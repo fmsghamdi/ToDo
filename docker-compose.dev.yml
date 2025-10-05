@@ -1,0 +1,65 @@
+services:
+  api:
+    image: mcr.microsoft.com/dotnet/aspnet:9.0
+    container_name: todo-api
+    depends_on: [db, redis, mailhog, minio]
+    ports: ["5000:8080"]
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Default=Host=db;Database=todo;Username=postgres;Password=postgres
+      - Redis__Connection=redis:6379
+      - Mail__Host=mailhog
+      - Mail__Port=1025
+      - Storage__Endpoint=http://minio:9000
+      - Storage__AccessKey=minioadmin
+      - Storage__SecretKey=minioadmin
+      - Storage__Bucket=attachments
+    volumes:
+      - ./src:/app
+    working_dir: /app/TaqTask.Api
+    command: ["dotnet", "watch"]
+
+  web:
+    image: node:22
+    container_name: todo-web
+    depends_on: [api]
+    ports: ["5173:5173"]
+    working_dir: /app
+    volumes:
+      - ./web:/app
+    command: ["bash","-lc","npm i && npm run dev -- --host"]
+
+  db:
+    image: postgres:17
+    container_name: todo-db
+    ports: ["5432:5432"]
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=todo
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: todo-redis
+    ports: ["6379:6379"]
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: todo-mail
+    ports: ["8025:8025", "1025:1025"]
+
+  minio:
+    image: minio/minio
+    container_name: todo-minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    ports: ["9000:9000","9001:9001"]
+    volumes:
+      - minio:/data
+
+volumes:
+  pgdata:
+  minio:
