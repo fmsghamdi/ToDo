@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "0DHmwh3CAT4=",
+  "dgSpecHash": "07EkNzDNwG8=",
   "success": false,
   "projectFilePath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Api\\TaqTask.Api.csproj",
   "expectedPackageFiles": [
@@ -101,6 +101,7 @@
     "C:\\Users\\fmghamdi\\.nuget\\packages\\system.composition.typedparts\\7.0.0\\system.composition.typedparts.7.0.0.nupkg.sha512",
     "C:\\Users\\fmghamdi\\.nuget\\packages\\system.configuration.configurationmanager\\6.0.1\\system.configuration.configurationmanager.6.0.1.nupkg.sha512",
     "C:\\Users\\fmghamdi\\.nuget\\packages\\system.diagnostics.diagnosticsource\\6.0.1\\system.diagnostics.diagnosticsource.6.0.1.nupkg.sha512",
+    "C:\\Users\\fmghamdi\\.nuget\\packages\\system.directoryservices.protocols\\9.0.0\\system.directoryservices.protocols.9.0.0.nupkg.sha512",
     "C:\\Users\\fmghamdi\\.nuget\\packages\\system.drawing.common\\6.0.0\\system.drawing.common.6.0.0.nupkg.sha512",
     "C:\\Users\\fmghamdi\\.nuget\\packages\\system.formats.asn1\\9.0.0\\system.formats.asn1.9.0.0.nupkg.sha512",
     "C:\\Users\\fmghamdi\\.nuget\\packages\\system.identitymodel.tokens.jwt\\8.0.1\\system.identitymodel.tokens.jwt.8.0.1.nupkg.sha512",

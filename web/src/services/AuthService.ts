@@ -205,7 +205,7 @@ class AuthService {
   }
 
   // Sync users from AD
-  async syncUsersFromAD(): Promise<ADUser[]> {
+  async syncUsersFromAD(searchQuery: string = ''): Promise<ADUser[]> {
     const config = this.getADConfig();
     
     if (!config || !config.enabled) {
@@ -215,52 +215,51 @@ class AuthService {
     try {
       console.log('Syncing users from Active Directory...');
       
-      // Simulate sync delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mock AD users
-      const mockUsers: ADUser[] = [
-        {
-          id: 'ad_1',
-          username: 'ahmed.mohammed',
-          email: 'ahmed.mohammed@gov.sa',
-          displayName: 'أحمد محمد',
-          firstName: 'أحمد',
-          lastName: 'محمد',
-          department: 'تقنية المعلومات',
-          title: 'مطور أنظمة',
-          groups: ['Domain Users', 'ToDoOS Users', 'Developers'],
-          isActive: true
+      // Call real API endpoint
+      const response = await fetch('/api/ActiveDirectory/search-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
-        {
-          id: 'ad_2',
-          username: 'fatima.ali',
-          email: 'fatima.ali@gov.sa',
-          displayName: 'فاطمة علي',
-          firstName: 'فاطمة',
-          lastName: 'علي',
-          department: 'إدارة المشاريع',
-          title: 'مديرة مشاريع',
-          groups: ['Domain Users', 'ToDoOS Users', 'Managers'],
-          isActive: true
-        },
-        {
-          id: 'ad_3',
-          username: 'omar.hassan',
-          email: 'omar.hassan@gov.sa',
-          displayName: 'عمر حسن',
-          firstName: 'عمر',
-          lastName: 'حسن',
-          department: 'الموارد البشرية',
-          title: 'أخصائي موارد بشرية',
-          groups: ['Domain Users', 'ToDoOS Users', 'HR'],
-          isActive: true
-        }
-      ];
+        body: JSON.stringify({
+          config: {
+            enabled: config.enabled,
+            domain: config.domain,
+            serverUrl: config.serverUrl,
+            baseDN: config.baseDN,
+            bindUsername: config.bindUsername,
+            bindPassword: config.bindPassword,
+            useSSL: config.useSSL
+          },
+          searchQuery: searchQuery
+        })
+      });
 
-      return mockUsers;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const users: ADUser[] = await response.json();
+      
+      // Transform API response to ADUser format
+      return users.map(user => ({
+        id: user.id || `ad_${Date.now()}`,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        department: user.department || '',
+        title: user.title || '',
+        manager: user.manager,
+        groups: user.groups || [],
+        isActive: user.isActive !== false
+      }));
     } catch (error) {
       console.error('Failed to sync users from AD:', error);
+      
+      // Return empty array on error so UI can show appropriate message
       return [];
     }
   }

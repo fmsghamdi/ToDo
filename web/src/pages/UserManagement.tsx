@@ -92,17 +92,48 @@ export default function UserManagement({ users, currentUser, onAddUser, onUpdate
     setShowADSearch(true);
     
     try {
-      const users = await authService.syncUsersFromAD();
+      const users = await authService.syncUsersFromAD(searchQuery);
       setAdUsers(users);
+      
+      if (users.length === 0) {
+        // Show message if no users found
+        console.log('No users found in Active Directory');
+      }
     } catch (error) {
       alert(language === 'ar' 
-        ? 'فشل تحميل المستخدمين من الدليل النشط'
-        : 'Failed to load users from Active Directory');
+        ? 'فشل تحميل المستخدمين من الدليل النشط. تأكد من صحة الإعدادات.'
+        : 'Failed to load users from Active Directory. Please check your settings.');
       console.error('AD sync error:', error);
     } finally {
       setLoadingAD(false);
     }
   };
+
+  // Search AD users when query changes
+  const handleSearchAD = async () => {
+    if (!showADSearch) return;
+    
+    setLoadingAD(true);
+    try {
+      const users = await authService.syncUsersFromAD(searchQuery);
+      setAdUsers(users);
+    } catch (error) {
+      console.error('AD search error:', error);
+    } finally {
+      setLoadingAD(false);
+    }
+  };
+
+  // Debounce search
+  React.useEffect(() => {
+    if (!showADSearch) return;
+    
+    const timeoutId = setTimeout(() => {
+      handleSearchAD();
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, showADSearch]);
 
   // Add user from AD
   const handleAddADUser = () => {
