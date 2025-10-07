@@ -7,7 +7,6 @@ namespace TaqTask.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class ActiveDirectoryController : ControllerBase
     {
         private readonly ILogger<ActiveDirectoryController> _logger;

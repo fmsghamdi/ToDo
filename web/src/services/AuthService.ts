@@ -208,42 +208,57 @@ class AuthService {
   async syncUsersFromAD(searchQuery: string = ''): Promise<ADUser[]> {
     const config = this.getADConfig();
     
+    console.log('=== AD Sync Started ===');
+    console.log('Config:', config);
+    console.log('Search Query:', searchQuery);
+    
     if (!config || !config.enabled) {
+      console.error('AD not enabled or config missing');
       return [];
     }
 
     try {
-      console.log('Syncing users from Active Directory...');
+      console.log('Calling API endpoint: /api/ActiveDirectory/search-users');
+      
+      const requestBody = {
+        config: {
+          enabled: config.enabled,
+          domain: config.domain,
+          serverUrl: config.serverUrl,
+          baseDN: config.baseDN,
+          bindUsername: config.bindUsername,
+          bindPassword: config.bindPassword,
+          useSSL: config.useSSL
+        },
+        searchQuery: searchQuery
+      };
+      
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
       
       // Call real API endpoint
       const response = await fetch('/api/ActiveDirectory/search-users', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          config: {
-            enabled: config.enabled,
-            domain: config.domain,
-            serverUrl: config.serverUrl,
-            baseDN: config.baseDN,
-            bindUsername: config.bindUsername,
-            bindPassword: config.bindPassword,
-            useSSL: config.useSSL
-          },
-          searchQuery: searchQuery
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
       const users: ADUser[] = await response.json();
+      console.log('Received users from API:', users.length, 'users');
+      console.log('First 3 users:', users.slice(0, 3));
       
       // Transform API response to ADUser format
-      return users.map(user => ({
+      const transformedUsers = users.map(user => ({
         id: user.id || `ad_${Date.now()}`,
         username: user.username || '',
         email: user.email || '',
@@ -256,8 +271,12 @@ class AuthService {
         groups: user.groups || [],
         isActive: user.isActive !== false
       }));
+      
+      console.log('=== AD Sync Completed Successfully ===');
+      return transformedUsers;
     } catch (error) {
-      console.error('Failed to sync users from AD:', error);
+      console.error('=== AD Sync Failed ===');
+      console.error('Error details:', error);
       
       // Return empty array on error so UI can show appropriate message
       return [];
