@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.DirectoryServices.Protocols;
-using System.Net;
+using Novell.Directory.Ldap;
 
 namespace TaqTask.Api.Controllers
 {
@@ -24,8 +23,16 @@ namespace TaqTask.Api.Controllers
         {
             try
             {
-                using var connection = CreateLdapConnection(config);
-                connection.Bind();
+                using var connection = new LdapConnection();
+                connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
+                
+                if (config.UseSSL)
+                {
+                    connection.SecureSocketLayer = true;
+                }
+                
+                var bindDn = FormatBindDn(config);
+                connection.Bind(bindDn, config.BindPassword);
                 
                 return Ok(new { 
                     success = true, 
@@ -51,16 +58,36 @@ namespace TaqTask.Api.Controllers
                 var config = request.Config;
                 var users = new List<ADUserDto>();
 
-                using var connection = CreateLdapConnection(config);
-                connection.Bind();
+                _logger.LogInformation($"Connecting to AD: {config.ServerUrl}");
+
+                using var connection = new LdapConnection();
+                connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
+                
+                if (config.UseSSL)
+                {
+                    connection.SecureSocketLayer = true;
+                }
+
+                var bindDn = FormatBindDn(config);
+                _logger.LogInformation($"Binding with: {bindDn}");
+                connection.Bind(bindDn, config.BindPassword);
+                
+                _logger.LogInformation("Connected and bound successfully");
 
                 // Build LDAP filter
                 string filter = BuildSearchFilter(request.SearchQuery);
+                _logger.LogInformation($"Search filter: {filter}");
                 
-                var searchRequest = new SearchRequest(
+                var searchConstraints = new LdapSearchConstraints
+                {
+                    MaxResults = 1000,
+                    TimeLimit = 30000 // 30 seconds
+                };
+
+                var searchResults = connection.Search(
                     config.BaseDN,
+                    LdapConnection.ScopeSub,
                     filter,
-                    SearchScope.Subtree,
                     new string[] { 
                         "sAMAccountName", 
                         "mail", 
@@ -72,15 +99,19 @@ namespace TaqTask.Api.Controllers
                         "manager",
                         "memberOf",
                         "userAccountControl"
-                    }
+                    },
+                    false,
+                    searchConstraints
                 );
 
-                var response = (SearchResponse)connection.SendRequest(searchRequest);
-
-                foreach (SearchResultEntry entry in response.Entries)
+                var count = 0;
+                while (searchResults.HasMore())
                 {
                     try
                     {
+                        var entry = searchResults.Next();
+                        count++;
+                        
                         var user = new ADUserDto
                         {
                             Id = Guid.NewGuid().ToString(),
@@ -104,18 +135,23 @@ namespace TaqTask.Api.Controllers
                             users.Add(user);
                         }
                     }
-                    catch (Exception ex)
+                    catch (LdapException ex)
                     {
+                        if (ex.ResultCode == LdapException.SizeLimitExceeded)
+                        {
+                            break;
+                        }
                         _logger.LogWarning(ex, "Error processing AD entry");
                     }
                 }
 
+                _logger.LogInformation($"Found {count} total entries, returning {users.Count} users with email");
                 return Ok(users);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "AD search failed");
-                return StatusCode(500, new { error = ex.Message });
+                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
             }
         }
 
@@ -127,32 +163,24 @@ namespace TaqTask.Api.Controllers
             try
             {
                 var config = request.Config;
-                var identifier = new LdapDirectoryIdentifier(config.ServerUrl, config.UseSSL ? 636 : 389);
                 
-                using var connection = new LdapConnection(identifier)
-                {
-                    AuthType = AuthType.Basic
-                };
-
+                using var connection = new LdapConnection();
+                connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
+                
                 if (config.UseSSL)
                 {
-                    connection.SessionOptions.SecureSocketLayer = true;
-                    connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
+                    connection.SecureSocketLayer = true;
                 }
 
                 // Try to bind with user credentials
-                var credentials = new NetworkCredential(
-                    $"{request.Username}@{config.Domain}",
-                    request.Password
-                );
-                
-                connection.Bind(credentials);
+                var userDn = $"{request.Username}@{config.Domain}";
+                connection.Bind(userDn, request.Password);
 
                 // Get user information
-                var searchRequest = new SearchRequest(
+                var searchResults = connection.Search(
                     config.BaseDN,
+                    LdapConnection.ScopeSub,
                     $"(sAMAccountName={request.Username})",
-                    SearchScope.Subtree,
                     new string[] { 
                         "sAMAccountName", 
                         "mail", 
@@ -162,14 +190,13 @@ namespace TaqTask.Api.Controllers
                         "department", 
                         "title",
                         "memberOf"
-                    }
+                    },
+                    false
                 );
 
-                var response = (SearchResponse)connection.SendRequest(searchRequest);
-
-                if (response.Entries.Count > 0)
+                if (searchResults.HasMore())
                 {
-                    var entry = response.Entries[0];
+                    var entry = searchResults.Next();
                     var user = new ADUserDto
                     {
                         Id = Guid.NewGuid().ToString(),
@@ -204,64 +231,23 @@ namespace TaqTask.Api.Controllers
         }
 
         // Helper methods
-        private LdapConnection CreateLdapConnection(ADConfigDto config)
+        private string FormatBindDn(ADConfigDto config)
         {
-            try
+            // If username already contains @domain, use it as-is
+            if (config.BindUsername.Contains("@"))
             {
-                _logger.LogInformation($"Creating LDAP connection to {config.ServerUrl}:{(config.UseSSL ? 636 : 389)}");
-                
-                var identifier = new LdapDirectoryIdentifier(config.ServerUrl, config.UseSSL ? 636 : 389);
-                var connection = new LdapConnection(identifier)
-                {
-                    AuthType = AuthType.Basic,
-                    Timeout = TimeSpan.FromSeconds(30)
-                };
-
-                if (config.UseSSL)
-                {
-                    connection.SessionOptions.SecureSocketLayer = true;
-                    connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
-                }
-                else
-                {
-                    // For non-SSL, set protocol version
-                    connection.SessionOptions.ProtocolVersion = 3;
-                }
-
-                // Try different credential formats
-                NetworkCredential credentials;
-                
-                // If username already contains @domain, use it as-is
-                if (config.BindUsername.Contains("@"))
-                {
-                    _logger.LogInformation($"Using UPN format: {config.BindUsername}");
-                    credentials = new NetworkCredential(config.BindUsername, config.BindPassword);
-                }
-                // If username contains backslash (DOMAIN\user), use it as-is
-                else if (config.BindUsername.Contains("\\"))
-                {
-                    _logger.LogInformation($"Using DOMAIN\\user format: {config.BindUsername}");
-                    credentials = new NetworkCredential(config.BindUsername, config.BindPassword);
-                }
-                // Otherwise, try UPN format (user@domain)
-                else
-                {
-                    var upn = config.BindUsername.EndsWith($".{config.Domain}") 
-                        ? config.BindUsername 
-                        : $"{config.BindUsername}@{config.Domain}";
-                    _logger.LogInformation($"Constructed UPN: {upn}");
-                    credentials = new NetworkCredential(upn, config.BindPassword);
-                }
-                
-                connection.Credential = credentials;
-
-                _logger.LogInformation("LDAP connection created successfully");
-                return connection;
+                return config.BindUsername;
             }
-            catch (Exception ex)
+            // If username contains backslash (DOMAIN\user), convert to UPN
+            else if (config.BindUsername.Contains("\\"))
             {
-                _logger.LogError(ex, "Failed to create LDAP connection");
-                throw;
+                var parts = config.BindUsername.Split('\\');
+                return $"{parts[1]}@{config.Domain}";
+            }
+            // Otherwise, append @domain
+            else
+            {
+                return $"{config.BindUsername}@{config.Domain}";
             }
         }
 
@@ -275,40 +261,32 @@ namespace TaqTask.Api.Controllers
             return $"(&(objectClass=user)(objectCategory=person)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(|(sAMAccountName=*{searchQuery}*)(mail=*{searchQuery}*)(displayName=*{searchQuery}*)(givenName=*{searchQuery}*)(sn=*{searchQuery}*)(department=*{searchQuery}*)))";
         }
 
-        private string GetAttributeValue(SearchResultEntry entry, string attributeName)
+        private string GetAttributeValue(LdapEntry entry, string attributeName)
         {
             try
             {
-                if (entry.Attributes.Contains(attributeName))
-                {
-                    var attribute = entry.Attributes[attributeName];
-                    if (attribute != null && attribute.Count > 0)
-                    {
-                        return attribute[0]?.ToString() ?? string.Empty;
-                    }
-                }
+                var attribute = entry.GetAttribute(attributeName);
+                return attribute?.StringValue ?? string.Empty;
             }
-            catch { }
-            return string.Empty;
+            catch
+            {
+                return string.Empty;
+            }
         }
 
-        private List<string> GetAttributeValues(SearchResultEntry entry, string attributeName)
+        private List<string> GetAttributeValues(LdapEntry entry, string attributeName)
         {
             var values = new List<string>();
             try
             {
-                if (entry.Attributes.Contains(attributeName))
+                var attribute = entry.GetAttribute(attributeName);
+                if (attribute != null)
                 {
-                    var attribute = entry.Attributes[attributeName];
-                    if (attribute != null)
+                    foreach (var value in attribute.StringValueArray)
                     {
-                        for (int i = 0; i < attribute.Count; i++)
+                        if (!string.IsNullOrEmpty(value))
                         {
-                            var value = attribute[i]?.ToString();
-                            if (!string.IsNullOrEmpty(value))
-                            {
-                                values.Add(value);
-                            }
+                            values.Add(value);
                         }
                     }
                 }
@@ -339,7 +317,7 @@ namespace TaqTask.Api.Controllers
             }
         }
 
-        private bool IsUserActive(SearchResultEntry entry)
+        private bool IsUserActive(LdapEntry entry)
         {
             try
             {
