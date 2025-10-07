@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { User, Permission, Role } from "../UserTypes";
 import { ALL_PERMISSIONS, DEFAULT_ADMIN_PERMISSIONS, DEFAULT_EMPLOYEE_PERMISSIONS } from "../UserTypes";
 import { useLanguage } from "../i18n/useLanguage";
+import { authService, type ADUser } from "../services/AuthService";
 
 type Props = {
   users: User[];
@@ -14,6 +15,7 @@ type Props = {
 export default function UserManagement({ users, currentUser, onAddUser, onUpdateUser, onDeleteUser }: Props) {
   const { t, language } = useLanguage();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showADSearch, setShowADSearch] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   
   // Add user form state
@@ -24,6 +26,14 @@ export default function UserManagement({ users, currentUser, onAddUser, onUpdate
     role: "employee" as Role,
     permissions: [...DEFAULT_EMPLOYEE_PERMISSIONS] as Permission[],
   });
+
+  // AD Search state
+  const [adUsers, setAdUsers] = useState<ADUser[]>([]);
+  const [loadingAD, setLoadingAD] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedADUser, setSelectedADUser] = useState<ADUser | null>(null);
+  const [adUserPermissions, setAdUserPermissions] = useState<Permission[]>([...DEFAULT_EMPLOYEE_PERMISSIONS]);
+  const [adUserRole, setAdUserRole] = useState<Role>("employee");
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +78,91 @@ export default function UserManagement({ users, currentUser, onAddUser, onUpdate
     onUpdateUser(userId, { permissions: newPermissions });
   };
 
+  // Load users from AD
+  const handleLoadADUsers = async () => {
+    const config = authService.getADConfig();
+    if (!config || !config.enabled) {
+      alert(language === 'ar' 
+        ? 'الدليل النشط غير مفعل. يرجى تفعيله من إعدادات النظام.'
+        : 'Active Directory is not enabled. Please enable it in System Settings.');
+      return;
+    }
+
+    setLoadingAD(true);
+    setShowADSearch(true);
+    
+    try {
+      const users = await authService.syncUsersFromAD();
+      setAdUsers(users);
+    } catch (error) {
+      alert(language === 'ar' 
+        ? 'فشل تحميل المستخدمين من الدليل النشط'
+        : 'Failed to load users from Active Directory');
+      console.error('AD sync error:', error);
+    } finally {
+      setLoadingAD(false);
+    }
+  };
+
+  // Add user from AD
+  const handleAddADUser = () => {
+    if (!selectedADUser) {
+      alert(language === 'ar' ? 'الرجاء اختيار مستخدم' : 'Please select a user');
+      return;
+    }
+
+    // Check if user already exists
+    if (users.some(u => u.email === selectedADUser.email)) {
+      alert(language === 'ar' 
+        ? 'هذا المستخدم مضاف بالفعل إلى النظام'
+        : 'This user is already added to the system');
+      return;
+    }
+
+    // Create user from AD user data
+    const newUserData: Omit<User, "id"> = {
+      name: selectedADUser.displayName,
+      email: selectedADUser.email,
+      password: '', // AD users don't need local passwords
+      role: adUserRole,
+      permissions: [...adUserPermissions],
+      avatar: '👤',
+      department: selectedADUser.department,
+      title: selectedADUser.title,
+      isADUser: true,
+    };
+
+    onAddUser(newUserData);
+    
+    // Reset states
+    setSelectedADUser(null);
+    setAdUserPermissions([...DEFAULT_EMPLOYEE_PERMISSIONS]);
+    setAdUserRole("employee");
+    setShowADSearch(false);
+    setSearchQuery("");
+    
+    alert(language === 'ar' 
+      ? `تم إضافة المستخدم ${selectedADUser.displayName} بنجاح`
+      : `User ${selectedADUser.displayName} added successfully`);
+  };
+
+  // Toggle AD user permission
+  const toggleADPermission = (permission: Permission) => {
+    if (adUserPermissions.includes(permission)) {
+      setAdUserPermissions(adUserPermissions.filter(p => p !== permission));
+    } else {
+      setAdUserPermissions([...adUserPermissions, permission]);
+    }
+  };
+
+  // Filter AD users by search query
+  const filteredADUsers = adUsers.filter(user =>
+    user.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const getPermissionLabel = (permission: Permission): string => {
     const labelsAr: Record<Permission, string> = {
       view_board: "عرض اللوحة",
@@ -98,13 +193,187 @@ export default function UserManagement({ users, currentUser, onAddUser, onUpdate
     <div className="bg-white p-6 rounded shadow">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">{language === 'ar' ? 'إدارة المستخدمين' : 'User Management'}</h2>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          {language === 'ar' ? '+ إضافة مستخدم' : '+ Add User'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleLoadADUsers}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+          >
+            <span>🔗</span>
+            {language === 'ar' ? 'إضافة من الدليل النشط' : 'Add from AD'}
+          </button>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            {language === 'ar' ? '+ إضافة مستخدم' : '+ Add User'}
+          </button>
+        </div>
       </div>
+
+      {/* AD User Search Modal */}
+      {showADSearch && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
+              <h3 className="text-lg font-semibold">
+                {language === 'ar' ? 'إضافة مستخدم من الدليل النشط' : 'Add User from Active Directory'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowADSearch(false);
+                  setSelectedADUser(null);
+                  setSearchQuery("");
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Search Box */}
+            <div className="p-4 border-b">
+              <input
+                type="text"
+                placeholder={language === 'ar' ? 'بحث بالاسم أو البريد أو القسم...' : 'Search by name, email or department...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {loadingAD ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">
+                    {language === 'ar' ? 'جاري تحميل المستخدمين...' : 'Loading users...'}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* AD Users List */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium mb-2">
+                      {language === 'ar' ? 'المستخدمون المتاحون' : 'Available Users'}
+                      {filteredADUsers.length > 0 && (
+                        <span className="text-sm text-gray-500 ml-2">({filteredADUsers.length})</span>
+                      )}
+                    </h4>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {filteredADUsers.map((adUser) => (
+                        <button
+                          key={adUser.id}
+                          onClick={() => setSelectedADUser(adUser)}
+                          className={`w-full text-left p-3 rounded border transition-colors ${
+                            selectedADUser?.id === adUser.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="font-medium">{adUser.displayName}</div>
+                          <div className="text-sm text-gray-600">{adUser.email}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {adUser.department} • {adUser.title}
+                          </div>
+                        </button>
+                      ))}
+                      {filteredADUsers.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          {language === 'ar' ? 'لم يتم العثور على مستخدمين' : 'No users found'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selected User & Permissions */}
+                  {selectedADUser && (
+                    <div className="border rounded p-4 bg-gray-50">
+                      <h4 className="font-medium mb-3">
+                        {language === 'ar' ? 'تعيين الصلاحيات' : 'Assign Permissions'}
+                      </h4>
+                      
+                      <div className="mb-4 p-3 bg-white rounded border">
+                        <div className="font-medium">{selectedADUser.displayName}</div>
+                        <div className="text-sm text-gray-600">{selectedADUser.email}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {selectedADUser.department} • {selectedADUser.title}
+                        </div>
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">
+                          {language === 'ar' ? 'الدور' : 'Role'}
+                        </label>
+                        <select
+                          value={adUserRole}
+                          onChange={(e) => {
+                            const role = e.target.value as Role;
+                            const permissions = role === "admin" ? DEFAULT_ADMIN_PERMISSIONS : DEFAULT_EMPLOYEE_PERMISSIONS;
+                            setAdUserRole(role);
+                            setAdUserPermissions([...permissions]);
+                          }}
+                          className="w-full border rounded p-2"
+                        >
+                          <option value="employee">{language === 'ar' ? 'موظف' : 'Employee'}</option>
+                          <option value="admin">{language === 'ar' ? 'مدير' : 'Admin'}</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          {language === 'ar' ? 'الصلاحيات' : 'Permissions'}
+                        </label>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {ALL_PERMISSIONS.map((permission) => (
+                            <label key={permission} className="flex items-center space-x-2 space-x-reverse">
+                              <input
+                                type="checkbox"
+                                checked={adUserPermissions.includes(permission)}
+                                onChange={() => toggleADPermission(permission)}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{getPermissionLabel(permission)}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t flex gap-2">
+                        <button
+                          onClick={handleAddADUser}
+                          className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                          {language === 'ar' ? 'إضافة المستخدم' : 'Add User'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedADUser(null);
+                            setAdUserPermissions([...DEFAULT_EMPLOYEE_PERMISSIONS]);
+                            setAdUserRole("employee");
+                          }}
+                          className="px-4 py-2 border rounded hover:bg-gray-100"
+                        >
+                          {t.cancel}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!selectedADUser && filteredADUsers.length > 0 && (
+                    <div className="flex items-center justify-center text-gray-500 text-sm border-2 border-dashed rounded p-8">
+                      {language === 'ar' 
+                        ? 'اختر مستخدماً من القائمة لتعيين الصلاحيات'
+                        : 'Select a user from the list to assign permissions'}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add User Form */}
       {showAddForm && (

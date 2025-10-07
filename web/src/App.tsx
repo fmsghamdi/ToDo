@@ -16,6 +16,7 @@ import NotificationSystem from "./components/NotificationSystem";
 import CalendarView from "./pages/CalendarView";
 import SystemSettings from "./pages/SystemSettings";
 import BoardManager from "./components/BoardManager";
+import LanguageSwitcher from "./components/LanguageSwitcher";
 import type { User, Permission } from "./UserTypes";
 import { DEFAULT_ADMIN_PERMISSIONS } from "./UserTypes";
 import type { Chat, Message } from "./ChatTypes";
@@ -25,6 +26,7 @@ import AdvancedReports from "./pages/AdvancedReports";
 import Integrations from "./pages/Integrations";
 import Workflows from "./pages/Workflows";
 import Timeline from "./pages/Timeline";
+import DataStorageIndicator from "./components/DataStorageIndicator";
 import { workflowService } from './services/WorkflowService';
 import { workflowExecutionEngine } from './services/WorkflowExecutionEngine';
 import { authService, type ADUser } from './services/AuthService';
@@ -32,7 +34,7 @@ import { authService, type ADUser } from './services/AuthService';
 type View = "board" | "dashboard" | "control" | "chat" | "calendar" | "settings" | "reports" | "integrations" | "workflows" | "timeline";
 
 const App: React.FC = () => {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, t } = useLanguage();
 
   // Users management
   const [users, setUsers] = useState<User[]>(() => {
@@ -705,100 +707,181 @@ const App: React.FC = () => {
               <span className="text-lg">🇸🇦</span>
               <span className="font-bold text-lg text-white">ToDoOS</span>
             </div>
-            <nav className="flex gap-1">
+            <nav className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-2xl p-2">
               {hasPermission("view_board") && (
                 <button
-                  className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    view === "board" ? "active" : ""
+                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    view === "board" 
+                      ? "bg-white text-green-700 shadow-lg scale-105" 
+                      : "text-white hover:bg-white/20"
                   }`}
                   onClick={() => setView("board")}
                 >
-                  📋 {t.board}
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-lg">📋</span>
+                    <span className="text-xs">{language === 'en' ? 'Board' : 'اللوحة'}</span>
+                  </div>
+                  {view === "board" && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                  )}
                 </button>
               )}
               {hasPermission("view_dashboard") && (
                 <button
-                  className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    view === "dashboard" ? "active" : ""
+                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    view === "dashboard" 
+                      ? "bg-white text-green-700 shadow-lg scale-105" 
+                      : "text-white hover:bg-white/20"
                   }`}
                   onClick={() => setView("dashboard")}
                 >
-                  📊 {t.dashboard}
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-lg">📊</span>
+                    <span className="text-xs">{language === 'en' ? 'Dashboard' : 'الرئيسية'}</span>
+                  </div>
+                  {view === "dashboard" && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                  )}
                 </button>
               )}
               {hasPermission("view_control_panel") && (
                 <button
-                  className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    view === "control" ? "active" : ""
+                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    view === "control" 
+                      ? "bg-white text-green-700 shadow-lg scale-105" 
+                      : "text-white hover:bg-white/20"
                   }`}
                   onClick={() => setView("control")}
                 >
-                  👥 {t.controlPanel}
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-lg">👥</span>
+                    <span className="text-xs">{language === 'en' ? 'Control Panel' : 'لوحة التحكم'}</span>
+                  </div>
+                  {view === "control" && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                  )}
                 </button>
               )}
               <button
-                className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 relative ${
-                  view === "chat" ? "active" : ""
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "chat" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
                 }`}
                 onClick={() => setView("chat")}
                 onDoubleClick={clearAllUnreadMessages}
-                title={getTotalUnreadCount() > 0 ? "انقر مرتين لمسح الرسائل غير المقروءة" : ""}
               >
-                💬 {t.chat}
-                {getTotalUnreadCount() > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                    {getTotalUnreadCount()}
-                  </span>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="relative">
+                    <span className="text-lg">💬</span>
+                    {getTotalUnreadCount() > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
+                        {getTotalUnreadCount()}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs">{language === 'en' ? 'Chat' : 'المحادثة'}</span>
+                </div>
+                {view === "chat" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
                 )}
               </button>
               <button
-                className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  view === "calendar" ? "active" : ""
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "calendar" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
                 }`}
                 onClick={() => setView("calendar")}
               >
-                📅 {t.calendar}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">📅</span>
+                  <span className="text-xs">{language === 'en' ? 'Calendar' : 'التقويم'}</span>
+                </div>
+                {view === "calendar" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                )}
               </button>
               <button
-                className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  view === "reports" ? "active" : ""
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "reports" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
                 }`}
                 onClick={() => setView("reports")}
               >
-                📈 {t.reports}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">📈</span>
+                  <span className="text-xs">{language === 'en' ? 'Reports' : 'التقارير'}</span>
+                </div>
+                {view === "reports" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                )}
               </button>
               <button
-                className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  view === "timeline" ? "active" : ""
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "timeline" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
                 }`}
                 onClick={() => setView("timeline")}
               >
-                📊 {t.timeline}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">📊</span>
+                  <span className="text-xs">{language === 'en' ? 'Timeline' : 'الخط الزمني'}</span>
+                </div>
+                {view === "timeline" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                )}
               </button>
               <button
-                className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  view === "integrations" ? "active" : ""
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "integrations" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
                 }`}
                 onClick={() => setView("integrations")}
               >
-                🔌 {t.integrations}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">🔌</span>
+                  <span className="text-xs">{language === 'en' ? 'Integrations' : 'التكاملات'}</span>
+                </div>
+                {view === "integrations" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                )}
               </button>
               <button
-                className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                  view === "workflows" ? "active" : ""
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "workflows" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
                 }`}
                 onClick={() => setView("workflows")}
               >
-                🔄 {t.workflows}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">🔄</span>
+                  <span className="text-xs">{language === 'en' ? 'Workflows' : 'سير العمل'}</span>
+                </div>
+                {view === "workflows" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                )}
               </button>
               {currentUser?.role === "admin" && (
                 <button
-                  className={`nav-item px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    view === "settings" ? "active" : ""
+                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                    view === "settings" 
+                      ? "bg-white text-green-700 shadow-lg scale-105" 
+                      : "text-white hover:bg-white/20"
                   }`}
                   onClick={() => setView("settings")}
                 >
-                  ⚙️ {t.systemSettings}
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-lg">⚙️</span>
+                    <span className="text-xs">{language === 'en' ? 'System Settings' : 'إعدادات النظام'}</span>
+                  </div>
+                  {view === "settings" && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                  )}
                 </button>
               )}
             </nav>
@@ -816,20 +899,8 @@ const App: React.FC = () => {
                 }}
               />
             )}
-            {/* Language Switch - Absolutely Fixed Position */}
-            <div className="fixed top-4 right-4 z-[60] flex items-center gap-2 bg-green-600 px-3 py-2 rounded-lg shadow-lg">
-              <span className="text-sm text-white font-medium">ع</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={language === 'en'}
-                  onChange={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-green-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-              </label>
-              <span className="text-sm text-white font-medium">EN</span>
-            </div>
+            {/* Connection Status Indicator */}
+            <DataStorageIndicator />
             <div className="relative group">
               <span className="text-sm text-white cursor-pointer font-medium">{t.welcome}، {currentUser?.name}</span>
               <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -851,12 +922,15 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* Beautiful Language Switcher */}
+      <LanguageSwitcher />
+
       {/* Views */}
-      <main className="min-h-screen" style={{
+      <main className="min-h-screen pt-20 transition-all duration-500" style={{
         background: 'linear-gradient(135deg, var(--saudi-cream) 0%, var(--gray-50) 50%, var(--saudi-beige) 100%)'
       }}>
         {view === "board" && (
-          <div className="max-w-7xl mx-auto p-6 pt-20">
+          <div className="max-w-7xl mx-auto p-6 animate-fadeIn">
             {/* Header Section with improved styling */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
               <div className="flex items-center justify-between mb-6">
@@ -963,9 +1037,9 @@ const App: React.FC = () => {
                                                 : "bg-green-500"
                                             }`}
                                           >
-                                            {card.priority === "High" ? "عالية" : 
-                                             card.priority === "Medium" ? "متوسطة" : 
-                                             "منخفضة"}
+                                            {card.priority === "High" ? (language === 'ar' ? "عالية" : "High") : 
+                                             card.priority === "Medium" ? (language === 'ar' ? "متوسطة" : "Medium") : 
+                                             (language === 'ar' ? "منخفضة" : "Low")}
                                           </span>
                                         )}
                                         {card.dueDate && (
@@ -1081,55 +1155,75 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {view === "dashboard" && <Dashboard columns={columns} />}
+        {view === "dashboard" && (
+          <div className="p-6 animate-slideInFromRight">
+            <Dashboard columns={columns} />
+          </div>
+        )}
 
         {view === "control" && currentUser && (
-          <ControlPanel 
-            currentUser={currentUser}
-            users={users}
-            onAddUser={handleAddUser}
-            onUpdateUser={handleUpdateUser}
-            onDeleteUser={handleDeleteUser}
-          />
+          <div className="p-6 animate-slideInFromLeft">
+            <ControlPanel 
+              currentUser={currentUser}
+              users={users}
+              onAddUser={handleAddUser}
+              onUpdateUser={handleUpdateUser}
+              onDeleteUser={handleDeleteUser}
+            />
+          </div>
         )}
 
         {view === "chat" && currentUser && (
-          <ChatPage
-            currentUser={currentUser}
-            users={users}
-            chats={chats}
-            onSendMessage={handleSendMessage}
-            onCreateChat={handleCreateChat}
-            onMarkAsRead={handleMarkAsRead}
-          />
+          <div className="p-6 animate-slideInFromBottom">
+            <ChatPage
+              currentUser={currentUser}
+              users={users}
+              chats={chats}
+              onSendMessage={handleSendMessage}
+              onCreateChat={handleCreateChat}
+              onMarkAsRead={handleMarkAsRead}
+            />
+          </div>
         )}
 
         {view === "calendar" && currentUser && (
-          <CalendarView
-            columns={columns}
-            currentUser={currentUser}
-            onCardClick={openCard}
-          />
+          <div className="p-6 animate-zoomIn">
+            <CalendarView
+              columns={columns}
+              currentUser={currentUser}
+              onCardClick={openCard}
+            />
+          </div>
         )}
 
         {view === "reports" && (
-          <AdvancedReports boards={boards} />
+          <div className="p-6 animate-slideInFromTop">
+            <AdvancedReports boards={boards} />
+          </div>
         )}
 
         {view === "integrations" && (
-          <Integrations />
+          <div className="p-6 animate-slideInFromRight">
+            <Integrations />
+          </div>
         )}
 
         {view === "workflows" && (
-          <Workflows />
+          <div className="p-6 animate-slideInFromLeft">
+            <Workflows />
+          </div>
         )}
 
         {view === "timeline" && (
-          <Timeline boards={boards} />
+          <div className="p-6 animate-zoomIn">
+            <Timeline boards={boards} />
+          </div>
         )}
 
         {view === "settings" && currentUser?.role === "admin" && (
-          <SystemSettings />
+          <div className="p-6 animate-slideInFromBottom">
+            <SystemSettings />
+          </div>
         )}
       </main>
 

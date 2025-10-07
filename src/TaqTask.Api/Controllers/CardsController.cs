@@ -1,0 +1,268 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TaqTask.Api.Data;
+using TaqTask.Api.Models;
+
+namespace TaqTask.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class CardsController : ControllerBase
+{
+    private readonly ToDoOSContext _context;
+
+    public CardsController(ToDoOSContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/cards
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Card>>> GetCards()
+    {
+        return await _context.Cards
+            .Include(c => c.Column)
+            .Include(c => c.Creator)
+            .Include(c => c.AssignedUser)
+            .Include(c => c.Members)
+                .ThenInclude(cm => cm.User)
+            .Include(c => c.Activities)
+            .Include(c => c.TimeEntries)
+            .Include(c => c.Attachments)
+            .Include(c => c.Comments)
+            .ToListAsync();
+    }
+
+    // GET: api/cards/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Card>> GetCard(int id)
+    {
+        var card = await _context.Cards
+            .Include(c => c.Column)
+            .Include(c => c.Creator)
+            .Include(c => c.AssignedUser)
+            .Include(c => c.Members)
+                .ThenInclude(cm => cm.User)
+            .Include(c => c.Activities)
+            .Include(c => c.TimeEntries)
+            .Include(c => c.Attachments)
+            .Include(c => c.Comments)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (card == null)
+        {
+            return NotFound();
+        }
+
+        return card;
+    }
+
+    // GET: api/cards/column/5
+    [HttpGet("column/{columnId}")]
+    public async Task<ActionResult<IEnumerable<Card>>> GetCardsByColumn(int columnId)
+    {
+        return await _context.Cards
+            .Where(c => c.ColumnId == columnId)
+            .Include(c => c.Creator)
+            .Include(c => c.AssignedUser)
+            .Include(c => c.Members)
+                .ThenInclude(cm => cm.User)
+            .OrderBy(c => c.Position)
+            .ToListAsync();
+    }
+
+    // POST: api/cards
+    [HttpPost]
+    public async Task<ActionResult<Card>> PostCard(CreateCardRequest request)
+    {
+        var card = new Card
+        {
+            ColumnId = request.ColumnId,
+            Title = request.Title,
+            Description = request.Description,
+            Priority = request.Priority ?? "Medium",
+            DueDate = request.DueDate,
+            StartDate = request.StartDate,
+            Position = request.Position,
+            Color = request.Color,
+            Tags = request.Tags,
+            EstimatedHours = request.EstimatedHours,
+            CreatedBy = request.CreatedBy,
+            AssignedTo = request.AssignedTo,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Cards.Add(card);
+        await _context.SaveChangesAsync();
+
+        // Add members if provided
+        if (request.MemberIds != null && request.MemberIds.Any())
+        {
+            foreach (var memberId in request.MemberIds)
+            {
+                var cardMember = new CardMember
+                {
+                    CardId = card.Id,
+                    UserId = memberId,
+                    AddedAt = DateTime.UtcNow
+                };
+                _context.CardMembers.Add(cardMember);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        // Log activity
+        var activity = new Activity
+        {
+            CardId = card.Id,
+            UserId = card.CreatedBy,
+            Type = "created",
+            Message = $"Created card '{card.Title}'",
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Activities.Add(activity);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetCard), new { id = card.Id }, card);
+    }
+
+    // PUT: api/cards/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutCard(int id, UpdateCardRequest request)
+    {
+        var card = await _context.Cards.FindAsync(id);
+        if (card == null)
+        {
+            return NotFound();
+        }
+
+        // Store old values for activity log
+        var oldTitle = card.Title;
+        var oldColumnId = card.ColumnId;
+
+        // Update card properties
+        card.Title = request.Title ?? card.Title;
+        card.Description = request.Description ?? card.Description;
+        card.Priority = request.Priority ?? card.Priority;
+        card.DueDate = request.DueDate ?? card.DueDate;
+        card.StartDate = request.StartDate ?? card.StartDate;
+        card.Position = request.Position ?? card.Position;
+        card.Color = request.Color ?? card.Color;
+        card.Tags = request.Tags ?? card.Tags;
+        card.EstimatedHours = request.EstimatedHours ?? card.EstimatedHours;
+        card.AssignedTo = request.AssignedTo ?? card.AssignedTo;
+        card.UpdatedAt = DateTime.UtcNow;
+
+        if (request.ColumnId.HasValue && request.ColumnId != card.ColumnId)
+        {
+            card.ColumnId = request.ColumnId.Value;
+        }
+
+        try
+        {
+            await _context.SaveChangesAsync();
+
+            // Log activity for significant changes
+            if (oldTitle != card.Title)
+            {
+                var activity = new Activity
+                {
+                    CardId = card.Id,
+                    UserId = request.UpdatedBy ?? card.CreatedBy,
+                    Type = "updated",
+                    Message = $"Updated card title from '{oldTitle}' to '{card.Title}'",
+                    OldValue = oldTitle,
+                    NewValue = card.Title,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Activities.Add(activity);
+            }
+
+            if (oldColumnId != card.ColumnId)
+            {
+                var oldColumn = await _context.Columns.FindAsync(oldColumnId);
+                var newColumn = await _context.Columns.FindAsync(card.ColumnId);
+                var activity = new Activity
+                {
+                    CardId = card.Id,
+                    UserId = request.UpdatedBy ?? card.CreatedBy,
+                    Type = "moved",
+                    Message = $"Moved card from '{oldColumn?.Title}' to '{newColumn?.Title}'",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Activities.Add(activity);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CardExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+    // DELETE: api/cards/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCard(int id)
+    {
+        var card = await _context.Cards.FindAsync(id);
+        if (card == null)
+        {
+            return NotFound();
+        }
+
+        _context.Cards.Remove(card);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool CardExists(int id)
+    {
+        return _context.Cards.Any(e => e.Id == id);
+    }
+}
+
+// DTOs for requests
+public class CreateCardRequest
+{
+    public int ColumnId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Priority { get; set; }
+    public DateTime? DueDate { get; set; }
+    public DateTime? StartDate { get; set; }
+    public int Position { get; set; }
+    public string? Color { get; set; }
+    public string? Tags { get; set; }
+    public decimal? EstimatedHours { get; set; }
+    public int CreatedBy { get; set; }
+    public int? AssignedTo { get; set; }
+    public List<int>? MemberIds { get; set; }
+}
+
+public class UpdateCardRequest
+{
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public string? Priority { get; set; }
+    public DateTime? DueDate { get; set; }
+    public DateTime? StartDate { get; set; }
+    public int? Position { get; set; }
+    public string? Color { get; set; }
+    public string? Tags { get; set; }
+    public decimal? EstimatedHours { get; set; }
+    public int? AssignedTo { get; set; }
+    public int? ColumnId { get; set; }
+    public int? UpdatedBy { get; set; }
+}

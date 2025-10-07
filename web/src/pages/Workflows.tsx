@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { workflowService } from '../services/WorkflowService';
+import { useLanguage } from '../i18n/useLanguage';
 import type { Workflow, WorkflowTemplate } from '../types/WorkflowTypes';
 
 const Workflows: React.FC = () => {
+  const { language, t } = useLanguage();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [templates, setTemplates] = useState<WorkflowTemplate[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -50,19 +52,19 @@ const Workflows: React.FC = () => {
   };
 
   const getStatusText = (isActive: boolean) => {
-    return isActive ? 'نشط' : 'غير نشط';
+    return isActive ? t.active : t.inactive;
   };
 
   const getTriggerText = (type: string) => {
     switch (type) {
-      case 'task_created': return 'عند إنشاء مهمة';
-      case 'task_updated': return 'عند تحديث مهمة';
-      case 'task_completed': return 'عند إكمال مهمة';
-      case 'task_overdue': return 'عند تأخير مهمة';
-      case 'task_assigned': return 'عند تعيين مهمة';
-      case 'due_date_approaching': return 'قبل موعد الاستحقاق';
-      case 'schedule': return 'جدولة زمنية';
-      case 'manual': return 'تشغيل يدوي';
+      case 'task_created': return language === 'ar' ? 'عند إنشاء مهمة' : 'Task Created';
+      case 'task_updated': return language === 'ar' ? 'عند تحديث مهمة' : 'Task Updated';
+      case 'task_completed': return language === 'ar' ? 'عند إكمال مهمة' : 'Task Completed';
+      case 'task_overdue': return language === 'ar' ? 'عند تأخير مهمة' : 'Task Overdue';
+      case 'task_assigned': return language === 'ar' ? 'عند تعيين مهمة' : 'Task Assigned';
+      case 'due_date_approaching': return language === 'ar' ? 'قبل موعد الاستحقاق' : 'Due Date Approaching';
+      case 'schedule': return language === 'ar' ? 'جدولة زمنية' : 'Schedule';
+      case 'manual': return language === 'ar' ? 'تشغيل يدوي' : 'Manual';
       default: return type;
     }
   };
@@ -73,25 +75,25 @@ const Workflows: React.FC = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                🔄 سير العمل والأتمتة
-              </h1>
-              <p className="text-gray-600 mt-1">أتمتة المهام وتخصيص سير العمل لزيادة الإنتاجية</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              🔄 {t.workflows}
+            </h1>
+            <p className="text-gray-600 mt-1">{t.workflowsDesc}</p>
+          </div>
             
             <div className="flex gap-3">
               <button
                 onClick={() => setShowTemplates(true)}
                 className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
               >
-                📋 القوالب الجاهزة
+                📋 {t.workflowTemplates}
               </button>
               <button
-                onClick={() => alert('إنشاء سير عمل مخصص - قريباً')}
+                onClick={() => alert('Create custom workflow - coming soon')}
                 className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
               >
-                ➕ إنشاء سير عمل جديد
+                ➕ {t.createWorkflow}
               </button>
             </div>
           </div>
@@ -100,23 +102,23 @@ const Workflows: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">{stats.totalWorkflows}</div>
-              <div className="text-sm text-gray-600">إجمالي سير العمل</div>
+              <div className="text-sm text-gray-600">{t.totalWorkflows || 'Total Workflows'}</div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-green-600">{stats.activeWorkflows}</div>
-              <div className="text-sm text-gray-600">النشطة</div>
+              <div className="text-sm text-gray-600">{t.activeWorkflows || 'Active'}</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">{stats.totalExecutions}</div>
-              <div className="text-sm text-gray-600">إجمالي التنفيذ</div>
+              <div className="text-sm text-gray-600">{t.totalExecutions || 'Total Executions'}</div>
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-yellow-600">{stats.successfulExecutions}</div>
-              <div className="text-sm text-gray-600">نجح</div>
+              <div className="text-sm text-gray-600">{t.successfulExecutions || 'Successful'}</div>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-red-600">{stats.failedExecutions}</div>
-              <div className="text-sm text-gray-600">فشل</div>
+              <div className="text-sm text-gray-600">{t.failedExecutions || 'Failed'}</div>
             </div>
           </div>
         </div>
@@ -127,20 +129,20 @@ const Workflows: React.FC = () => {
         {workflows.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
             <div className="text-6xl mb-4">🔄</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">لا يوجد سير عمل</h3>
-            <p className="text-gray-600 mb-6">ابدأ بإنشاء سير عمل جديد أو استخدم القوالب الجاهزة</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.noWorkflowsYet || 'No Workflows Yet'}</h3>
+            <p className="text-gray-600 mb-6">{t.startWorkflow || 'Start creating a new workflow or use the ready-made templates'}</p>
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => setShowTemplates(true)}
                 className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors"
               >
-                📋 استخدام القوالب
+                📋 {t.useWorkflowTemplate}
               </button>
               <button
-                onClick={() => alert('إنشاء سير عمل مخصص - قريباً')}
+                onClick={() => alert('Create custom workflow - coming soon')}
                 className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
               >
-                ➕ إنشاء جديد
+                ➕ {t.createWorkflow}
               </button>
             </div>
           </div>

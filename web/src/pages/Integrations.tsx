@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { integrationService } from '../services/IntegrationService';
+import { useLanguage } from '../i18n/useLanguage';
 import type { Integration, IntegrationType, IntegrationConfig } from '../types/IntegrationTypes';
+import type { Translation } from '../i18n/translations';
 
 const Integrations: React.FC = () => {
+  const { language, t } = useLanguage();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
@@ -85,9 +88,9 @@ const Integrations: React.FC = () => {
 
   const getStatusText = (status: Integration['status']) => {
     switch (status) {
-      case 'connected': return 'متصل';
-      case 'disconnected': return 'غير متصل';
-      case 'error': return 'خطأ';
+      case 'connected': return t.connected;
+      case 'disconnected': return t.disconnected;
+      case 'error': return t.error;
       default: return status;
     }
   };
@@ -100,18 +103,18 @@ const Integrations: React.FC = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                🔌 التكاملات الخارجية
-              </h1>
-              <p className="text-gray-600 mt-1">ربط ToDoOS مع الأنظمة والخدمات الخارجية</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              🔌 {t.integrations}
+            </h1>
+            <p className="text-gray-600 mt-1">{t.integrationsDesc}</p>
+          </div>
             
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
             >
-              ➕ إضافة تكامل جديد
+              ➕ {t.addIntegration || 'Add New Integration'}
             </button>
           </div>
 
@@ -119,21 +122,21 @@ const Integrations: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">{stats.totalIntegrations}</div>
-              <div className="text-sm text-gray-600">إجمالي التكاملات</div>
+              <div className="text-sm text-gray-600">{t.totalIntegrations || 'Total Integrations'}</div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-green-600">{stats.activeIntegrations}</div>
-              <div className="text-sm text-gray-600">التكاملات النشطة</div>
+              <div className="text-sm text-gray-600">{t.activeIntegrations || 'Active Integrations'}</div>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-red-600">{stats.syncErrors}</div>
-              <div className="text-sm text-gray-600">أخطاء المزامنة</div>
+              <div className="text-sm text-gray-600">{t.syncErrors || 'Sync Errors'}</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
-                {stats.lastSyncTime ? new Date(stats.lastSyncTime).toLocaleDateString('ar-SA') : 'لا يوجد'}
+                {stats.lastSyncTime ? new Date(stats.lastSyncTime).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US') : t.none || 'None'}
               </div>
-              <div className="text-sm text-gray-600">آخر مزامنة</div>
+              <div className="text-sm text-gray-600">{t.lastSync || 'Last Sync'}</div>
             </div>
           </div>
         </div>
@@ -144,13 +147,13 @@ const Integrations: React.FC = () => {
         {integrations.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
             <div className="text-6xl mb-4">🔌</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">لا توجد تكاملات</h3>
-            <p className="text-gray-600 mb-6">ابدأ بإضافة تكامل جديد لربط ToDoOS مع الخدمات الخارجية</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.noIntegrationsYet || 'No Integrations'}</h3>
+            <p className="text-gray-600 mb-6">{t.startIntegration || 'Start adding a new integration to connect ToDoOS with external services'}</p>
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
             >
-              إضافة تكامل جديد
+              {t.addIntegration || 'Add New Integration'}
             </button>
           </div>
         ) : (
@@ -173,11 +176,11 @@ const Integrations: React.FC = () => {
 
                 <div className="space-y-2 mb-4">
                   <div className="text-sm text-gray-600">
-                    <strong>تم الإنشاء:</strong> {new Date(integration.createdAt).toLocaleDateString('ar-SA')}
+                    <strong>{t.createdAt || 'Created At'}:</strong> {new Date(integration.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                   </div>
                   {integration.lastSync && (
                     <div className="text-sm text-gray-600">
-                      <strong>آخر مزامنة:</strong> {new Date(integration.lastSync).toLocaleString('ar-SA')}
+                      <strong>{t.lastSync || 'Last Sync'}:</strong> {new Date(integration.lastSync).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}
                     </div>
                   )}
                 </div>
@@ -188,21 +191,21 @@ const Integrations: React.FC = () => {
                     disabled={syncingId === integration.id || integration.status !== 'connected'}
                     className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
-                    {syncingId === integration.id ? '🔄 جاري المزامنة...' : '🔄 مزامنة'}
+                    {syncingId === integration.id ? '🔄 ' + t.loading : '🔄 ' + (t.sync || 'Sync')}
                   </button>
                   
                   <button
                     onClick={() => setSelectedIntegration(integration)}
                     className="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm"
                   >
-                    ⚙️ إعدادات
+                    ⚙️ {t.settings || 'Settings'}
                   </button>
                   
                   <button
                     onClick={() => handleDelete(integration.id)}
                     className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
                   >
-                    🗑️
+                    🗑️ {t.delete || 'Delete'}
                   </button>
                 </div>
               </div>
@@ -219,6 +222,8 @@ const Integrations: React.FC = () => {
             setShowAddModal(false);
             loadIntegrations();
           }}
+          language={language}
+          t={t}
         />
       )}
 
@@ -231,6 +236,8 @@ const Integrations: React.FC = () => {
             setSelectedIntegration(null);
             loadIntegrations();
           }}
+          language={language}
+          t={t}
         />
       )}
     </div>
@@ -241,7 +248,9 @@ const Integrations: React.FC = () => {
 const AddIntegrationModal: React.FC<{
   onClose: () => void;
   onAdd: () => void;
-}> = ({ onClose, onAdd }) => {
+  language: string;
+  t: Translation;
+}> = ({ onClose, onAdd, language, t }) => {
   const [selectedType, setSelectedType] = useState<IntegrationType>('google_calendar');
   const [name, setName] = useState('');
   const [config, setConfig] = useState<Partial<IntegrationConfig>>({});
@@ -384,7 +393,7 @@ const AddIntegrationModal: React.FC<{
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">إضافة تكامل جديد</h2>
+            <h2 className="text-xl font-semibold">{t.addIntegration || 'Add New Integration'}</h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -398,7 +407,7 @@ const AddIntegrationModal: React.FC<{
           <div className="space-y-6">
             {/* Integration Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">نوع التكامل</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">{t.integrationType || 'Integration Type'}</label>
               <div className="grid grid-cols-2 gap-3">
                 {integrationTypes.map((type) => (
                   <button
@@ -415,7 +424,7 @@ const AddIntegrationModal: React.FC<{
                       <span className="text-2xl">{type.icon}</span>
                       <div>
                         <div className="font-medium">{type.name}</div>
-                        <div className="text-xs text-gray-600">{type.description}</div>
+                        <div className="text-xs text-gray-600">{language === 'ar' ? type.description : type.description}</div>
                       </div>
                     </div>
                   </button>
@@ -425,12 +434,12 @@ const AddIntegrationModal: React.FC<{
 
             {/* Integration Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">اسم التكامل</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t.integrationName || 'Integration Name'}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="مثال: تقويم العمل الرئيسي"
+                placeholder={language === 'ar' ? 'مثال: تقويم العمل الرئيسي' : 'e.g., Main Work Calendar'}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 required
               />
@@ -438,7 +447,7 @@ const AddIntegrationModal: React.FC<{
 
             {/* Configuration Form */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">إعدادات التكامل</label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">{t.integrationSettings || 'Integration Settings'}</label>
               {renderConfigForm()}
             </div>
           </div>
@@ -449,14 +458,14 @@ const AddIntegrationModal: React.FC<{
               disabled={isSubmitting}
               className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? 'جاري الإضافة...' : 'إضافة التكامل'}
+              {isSubmitting ? t.loading + '...' : t.add || 'Add'}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              إلغاء
+              {t.cancel || 'Cancel'}
             </button>
           </div>
         </form>
@@ -470,13 +479,15 @@ const IntegrationSettingsModal: React.FC<{
   integration: Integration;
   onClose: () => void;
   onUpdate: () => void;
-}> = ({ integration, onClose }) => {
+  language: string;
+  t: Translation;
+}> = ({ integration, onClose, language, t }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">إعدادات التكامل</h2>
+            <h2 className="text-xl font-semibold">{t.integrationSettings || 'Integration Settings'}</h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -487,17 +498,20 @@ const IntegrationSettingsModal: React.FC<{
         </div>
 
         <div className="p-6">
-          <div className="text-center py-8">
+        <div className="text-center py-8">
             <div className="text-6xl mb-4">⚙️</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">إعدادات التكامل</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t.integrationSettings || 'Integration Settings'}</h3>
             <p className="text-gray-600 mb-6">
-              إعدادات تفصيلية لتكامل {integration.name} ستكون متاحة قريباً
+              {language === 'ar' 
+                ? `إعدادات تفصيلية لتكامل ${integration.name} ستكون متاحة قريباً`
+                : `Detailed settings for ${integration.name} will be available soon`
+              }
             </p>
             <button
               onClick={onClose}
               className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
             >
-              إغلاق
+              {t.close || 'Close'}
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../i18n/useLanguage';
+import { hybridService } from '../services/HybridService';
 
 interface DataStorageIndicatorProps {
   className?: string;
@@ -7,46 +8,42 @@ interface DataStorageIndicatorProps {
 
 const DataStorageIndicator: React.FC<DataStorageIndicatorProps> = ({ className = '' }) => {
   const { language } = useLanguage();
-  const [storageType, setStorageType] = useState<'local' | 'database' | 'checking'>('checking');
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'local' | 'disconnected' | 'checking'>('checking');
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
   useEffect(() => {
-    checkStorageType();
+    checkConnectionStatus();
     // Check every 30 seconds
-    const interval = setInterval(checkStorageType, 30000);
+    const interval = setInterval(checkConnectionStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const checkStorageType = async () => {
+  const checkConnectionStatus = async () => {
     try {
-      // Try to ping the API server using ApiService
-      const { apiService } = await import('../services/ApiService');
-      const isAvailable = await apiService.isApiAvailable();
+      const status = await hybridService.getConnectionStatus();
+      setConnectionStatus(status);
       
-      if (isAvailable) {
-        setStorageType('database');
+      if (status === 'connected') {
         setLastSync(new Date());
-      } else {
-        setStorageType('local');
       }
     } catch {
-      // API server not available, using localStorage
-      setStorageType('local');
+      // Fallback to disconnected
+      setConnectionStatus('disconnected');
     }
   };
 
   const getIndicatorContent = () => {
-    switch (storageType) {
-      case 'database':
+    switch (connectionStatus) {
+      case 'connected':
         return {
           icon: '🗄️',
-          text: 'Database',
-          textAr: 'قاعدة البيانات',
+          text: 'Database Connected',
+          textAr: 'متصل بقاعدة البيانات',
           color: 'bg-green-500',
           textColor: 'text-green-700',
           bgColor: 'bg-green-50',
-          description: 'Data stored in SQL database',
-          descriptionAr: 'البيانات محفوظة في قاعدة البيانات SQL'
+          description: 'Connected to API server - Data synced with SQL database',
+          descriptionAr: 'متصل بالخادم - البيانات محفوظة في قاعدة البيانات SQL'
         };
       case 'local':
         return {
@@ -56,8 +53,19 @@ const DataStorageIndicator: React.FC<DataStorageIndicatorProps> = ({ className =
           color: 'bg-yellow-500',
           textColor: 'text-yellow-700',
           bgColor: 'bg-yellow-50',
-          description: 'Data stored in browser only',
-          descriptionAr: 'البيانات محفوظة في المتصفح فقط'
+          description: 'API server offline - Data stored locally in browser',
+          descriptionAr: 'الخادم غير متصل - البيانات محفوظة محلياً في المتصفح'
+        };
+      case 'disconnected':
+        return {
+          icon: '❌',
+          text: 'Disconnected',
+          textAr: 'غير متصل',
+          color: 'bg-red-500',
+          textColor: 'text-red-700',
+          bgColor: 'bg-red-50',
+          description: 'No connection - No data available',
+          descriptionAr: 'لا يوجد اتصال - لا توجد بيانات متاحة'
         };
       case 'checking':
         return {
@@ -78,12 +86,12 @@ const DataStorageIndicator: React.FC<DataStorageIndicatorProps> = ({ className =
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${indicator.bgColor} border border-gray-200`}>
-        <div className={`w-2 h-2 rounded-full ${indicator.color} ${storageType === 'checking' ? 'animate-pulse' : ''}`}></div>
+        <div className={`w-2 h-2 rounded-full ${indicator.color} ${connectionStatus === 'checking' ? 'animate-pulse' : ''}`}></div>
         <span className="text-sm">{indicator.icon}</span>
         <span className={`text-sm font-medium ${indicator.textColor}`}>
           {language === 'ar' ? indicator.textAr : indicator.text}
         </span>
-        {lastSync && storageType === 'database' && (
+        {lastSync && connectionStatus === 'connected' && (
           <span className="text-xs text-gray-500">
             ({lastSync.toLocaleTimeString()})
           </span>

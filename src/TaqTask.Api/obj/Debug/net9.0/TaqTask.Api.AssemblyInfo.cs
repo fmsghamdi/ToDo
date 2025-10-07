@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TaqTask.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cba11b80fb70b1a83bcf4e271a4be7c10d7a1955")]
 [assembly: System.Reflection.AssemblyProductAttribute("TaqTask.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TaqTask.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

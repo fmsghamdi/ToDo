@@ -1,0 +1,338 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using TaqTask.Api.Data;
+using TaqTask.Api.Models;
+
+namespace TaqTask.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class ColumnsController : ControllerBase
+{
+    private readonly ToDoOSContext _context;
+
+    public ColumnsController(ToDoOSContext context)
+    {
+        _context = context;
+    }
+
+    // GET: api/columns
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<BoardColumn>>> GetColumns()
+    {
+        return await _context.Columns
+            .Include(c => c.Board)
+            .Include(c => c.Cards)
+            .OrderBy(c => c.BoardId)
+            .ThenBy(c => c.Position)
+            .ToListAsync();
+    }
+
+    // GET: api/columns/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<BoardColumn>> GetColumn(int id)
+    {
+        var column = await _context.Columns
+            .Include(c => c.Board)
+            .Include(c => c.Cards)
+                .ThenInclude(card => card.Creator)
+            .Include(c => c.Cards)
+                .ThenInclude(card => card.AssignedUser)
+            .Include(c => c.Cards)
+                .ThenInclude(card => card.Members)
+                    .ThenInclude(cm => cm.User)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (column == null)
+        {
+            return NotFound();
+        }
+
+        return column;
+    }
+
+    // GET: api/columns/board/5
+    [HttpGet("board/{boardId}")]
+    public async Task<ActionResult<IEnumerable<BoardColumn>>> GetColumnsByBoard(int boardId)
+    {
+        return await _context.Columns
+            .Where(c => c.BoardId == boardId)
+            .Include(c => c.Cards)
+                .ThenInclude(card => card.Creator)
+            .Include(c => c.Cards)
+                .ThenInclude(card => card.AssignedUser)
+            .Include(c => c.Cards)
+                .ThenInclude(card => card.Members)
+                    .ThenInclude(cm => cm.User)
+            .OrderBy(c => c.Position)
+            .ToListAsync();
+    }
+
+    // POST: api/columns
+    [HttpPost]
+    public async Task<ActionResult<BoardColumn>> PostColumn(CreateColumnRequest request)
+    {
+        // Check if board exists
+        var board = await _context.Boards.FindAsync(request.BoardId);
+        if (board == null)
+        {
+            return BadRequest("Board not found");
+        }
+
+        // Get the next position
+        var maxPosition = await _context.Columns
+            .Where(c => c.BoardId == request.BoardId)
+            .MaxAsync(c => (int?)c.Position) ?? 0;
+
+        var column = new BoardColumn
+        {
+            BoardId = request.BoardId,
+            Title = request.Title,
+            Position = request.Position ?? (maxPosition + 1),
+            Color = request.Color ?? "#6B7280",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Columns.Add(column);
+        await _context.SaveChangesAsync();
+
+        // Log activity
+        var activity = new Activity
+        {
+            BoardId = column.BoardId,
+            UserId = GetCurrentUserId(),
+            Type = "column_created",
+            Message = $"Created column '{column.Title}'",
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Activities.Add(activity);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetColumn), new { id = column.Id }, column);
+    }
+
+    // PUT: api/columns/5
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutColumn(int id, UpdateColumnRequest request)
+    {
+        var column = await _context.Columns.FindAsync(id);
+        if (column == null)
+        {
+            return NotFound();
+        }
+
+        var oldTitle = column.Title;
+        var oldPosition = column.Position;
+
+        // Update column properties
+        if (!string.IsNullOrEmpty(request.Title))
+            column.Title = request.Title;
+
+        if (request.Position.HasValue && request.Position.Value != column.Position)
+        {
+            await ReorderColumns(column.BoardId, column.Position, request.Position.Value);
+            column.Position = request.Position.Value;
+        }
+
+        if (!string.IsNullOrEmpty(request.Color))
+            column.Color = request.Color;
+
+        column.UpdatedAt = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+
+            // Log activity for significant changes
+            if (oldTitle != column.Title)
+            {
+                var activity = new Activity
+                {
+                    BoardId = column.BoardId,
+                    UserId = GetCurrentUserId(),
+                    Type = "column_updated",
+                    Message = $"Updated column title from '{oldTitle}' to '{column.Title}'",
+                    OldValue = oldTitle,
+                    NewValue = column.Title,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Activities.Add(activity);
+            }
+
+            if (oldPosition != column.Position)
+            {
+                var activity = new Activity
+                {
+                    BoardId = column.BoardId,
+                    UserId = GetCurrentUserId(),
+                    Type = "column_moved",
+                    Message = $"Moved column '{column.Title}' from position {oldPosition} to {column.Position}",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Activities.Add(activity);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ColumnExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+
+    // DELETE: api/columns/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteColumn(int id)
+    {
+        var column = await _context.Columns
+            .Include(c => c.Cards)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (column == null)
+        {
+            return NotFound();
+        }
+
+        // Check if column has cards
+        if (column.Cards.Any())
+        {
+            return BadRequest("Cannot delete column with existing cards. Please move or delete all cards first.");
+        }
+
+        // Update positions of remaining columns
+        var columnsToUpdate = await _context.Columns
+            .Where(c => c.BoardId == column.BoardId && c.Position > column.Position)
+            .ToListAsync();
+
+        foreach (var col in columnsToUpdate)
+        {
+            col.Position--;
+            col.UpdatedAt = DateTime.UtcNow;
+        }
+
+        _context.Columns.Remove(column);
+
+        // Log activity
+        var activity = new Activity
+        {
+            BoardId = column.BoardId,
+            UserId = GetCurrentUserId(),
+            Type = "column_deleted",
+            Message = $"Deleted column '{column.Title}'",
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Activities.Add(activity);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // POST: api/columns/5/reorder
+    [HttpPost("{id}/reorder")]
+    public async Task<IActionResult> ReorderColumn(int id, ReorderColumnRequest request)
+    {
+        var column = await _context.Columns.FindAsync(id);
+        if (column == null)
+        {
+            return NotFound();
+        }
+
+        if (request.NewPosition == column.Position)
+        {
+            return NoContent(); // No change needed
+        }
+
+        await ReorderColumns(column.BoardId, column.Position, request.NewPosition);
+        
+        column.Position = request.NewPosition;
+        column.UpdatedAt = DateTime.UtcNow;
+
+        // Log activity
+        var activity = new Activity
+        {
+            BoardId = column.BoardId,
+            UserId = GetCurrentUserId(),
+            Type = "column_reordered",
+            Message = $"Reordered column '{column.Title}' to position {request.NewPosition}",
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Activities.Add(activity);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private async Task ReorderColumns(int boardId, int oldPosition, int newPosition)
+    {
+        if (oldPosition == newPosition) return;
+
+        var columns = await _context.Columns
+            .Where(c => c.BoardId == boardId)
+            .ToListAsync();
+
+        if (oldPosition < newPosition)
+        {
+            // Moving right - shift columns left
+            foreach (var col in columns.Where(c => c.Position > oldPosition && c.Position <= newPosition))
+            {
+                col.Position--;
+                col.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        else
+        {
+            // Moving left - shift columns right
+            foreach (var col in columns.Where(c => c.Position >= newPosition && c.Position < oldPosition))
+            {
+                col.Position++;
+                col.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+    }
+
+    private bool ColumnExists(int id)
+    {
+        return _context.Columns.Any(e => e.Id == id);
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return int.TryParse(userIdClaim, out var userId) ? userId : 1; // Default to admin if not found
+    }
+}
+
+// DTOs for Columns
+public class CreateColumnRequest
+{
+    public int BoardId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public int? Position { get; set; }
+    public string? Color { get; set; }
+}
+
+public class UpdateColumnRequest
+{
+    public string? Title { get; set; }
+    public int? Position { get; set; }
+    public string? Color { get; set; }
+}
+
+public class ReorderColumnRequest
+{
+    public int NewPosition { get; set; }
+}

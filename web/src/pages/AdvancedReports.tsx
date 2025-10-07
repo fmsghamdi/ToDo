@@ -130,7 +130,7 @@ const AdvancedReports: React.FC<AdvancedReportsProps> = ({ boards }) => {
         };
       }).sort((a, b) => b.completionRate - a.completionRate)
     };
-  }, [boards, selectedBoard, dateRange, getAllCards]);
+  }, [boards, dateRange, getAllCards]);
 
   // Daily progress data for charts
   const dailyProgressData = useMemo(() => {
@@ -166,7 +166,7 @@ const AdvancedReports: React.FC<AdvancedReportsProps> = ({ boards }) => {
     }
     
     return data;
-  }, [boards, selectedBoard, dateRange]);
+  }, [boards, dateRange, getAllCards]);
 
   // Generate Word document content
   const generateWordContent = () => {

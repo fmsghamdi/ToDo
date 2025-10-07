@@ -331,8 +331,6 @@ export interface Translation {
   disableIntegration: string;
   integrationSettings: string;
   connectionStatus: string;
-  connected: string;
-  disconnected: string;
   testIntegration: string;
   
   // Workflows
@@ -366,6 +364,32 @@ export interface Translation {
   overdue: string;
   needsAttention: string;
   avgPerTask: string;
+
+  // Workflow specific translations
+  totalWorkflows: string;
+  activeWorkflows: string;
+  totalExecutions: string;
+  successfulExecutions: string;
+  failedExecutions: string;
+  noWorkflowsYet: string;
+  startWorkflow: string;
+
+  // Integration specific translations
+  totalIntegrations: string;
+  activeIntegrations: string;
+  syncErrors: string;
+  sync: string;
+  lastSync: string;
+  none: string;
+  noIntegrationsYet: string;
+  startIntegration: string;
+  addIntegration: string;
+  connected: string;
+  disconnected: string;
+  createdAt: string;
+  settings: string;
+  integrationType: string;
+  integrationName: string;
 }
 
 export const translations: Record<'ar' | 'en', Translation> = {
@@ -697,8 +721,6 @@ export const translations: Record<'ar' | 'en', Translation> = {
     disableIntegration: 'إلغاء تفعيل التكامل',
     integrationSettings: 'إعدادات التكامل',
     connectionStatus: 'حالة الاتصال',
-    connected: 'متصل',
-    disconnected: 'غير متصل',
     testIntegration: 'اختبار التكامل',
     
     // Workflows - Arabic
@@ -731,7 +753,33 @@ export const translations: Record<'ar' | 'en', Translation> = {
     completionRate: 'معدل الإنجاز',
     overdue: 'متأخرة',
     needsAttention: 'تحتاج انتباه',
-    avgPerTask: 'متوسط لكل مهمة'
+    avgPerTask: 'متوسط لكل مهمة',
+
+    // Workflow specific translations - Arabic
+    totalWorkflows: 'إجمالي سير العمل',
+    activeWorkflows: 'النشطة',
+    totalExecutions: 'إجمالي التنفيذ',
+    successfulExecutions: 'نجح',
+    failedExecutions: 'فشل',
+    noWorkflowsYet: 'لا يوجد سير عمل بعد',
+    startWorkflow: 'ابدأ بإنشاء سير عمل جديد أو استخدم القوالب الجاهزة',
+
+    // Integration specific translations - Arabic
+    totalIntegrations: 'إجمالي التكاملات',
+    activeIntegrations: 'التكاملات النشطة',
+    syncErrors: 'أخطاء المزامنة',
+    sync: 'مزامنة',
+    lastSync: 'آخر مزامنة',
+    none: 'لا يوجد',
+    noIntegrationsYet: 'لا توجد تكاملات',
+    startIntegration: 'ابدأ بإضافة تكامل جديد لربط ToDoOS مع الخدمات الخارجية',
+    addIntegration: 'إضافة تكامل جديد',
+    connected: 'متصل',
+    disconnected: 'غير متصل',
+    createdAt: 'تم الإنشاء',
+    settings: 'إعدادات',
+    integrationType: 'نوع التكامل',
+    integrationName: 'اسم التكامل'
   },
   en: {
     // Navigation
@@ -1061,8 +1109,6 @@ export const translations: Record<'ar' | 'en', Translation> = {
     disableIntegration: 'Disable Integration',
     integrationSettings: 'Integration Settings',
     connectionStatus: 'Connection Status',
-    connected: 'Connected',
-    disconnected: 'Disconnected',
     testIntegration: 'Test Integration',
     
     // Workflows - English
@@ -1095,6 +1141,32 @@ export const translations: Record<'ar' | 'en', Translation> = {
     completionRate: 'Completion Rate',
     overdue: 'Overdue',
     needsAttention: 'Needs Attention',
-    avgPerTask: 'Avg per Task'
+    avgPerTask: 'Avg per Task',
+
+    // Workflow specific translations - English
+    totalWorkflows: 'Total Workflows',
+    activeWorkflows: 'Active',
+    totalExecutions: 'Total Executions',
+    successfulExecutions: 'Successful',
+    failedExecutions: 'Failed',
+    noWorkflowsYet: 'No Workflows Yet',
+    startWorkflow: 'Start creating a new workflow or use the ready-made templates',
+
+    // Integration specific translations - English
+    totalIntegrations: 'Total Integrations',
+    activeIntegrations: 'Active Integrations',
+    syncErrors: 'Sync Errors',
+    sync: 'Sync',
+    lastSync: 'Last Sync',
+    none: 'None',
+    noIntegrationsYet: 'No Integrations',
+    startIntegration: 'Start adding a new integration to connect ToDoOS with external services',
+    addIntegration: 'Add New Integration',
+    connected: 'Connected',
+    disconnected: 'Disconnected',
+    createdAt: 'Created At',
+    settings: 'Settings',
+    integrationType: 'Integration Type',
+    integrationName: 'Integration Name'
   }
 };
