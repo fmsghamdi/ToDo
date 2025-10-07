@@ -10,9 +10,38 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Add Entity Framework
+// Add Entity Framework with Database Provider Selection
+var dbProvider = builder.Configuration.GetValue<string>("Database:Provider") ?? "MySQL";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
 builder.Services.AddDbContext<ToDoOSContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    switch (dbProvider.ToLower())
+    {
+        case "mysql":
+            var serverVersion = new MySqlServerVersion(new Version(8, 0, 35));
+            options.UseMySql(connectionString, serverVersion);
+            break;
+        case "postgresql":
+            options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQLConnection"));
+            break;
+        case "sqlserver":
+            options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServerConnection"));
+            break;
+        default:
+            // Default to MySQL
+            var defaultServerVersion = new MySqlServerVersion(new Version(8, 0, 35));
+            options.UseMySql(connectionString, defaultServerVersion);
+            break;
+    }
+    
+    // Enable sensitive data logging in development
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
