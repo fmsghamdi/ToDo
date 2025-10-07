@@ -38,9 +38,36 @@ export interface IntegrationConfig {
     refreshToken: string;
     syncTasks: boolean;
     syncDeadlines: boolean;
+    createEvents: boolean;
   };
 
-  // Cloud Storage
+  // Google Drive
+  googleDrive?: {
+    accessToken: string;
+    refreshToken: string;
+    folderId: string;
+    autoUpload: boolean;
+    syncAttachments: boolean;
+  };
+
+  // Dropbox
+  dropbox?: {
+    accessToken: string;
+    folderPath: string;
+    autoUpload: boolean;
+    syncAttachments: boolean;
+  };
+
+  // OneDrive
+  onedrive?: {
+    accessToken: string;
+    refreshToken: string;
+    folderPath: string;
+    autoUpload: boolean;
+    syncAttachments: boolean;
+  };
+
+  // Cloud Storage (Generic - kept for backward compatibility)
   cloudStorage?: {
     accessToken: string;
     refreshToken: string;
@@ -60,13 +87,19 @@ export interface IntegrationConfig {
 
   // Email
   email?: {
+    smtpServer: string;
     smtpHost: string;
     smtpPort: number;
     username: string;
     password: string;
     fromEmail: string;
+    fromName: string;
+    useTLS: boolean;
     createTasksFromEmail: boolean;
     emailNotifications: boolean;
+    notifyOnTaskCreate: boolean;
+    notifyOnTaskComplete: boolean;
+    notifyOnDeadline: boolean;
   };
 
   // Webhook

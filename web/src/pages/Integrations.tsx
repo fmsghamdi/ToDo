@@ -292,7 +292,9 @@ const AddIntegrationModal: React.FC<{
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Access Token</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رمز الوصول (Access Token)' : 'Access Token'}
+              </label>
               <input
                 type="text"
                 placeholder="Google Calendar Access Token"
@@ -300,7 +302,6 @@ const AddIntegrationModal: React.FC<{
                 onChange={(e) => setConfig({
                   ...config,
                   googleCalendar: { 
-                    ...config.googleCalendar,
                     accessToken: e.target.value,
                     refreshToken: '',
                     calendarId: 'primary',
@@ -311,6 +312,230 @@ const AddIntegrationModal: React.FC<{
                 })}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'معرف التقويم' : 'Calendar ID'}
+              </label>
+              <input
+                type="text"
+                placeholder="primary"
+                defaultValue="primary"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  googleCalendar: { 
+                    ...config.googleCalendar,
+                    accessToken: config.googleCalendar?.accessToken || '',
+                    refreshToken: '',
+                    calendarId: e.target.value,
+                    syncTasks: true,
+                    syncDeadlines: true,
+                    createEvents: true
+                  }
+                })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المهام' : 'Sync Tasks'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المواعيد النهائية' : 'Sync Deadlines'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إنشاء أحداث تلقائياً' : 'Create Events Automatically'}</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case 'outlook_calendar':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رمز الوصول (Access Token)' : 'Access Token'}
+              </label>
+              <input
+                type="text"
+                placeholder="Outlook Calendar Access Token"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  outlookCalendar: { 
+                    accessToken: e.target.value,
+                    refreshToken: '',
+                    calendarId: 'primary',
+                    syncTasks: true,
+                    syncDeadlines: true,
+                    createEvents: true
+                  }
+                })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+              </label>
+              <input
+                type="email"
+                placeholder="user@outlook.com"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المهام' : 'Sync Tasks'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المواعيد النهائية' : 'Sync Deadlines'}</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case 'google_drive':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رمز الوصول (Access Token)' : 'Access Token'}
+              </label>
+              <input
+                type="text"
+                placeholder="Google Drive Access Token"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  googleDrive: {
+                    accessToken: e.target.value,
+                    refreshToken: '',
+                    folderId: 'root',
+                    autoUpload: true,
+                    syncAttachments: true
+                  }
+                })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'معرف المجلد' : 'Folder ID'}
+              </label>
+              <input
+                type="text"
+                placeholder="root"
+                defaultValue="root"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'رفع تلقائي' : 'Auto Upload'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المرفقات' : 'Sync Attachments'}</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case 'dropbox':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رمز الوصول (Access Token)' : 'Access Token'}
+              </label>
+              <input
+                type="text"
+                placeholder="Dropbox Access Token"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  dropbox: {
+                    accessToken: e.target.value,
+                    folderPath: '/ToDoOS',
+                    autoUpload: true,
+                    syncAttachments: true
+                  }
+                })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'مسار المجلد' : 'Folder Path'}
+              </label>
+              <input
+                type="text"
+                placeholder="/ToDoOS"
+                defaultValue="/ToDoOS"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'رفع تلقائي' : 'Auto Upload'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المرفقات' : 'Sync Attachments'}</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case 'onedrive':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رمز الوصول (Access Token)' : 'Access Token'}
+              </label>
+              <input
+                type="text"
+                placeholder="OneDrive Access Token"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  onedrive: {
+                    accessToken: e.target.value,
+                    refreshToken: '',
+                    folderPath: '/ToDoOS',
+                    autoUpload: true,
+                    syncAttachments: true
+                  }
+                })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'مسار المجلد' : 'Folder Path'}
+              </label>
+              <input
+                type="text"
+                placeholder="/ToDoOS"
+                defaultValue="/ToDoOS"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'رفع تلقائي' : 'Auto Upload'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'مزامنة المرفقات' : 'Sync Attachments'}</span>
+              </label>
+            </div>
           </div>
         );
 
@@ -318,7 +543,9 @@ const AddIntegrationModal: React.FC<{
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Webhook URL</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رابط Webhook' : 'Webhook URL'}
+              </label>
               <input
                 type="url"
                 placeholder="https://hooks.slack.com/services/..."
@@ -336,10 +563,13 @@ const AddIntegrationModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Channel</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'القناة' : 'Channel'}
+              </label>
               <input
                 type="text"
                 placeholder="#general"
+                defaultValue="#general"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 onChange={(e) => setConfig({
                   ...config,
@@ -353,6 +583,117 @@ const AddIntegrationModal: React.FC<{
                 })}
               />
             </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إشعار عند إنشاء مهمة' : 'Notify on Task Create'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إشعار عند إكمال مهمة' : 'Notify on Task Complete'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إشعار عند اقتراب الموعد النهائي' : 'Notify on Deadline'}</span>
+              </label>
+            </div>
+          </div>
+        );
+
+      case 'email':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'خادم SMTP' : 'SMTP Server'}
+              </label>
+              <input
+                type="text"
+                placeholder="smtp.gmail.com"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  email: {
+                    smtpServer: e.target.value,
+                    smtpHost: e.target.value,
+                    smtpPort: 587,
+                    username: '',
+                    password: '',
+                    fromEmail: '',
+                    fromName: 'ToDoOS',
+                    useTLS: true,
+                    createTasksFromEmail: false,
+                    emailNotifications: true,
+                    notifyOnTaskCreate: true,
+                    notifyOnTaskComplete: true,
+                    notifyOnDeadline: true
+                  }
+                })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {language === 'ar' ? 'المنفذ' : 'Port'}
+                </label>
+                <input
+                  type="number"
+                  placeholder="587"
+                  defaultValue="587"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 h-full pt-8">
+                  <input type="checkbox" defaultChecked className="rounded" />
+                  <span className="text-sm">{language === 'ar' ? 'استخدام TLS' : 'Use TLS'}</span>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'اسم المستخدم' : 'Username'}
+              </label>
+              <input
+                type="text"
+                placeholder="user@example.com"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'كلمة المرور' : 'Password'}
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'البريد الإلكتروني المرسل' : 'From Email'}
+              </label>
+              <input
+                type="email"
+                placeholder="notifications@todoos.com"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إشعار عند إنشاء مهمة' : 'Notify on Task Create'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إشعار عند إكمال مهمة' : 'Notify on Task Complete'}</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="rounded" />
+                <span className="text-sm">{language === 'ar' ? 'إشعار عند اقتراب الموعد النهائي' : 'Notify on Deadline'}</span>
+              </label>
+            </div>
           </div>
         );
 
@@ -360,7 +701,9 @@ const AddIntegrationModal: React.FC<{
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Webhook URL</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'رابط Webhook' : 'Webhook URL'}
+              </label>
               <input
                 type="url"
                 placeholder="https://your-webhook-url.com/endpoint"
@@ -368,7 +711,6 @@ const AddIntegrationModal: React.FC<{
                 onChange={(e) => setConfig({
                   ...config,
                   webhook: {
-                    ...config.webhook,
                     url: e.target.value,
                     secret: '',
                     events: ['task_created', 'task_completed']
@@ -376,15 +718,52 @@ const AddIntegrationModal: React.FC<{
                 })}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'المفتاح السري (اختياري)' : 'Secret Key (Optional)'}
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                onChange={(e) => setConfig({
+                  ...config,
+                  webhook: {
+                    url: config.webhook?.url || '',
+                    secret: e.target.value,
+                    events: config.webhook?.events || ['task_created', 'task_completed']
+                  }
+                })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {language === 'ar' ? 'الأحداث' : 'Events'}
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked className="rounded" />
+                  <span className="text-sm">{language === 'ar' ? 'إنشاء مهمة' : 'Task Created'}</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" defaultChecked className="rounded" />
+                  <span className="text-sm">{language === 'ar' ? 'إكمال مهمة' : 'Task Completed'}</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" className="rounded" />
+                  <span className="text-sm">{language === 'ar' ? 'تحديث مهمة' : 'Task Updated'}</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" className="rounded" />
+                  <span className="text-sm">{language === 'ar' ? 'حذف مهمة' : 'Task Deleted'}</span>
+                </label>
+              </div>
+            </div>
           </div>
         );
 
       default:
-        return (
-          <div className="text-center py-8 text-gray-500">
-            <p>إعدادات هذا النوع من التكامل ستكون متاحة قريباً</p>
-          </div>
-        );
+        return null;
     }
   };
 
