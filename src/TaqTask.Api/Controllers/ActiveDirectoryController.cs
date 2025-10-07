@@ -206,22 +206,63 @@ namespace TaqTask.Api.Controllers
         // Helper methods
         private LdapConnection CreateLdapConnection(ADConfigDto config)
         {
-            var identifier = new LdapDirectoryIdentifier(config.ServerUrl, config.UseSSL ? 636 : 389);
-            var connection = new LdapConnection(identifier)
+            try
             {
-                AuthType = AuthType.Basic
-            };
+                _logger.LogInformation($"Creating LDAP connection to {config.ServerUrl}:{(config.UseSSL ? 636 : 389)}");
+                
+                var identifier = new LdapDirectoryIdentifier(config.ServerUrl, config.UseSSL ? 636 : 389);
+                var connection = new LdapConnection(identifier)
+                {
+                    AuthType = AuthType.Basic,
+                    Timeout = TimeSpan.FromSeconds(30)
+                };
 
-            if (config.UseSSL)
-            {
-                connection.SessionOptions.SecureSocketLayer = true;
-                connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
+                if (config.UseSSL)
+                {
+                    connection.SessionOptions.SecureSocketLayer = true;
+                    connection.SessionOptions.VerifyServerCertificate = (conn, cert) => true;
+                }
+                else
+                {
+                    // For non-SSL, set protocol version
+                    connection.SessionOptions.ProtocolVersion = 3;
+                }
+
+                // Try different credential formats
+                NetworkCredential credentials;
+                
+                // If username already contains @domain, use it as-is
+                if (config.BindUsername.Contains("@"))
+                {
+                    _logger.LogInformation($"Using UPN format: {config.BindUsername}");
+                    credentials = new NetworkCredential(config.BindUsername, config.BindPassword);
+                }
+                // If username contains backslash (DOMAIN\user), use it as-is
+                else if (config.BindUsername.Contains("\\"))
+                {
+                    _logger.LogInformation($"Using DOMAIN\\user format: {config.BindUsername}");
+                    credentials = new NetworkCredential(config.BindUsername, config.BindPassword);
+                }
+                // Otherwise, try UPN format (user@domain)
+                else
+                {
+                    var upn = config.BindUsername.EndsWith($".{config.Domain}") 
+                        ? config.BindUsername 
+                        : $"{config.BindUsername}@{config.Domain}";
+                    _logger.LogInformation($"Constructed UPN: {upn}");
+                    credentials = new NetworkCredential(upn, config.BindPassword);
+                }
+                
+                connection.Credential = credentials;
+
+                _logger.LogInformation("LDAP connection created successfully");
+                return connection;
             }
-
-            var credentials = new NetworkCredential(config.BindUsername, config.BindPassword, config.Domain);
-            connection.Credential = credentials;
-
-            return connection;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create LDAP connection");
+                throw;
+            }
         }
 
         private string BuildSearchFilter(string searchQuery)
