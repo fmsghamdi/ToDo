@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TaqTask.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+afbf097579f2a6945d8cff3b724c865905d5ab6c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b51c26a1fc662841050c5534c27704561dadee1f")]
 [assembly: System.Reflection.AssemblyProductAttribute("TaqTask.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TaqTask.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

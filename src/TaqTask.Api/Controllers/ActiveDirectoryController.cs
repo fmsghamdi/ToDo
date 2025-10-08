@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Novell.Directory.Ldap;
+using System.Net.Sockets;
+using System.Text.Json;
 
 namespace TaqTask.Api.Controllers
 {
@@ -22,30 +24,85 @@ namespace TaqTask.Api.Controllers
         [HttpPost("test-connection")]
         public async Task<IActionResult> TestConnection([FromBody] ADConfigDto config)
         {
+            _logger.LogInformation($"Starting AD connection test with config: {JsonSerializer.Serialize(config)}");
+            
             try
             {
-                using var connection = new LdapConnection();
-                connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
-                
-                if (config.UseSSL)
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(config.ServerUrl))
                 {
-                    connection.SecureSocketLayer = true;
+                    return Ok(new { 
+                        success = false, 
+                        message = "Server URL is required" 
+                    });
                 }
                 
-                var bindDn = FormatBindDn(config);
-                connection.Bind(bindDn, config.BindPassword);
+                if (string.IsNullOrWhiteSpace(config.Domain))
+                {
+                    return Ok(new { 
+                        success = false, 
+                        message = "Domain is required" 
+                    });
+                }
                 
+                var port = config.UseSSL ? 636 : 389;
+                _logger.LogInformation($"Attempting to connect to: {config.ServerUrl}:{port}");
+                
+                using var connection = new LdapConnection();
+                
+                try
+                {
+                    // Set timeout
+                    connection.ConnectionTimeout = 10000; // 10 seconds
+                    
+                    // Connect to server
+                    connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
+                    
+                    if (config.UseSSL)
+                    {
+                        _logger.LogInformation("Enabling SSL...");
+                        connection.SecureSocketLayer = true;
+                    }
+                    
+                    _logger.LogInformation("Connected successfully, attempting to bind...");
+                    
+                    var bindDn = FormatBindDn(config);
+                    _logger.LogInformation($"Binding with DN: {bindDn}");
+                    
+                    connection.Bind(bindDn, config.BindPassword);
+                    
+                    _logger.LogInformation("Bind successful!");
+                    
+                    return Ok(new { 
+                        success = true, 
+                        message = $"Successfully connected to {config.Domain}" 
+                    });
+                }
+                catch (LdapException ldapEx)
+                {
+                    _logger.LogError(ldapEx, "LDAP Exception occurred");
+                    return Ok(new { 
+                        success = false, 
+                        message = $"LDAP Error: {ldapEx.Message} (Code: {ldapEx.ResultCode})" 
+                    });
+                }
+            }
+            catch (SocketException socketEx)
+            {
+                _logger.LogError(socketEx, "Socket Exception occurred");
+                var port = config.UseSSL ? 636 : 389;
                 return Ok(new { 
-                    success = true, 
-                    message = $"Successfully connected to {config.Domain}" 
+                    success = false, 
+                    message = $"Connection Error: Unable to connect to {config.ServerUrl}:{port}. Please check:\n1. Server address is correct\n2. Firewall allows port {port}\n3. LDAP service is running" 
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "AD connection test failed");
+                var port = config.UseSSL ? 636 : 389;
                 return Ok(new { 
                     success = false, 
-                    message = $"Connection failed: {ex.Message}" 
+                    message = $"Connection failed: {ex.Message}\n\nTroubleshooting tips:\n1. Check server address\n2. Verify port {port} is open\n3. Check if LDAP service is running\n4. Verify credentials" 
                 });
             }
         }
