@@ -6,6 +6,7 @@ namespace TaqTask.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [AllowAnonymous]
     public class ActiveDirectoryController : ControllerBase
     {
         private readonly ILogger<ActiveDirectoryController> _logger;

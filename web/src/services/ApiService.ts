@@ -61,8 +61,17 @@ class ApiService {
   private token: string | null = null;
 
   constructor() {
-    // Try to detect if API server is running locally
-    this.baseUrl = 'http://localhost:5000/api';
+    // Try to detect environment and set appropriate URL
+    const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.startsWith('192.168.');
+    
+    if (isProduction) {
+      // In production, API should be on the same domain via Nginx
+      this.baseUrl = '/api';
+    } else {
+      // For local development, try multiple possible URLs
+      this.baseUrl = 'http://localhost:5000/api';
+    }
+    
     this.token = localStorage.getItem('authToken');
   }
 

@@ -69,11 +69,11 @@
             },
             "Microsoft.Data.SqlClient": {
               "target": "Package",
-              "version": "[5.1.5, )"
+              "version": "[5.1.6, )"
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[9.0.1, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "target": "Package",
@@ -89,19 +89,15 @@
             },
             "MySqlConnector": {
               "target": "Package",
-              "version": "[2.3.7, )"
+              "version": "[2.4.0, )"
             },
             "Novell.Directory.Ldap.NETStandard": {
               "target": "Package",
               "version": "[3.6.0, )"
             },
-            "Npgsql.EntityFrameworkCore.PostgreSQL": {
-              "target": "Package",
-              "version": "[9.0.1, )"
-            },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
-              "version": "[8.0.2, )"
+              "version": "[9.0.0, )"
             }
           },
           "imports": [

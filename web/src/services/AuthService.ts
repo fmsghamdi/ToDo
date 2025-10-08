@@ -59,26 +59,35 @@ class AuthService {
   // Test AD connection
   async testADConnection(config: ADConfig): Promise<{ success: boolean; message: string }> {
     try {
-      // Simulate AD connection test
-      // In real implementation, this would connect to AD server
       console.log('Testing AD connection with config:', config);
       
       if (!config.domain || !config.serverUrl) {
         return { success: false, message: 'Domain and Server URL are required' };
       }
 
-      // Simulate network call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call real API endpoint
+      const response = await fetch('/api/ActiveDirectory/test-connection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(config)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('AD connection test result:', result);
       
-      // Mock successful connection
-      return { 
-        success: true, 
-        message: `Successfully connected to ${config.domain}` 
-      };
+      return result;
     } catch (error) {
+      console.error('AD connection test failed:', error);
       return { 
         success: false, 
-        message: `Connection failed: ${error}` 
+        message: `Connection failed: ${error instanceof Error ? error.message : String(error)}` 
       };
     }
   }
