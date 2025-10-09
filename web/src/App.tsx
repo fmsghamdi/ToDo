@@ -17,6 +17,7 @@ import CalendarView from "./pages/CalendarView";
 import SystemSettings from "./pages/SystemSettings";
 import BoardManager from "./components/BoardManager";
 import LanguageSwitcher from "./components/LanguageSwitcher";
+import Logo from "./components/Logo";
 import type { User, Permission } from "./UserTypes";
 import { DEFAULT_ADMIN_PERMISSIONS } from "./UserTypes";
 import type { Chat, Message } from "./ChatTypes";
@@ -700,233 +701,246 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header / Nav */}
-      <header className="header-gradient fixed top-0 left-0 right-0 z-50 shadow-sm border-b border-green-700">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🇸🇦</span>
-              <span className="font-bold text-lg text-white">ToDoOS</span>
-            </div>
-            <nav className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-2xl p-2">
-              {hasPermission("view_board") && (
-                <button
-                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                    view === "board" 
-                      ? "bg-white text-green-700 shadow-lg scale-105" 
-                      : "text-white hover:bg-white/20"
-                  }`}
-                  onClick={() => setView("board")}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg">📋</span>
-                    <span className="text-xs">{language === 'en' ? 'Board' : 'اللوحة'}</span>
-                  </div>
-                  {view === "board" && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                  )}
-                </button>
-              )}
-              {hasPermission("view_dashboard") && (
-                <button
-                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                    view === "dashboard" 
-                      ? "bg-white text-green-700 shadow-lg scale-105" 
-                      : "text-white hover:bg-white/20"
-                  }`}
-                  onClick={() => setView("dashboard")}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg">📊</span>
-                    <span className="text-xs">{language === 'en' ? 'Dashboard' : 'الرئيسية'}</span>
-                  </div>
-                  {view === "dashboard" && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                  )}
-                </button>
-              )}
-              {hasPermission("view_control_panel") && (
-                <button
-                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                    view === "control" 
-                      ? "bg-white text-green-700 shadow-lg scale-105" 
-                      : "text-white hover:bg-white/20"
-                  }`}
-                  onClick={() => setView("control")}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg">👥</span>
-                    <span className="text-xs">{language === 'en' ? 'Control Panel' : 'لوحة التحكم'}</span>
-                  </div>
-                  {view === "control" && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                  )}
-                </button>
-              )}
+      <header className="fixed top-0 left-0 right-0 z-50 shadow-sm border-b" style={{background: `linear-gradient(135deg, var(--primary-darkest) 0%, var(--primary) 50%, var(--primary-bright) 100%)`}}>
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center relative">
+          <div className="absolute left-4 flex items-center">
+            <LanguageSwitcher />
+          </div>
+          <div className="absolute right-4 flex items-center">
+            <Logo size="lg" variant="logo-only" className="text-white" />
+          </div>
+          <nav className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-2xl p-2">
+            {hasPermission("view_board") && (
               <button
                 className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "chat" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                  view === "board"
+                    ? "bg-white shadow-lg scale-105"
                     : "text-white hover:bg-white/20"
                 }`}
-                onClick={() => setView("chat")}
-                onDoubleClick={clearAllUnreadMessages}
+                style={{
+                  color: view === "board" ? "var(--primary)" : "white"
+                }}
+                onClick={() => setView("board")}
               >
                 <div className="flex flex-col items-center gap-1">
-                  <div className="relative">
-                    <span className="text-lg">💬</span>
-                    {getTotalUnreadCount() > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
-                        {getTotalUnreadCount()}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs">{language === 'en' ? 'Chat' : 'المحادثة'}</span>
+                  <span className="text-lg">📋</span>
+                  <span className="text-xs">{language === 'en' ? 'Board' : 'اللوحة'}</span>
                 </div>
-                {view === "chat" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                {view === "board" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
                 )}
               </button>
+            )}
+            {hasPermission("view_dashboard") && (
               <button
                 className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "calendar" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                  view === "dashboard"
+                    ? "bg-white shadow-lg scale-105"
                     : "text-white hover:bg-white/20"
                 }`}
-                onClick={() => setView("calendar")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">📅</span>
-                  <span className="text-xs">{language === 'en' ? 'Calendar' : 'التقويم'}</span>
-                </div>
-                {view === "calendar" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                )}
-              </button>
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "reports" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
-                    : "text-white hover:bg-white/20"
-                }`}
-                onClick={() => setView("reports")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">📈</span>
-                  <span className="text-xs">{language === 'en' ? 'Reports' : 'التقارير'}</span>
-                </div>
-                {view === "reports" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                )}
-              </button>
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "timeline" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
-                    : "text-white hover:bg-white/20"
-                }`}
-                onClick={() => setView("timeline")}
+                style={{
+                  color: view === "dashboard" ? "var(--primary)" : "white"
+                }}
+                onClick={() => setView("dashboard")}
               >
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-lg">📊</span>
-                  <span className="text-xs">{language === 'en' ? 'Timeline' : 'الخط الزمني'}</span>
+                  <span className="text-xs">{language === 'en' ? 'Dashboard' : 'الرئيسية'}</span>
                 </div>
-                {view === "timeline" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                {view === "dashboard" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
                 )}
               </button>
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "integrations" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
-                    : "text-white hover:bg-white/20"
-                }`}
-                onClick={() => setView("integrations")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">🔌</span>
-                  <span className="text-xs">{language === 'en' ? 'Integrations' : 'التكاملات'}</span>
-                </div>
-                {view === "integrations" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                )}
-              </button>
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "workflows" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
-                    : "text-white hover:bg-white/20"
-                }`}
-                onClick={() => setView("workflows")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">🔄</span>
-                  <span className="text-xs">{language === 'en' ? 'Workflows' : 'سير العمل'}</span>
-                </div>
-                {view === "workflows" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                )}
-              </button>
-              {currentUser?.role === "admin" && (
-                <button
-                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                    view === "settings" 
-                      ? "bg-white text-green-700 shadow-lg scale-105" 
-                      : "text-white hover:bg-white/20"
-                  }`}
-                  onClick={() => setView("settings")}
-                >
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-lg">⚙️</span>
-                    <span className="text-xs">{language === 'en' ? 'System Settings' : 'إعدادات النظام'}</span>
-                  </div>
-                  {view === "settings" && (
-                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                  )}
-                </button>
-              )}
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            {currentUser && (
-              <NotificationSystem
-                currentUser={currentUser}
-                columns={columns}
-                users={users}
-                chats={chats}
-                onClearChatNotifications={(chatId) => {
-                  // This function will be called when chat notifications are cleared
-                  console.log(`Clearing notifications for chat: ${chatId}`);
-                }}
-              />
             )}
-            {/* Connection Status Indicator */}
-            <DataStorageIndicator />
-            <div className="relative group">
-              <span className="text-sm text-white cursor-pointer font-medium">{t.welcome}، {currentUser?.name}</span>
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <button
-                  onClick={() => currentUser && setPasswordChangeModal({ isOpen: true, user: currentUser })}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-md"
-                >
-                  {t.changePassword}
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-md"
-                >
-                  {t.logout}
-                </button>
+            {hasPermission("view_control_panel") && (
+              <button
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "control"
+                    ? "bg-white shadow-lg scale-105"
+                    : "text-white hover:bg-white/20"
+                }`}
+                style={{
+                  color: view === "control" ? "var(--primary)" : "white"
+                }}
+                onClick={() => setView("control")}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">👥</span>
+                  <span className="text-xs">{language === 'en' ? 'Control Panel' : 'لوحة التحكم'}</span>
+                </div>
+                {view === "control" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
+                )}
+              </button>
+            )}
+            <button
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                view === "chat"
+                  ? "bg-white shadow-lg scale-105"
+                  : "text-white hover:bg-white/20"
+              }`}
+              style={{
+                color: view === "chat" ? "var(--primary)" : "white"
+              }}
+              onClick={() => setView("chat")}
+              onDoubleClick={clearAllUnreadMessages}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <div className="relative">
+                  <span className="text-lg">💬</span>
+                  {getTotalUnreadCount() > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
+                      {getTotalUnreadCount()}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs">{language === 'en' ? 'Chat' : 'المحادثة'}</span>
               </div>
+              {view === "chat" && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
+              )}
+            </button>
+            <button
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                view === "calendar"
+                  ? "bg-white shadow-lg scale-105"
+                  : "text-white hover:bg-white/20"
+              }`}
+              style={{
+                color: view === "calendar" ? "var(--primary)" : "white"
+              }}
+              onClick={() => setView("calendar")}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-lg">📅</span>
+                <span className="text-xs">{language === 'en' ? 'Calendar' : 'التقويم'}</span>
+              </div>
+              {view === "calendar" && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+              )}
+            </button>
+            <button
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                view === "reports" 
+                  ? "bg-white text-green-700 shadow-lg scale-105" 
+                  : "text-white hover:bg-white/20"
+              }`}
+              onClick={() => setView("reports")}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-lg">📈</span>
+                <span className="text-xs">{language === 'en' ? 'Reports' : 'التقارير'}</span>
+              </div>
+              {view === "reports" && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+              )}
+            </button>
+            <button
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                view === "timeline" 
+                  ? "bg-white text-green-700 shadow-lg scale-105" 
+                  : "text-white hover:bg-white/20"
+              }`}
+              onClick={() => setView("timeline")}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-lg">📊</span>
+                <span className="text-xs">{language === 'en' ? 'Timeline' : 'الخط الزمني'}</span>
+              </div>
+              {view === "timeline" && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+              )}
+            </button>
+            <button
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                view === "integrations" 
+                  ? "bg-white text-green-700 shadow-lg scale-105" 
+                  : "text-white hover:bg-white/20"
+              }`}
+              onClick={() => setView("integrations")}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-lg">🔌</span>
+                <span className="text-xs">{language === 'en' ? 'Integrations' : 'التكاملات'}</span>
+              </div>
+              {view === "integrations" && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+              )}
+            </button>
+            <button
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                view === "workflows" 
+                  ? "bg-white text-green-700 shadow-lg scale-105" 
+                  : "text-white hover:bg-white/20"
+              }`}
+              onClick={() => setView("workflows")}
+            >
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-lg">🔄</span>
+                <span className="text-xs">{language === 'en' ? 'Workflows' : 'سير العمل'}</span>
+              </div>
+              {view === "workflows" && (
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+              )}
+            </button>
+            {currentUser?.role === "admin" && (
+              <button
+                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
+                  view === "settings" 
+                    ? "bg-white text-green-700 shadow-lg scale-105" 
+                    : "text-white hover:bg-white/20"
+                }`}
+                onClick={() => setView("settings")}
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-lg">⚙️</span>
+                  <span className="text-xs">{language === 'en' ? 'System Settings' : 'إعدادات النظام'}</span>
+                </div>
+                {view === "settings" && (
+                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
+                )}
+              </button>
+            )}
+          </nav>
+        </div>
+        <div className="flex items-center gap-3">
+          {currentUser && (
+            <NotificationSystem
+              currentUser={currentUser}
+              columns={columns}
+              users={users}
+              chats={chats}
+              onClearChatNotifications={(chatId) => {
+                // This function will be called when chat notifications are cleared
+                console.log(`Clearing notifications for chat: ${chatId}`);
+              }}
+            />
+          )}
+          {/* Connection Status Indicator */}
+          <DataStorageIndicator />
+          <div className="relative group">
+            <span className="text-sm text-white cursor-pointer font-medium">{t.welcome}، {currentUser?.name}</span>
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <button
+                onClick={() => currentUser && setPasswordChangeModal({ isOpen: true, user: currentUser })}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-md"
+              >
+                {t.changePassword}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-md"
+              >
+                {t.logout}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Beautiful Language Switcher */}
-      <LanguageSwitcher />
 
       {/* Views */}
-      <main className="min-h-screen pt-20 transition-all duration-500" style={{
+      <main className="min-h-screen pt-32 pb-8 transition-all duration-500" style={{
         background: 'linear-gradient(135deg, var(--saudi-cream) 0%, var(--gray-50) 50%, var(--saudi-beige) 100%)'
       }}>
         {view === "board" && (

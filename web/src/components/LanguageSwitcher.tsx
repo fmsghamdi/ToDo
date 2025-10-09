@@ -5,7 +5,7 @@ const LanguageSwitcher: React.FC = () => {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <div className="fixed top-4 right-4 z-[100]">
+    <div className="fixed top-4 left-4 z-[100]">
       {/* Cute Language Switcher */}
       <div className="relative group">
         {/* Language Button - Small and cute */}

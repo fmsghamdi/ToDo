@@ -1,12 +1,38 @@
-/* Saudi Government Theme Colors */
+/* ToDoOS Brand Colors - Based on Design System */
 :root {
-  /* Primary Colors - Saudi Green */
-  --saudi-green-dark: #1a5f3f;
-  --saudi-green: #2d7a4f;
-  --saudi-green-light: #4a9d6b;
-  --saudi-green-lighter: #6bb584;
-  
-  /* Secondary Colors - Gold/Beige */
+  /* Primary Colors - Modern ToDoOS Palette (Updated to match new logo design) */
+  --primary-darkest: #1A4C1F;
+  --primary-dark: #2D5A3D;
+  --primary: #4A7C59;
+  --primary-light: #7FB069;
+  --primary-bright: #A8C99A;
+
+  /* Secondary Colors (Updated to match new design) */
+  --secondary: #7FB069;
+  --secondary-light: #A8C99A;
+  --secondary-lighter: #C4D4B8;
+
+  /* Background Colors (Updated to match new design) */
+  --bg-primary: #1A4C1F;
+  --bg-secondary: #2D5A3D;
+  --bg-tertiary: #4A7C59;
+  --bg-light: #FFFFFF;
+
+  /* Logo Specific Colors */
+  --logo-primary: #2D5A3D;
+  --logo-secondary: #4A7C59;
+  --logo-accent: #7FB069;
+  --logo-text: #1A4C1F;
+
+  /* Additional Design System Colors */
+  --accent-bright: #7FB069;
+  --accent-light: #A8C99A;
+  --accent-lighter: #C4D4B8;
+  --neutral-dark: #000000;
+  --neutral-light: #FFFFFF;
+  --neutral-gray: #CCCCCC;
+
+  /* Saudi Gold Colors (keeping for cultural relevance) */
   --saudi-gold: #d4af37;
   --saudi-gold-light: #e6c866;
   --saudi-beige: #f5f1e8;
@@ -61,8 +87,8 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, var(--saudi-cream) 0%, var(--gray-50) 100%);
-  color: var(--gray-800);
+  background: linear-gradient(135deg, var(--bg-light) 0%, #f8f9fa 100%);
+  color: var(--primary-darkest);
   line-height: 1.6;
   margin: 0;
   padding: 0;
@@ -73,39 +99,60 @@ body {
   font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
 }
 
-/* Button Styles */
+/* Button Styles - Updated for ToDoOS Design System */
 .btn-primary {
-  background: linear-gradient(135deg, var(--saudi-green) 0%, var(--saudi-green-dark) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: var(--white);
   border: none;
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius);
+  padding: 8px 16px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--saudi-green-dark) 0%, var(--saudi-green) 100%);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darkest) 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: var(--white);
-  color: var(--saudi-green);
-  border: 2px solid var(--saudi-green);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 8px 16px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-size: 14px;
 }
 
 .btn-secondary:hover {
-  background: var(--saudi-green);
+  background: var(--primary);
   color: var(--white);
+  transform: translateY(-1px);
+}
+
+.btn-bright {
+  background: linear-gradient(135deg, var(--primary-bright) 0%, var(--secondary) 100%);
+  color: var(--primary-darkest);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+}
+
+.btn-bright:hover {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--primary-bright) 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
@@ -127,30 +174,30 @@ body {
   transform: translateY(-1px);
 }
 
-/* Card Styles */
+/* Card Styles - Updated for ToDoOS Design System */
 .card {
   background: var(--white);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
   transition: all 0.3s ease;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
 .card-header {
-  background: linear-gradient(135deg, var(--saudi-green) 0%, var(--saudi-green-light) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: var(--white);
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
   font-weight: 600;
 }
 
 .card-body {
-  padding: var(--spacing-lg);
+  padding: 16px;
 }
 
 /* Input Styles */
