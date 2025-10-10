@@ -11,6 +11,7 @@ export interface ADConfig {
   tenantId?: string;
   clientId?: string;
   clientSecret?: string;
+  id?: number; // Add ID for existing config
 }
 
 export interface ADUser {
@@ -37,39 +38,87 @@ export interface AuthResult {
 class AuthService {
   private adConfig: ADConfig | null = null;
 
-  // Initialize AD configuration
-  setADConfig(config: ADConfig) {
-    this.adConfig = config;
-    localStorage.setItem('adConfig', JSON.stringify(config));
-  }
-
-  // Get AD configuration
-  getADConfig(): ADConfig | null {
-    if (this.adConfig) return this.adConfig;
-    
-    const saved = localStorage.getItem('adConfig');
-    if (saved) {
-      this.adConfig = JSON.parse(saved);
+  // Fetch AD configuration from the server
+  async fetchADConfigFromServer(): Promise<ADConfig | null> {
+    try {
+      const response = await fetch("/api/ActiveDirectory/config");
+      if (!response.ok) {
+        // If config not found or other error, assume AD is not enabled
+        console.warn("Failed to fetch AD config from server:", response.statusText);
+        this.adConfig = { enabled: false, domain: "", serverUrl: "", baseDN: "", bindUsername: "", bindPassword: "", useSSL: false, office365Integration: false };
+        return this.adConfig;
+      }
+      const config: ADConfig = await response.json();
+      this.adConfig = config;
+      // Optionally, save to localStorage for faster subsequent loads (but prioritize server data)
+      localStorage.setItem("adConfig", JSON.stringify(config));
+      return config;
+    } catch (error) {
+      console.error("Error fetching AD config from server:", error);
+      // Fallback to local storage if server fetch fails
+      const saved = localStorage.getItem("adConfig");
+      if (saved) {
+        this.adConfig = JSON.parse(saved);
+        return this.adConfig;
+      }
+      this.adConfig = { enabled: false, domain: "", serverUrl: "", baseDN: "", bindUsername: "", bindPassword: "", useSSL: false, office365Integration: false };
       return this.adConfig;
     }
-    
-    return null;
+  }
+
+  // Get AD configuration (prioritizes already fetched config)
+  getADConfig(): ADConfig | null {
+    return this.adConfig;
+  }
+
+  // Set AD configuration (for saving from UI, will call backend API)
+  async setADConfig(config: ADConfig): Promise<ADConfig | null> {
+    try {
+      const response = await fetch("/api/ActiveDirectory/config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) {
+        console.error("Failed to save AD config to server:", response.statusText);
+        return null;
+      }
+      const savedConfig: ADConfig = await response.json();
+      this.adConfig = savedConfig;
+      localStorage.setItem("adConfig", JSON.stringify(savedConfig));
+      return savedConfig;
+    } catch (error) {
+      console.error("Error saving AD config to server:", error);
+      return null;
+    }
+  }
+
+  // Helper to check if AD is enabled (can be called after fetchADConfigFromServer)
+  isADEnabled(): boolean {
+    return this.adConfig?.enabled || false;
+  }
+
+  // Helper to check if Office 365 is enabled
+  isOffice365Enabled(): boolean {
+    return this.adConfig?.office365Integration || false;
   }
 
   // Test AD connection
   async testADConnection(config: ADConfig): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('Testing AD connection with config:', config);
+      console.log("Testing AD connection with config:", config);
       
       if (!config.domain || !config.serverUrl) {
-        return { success: false, message: 'Domain and Server URL are required' };
+        return { success: false, message: "Domain and Server URL are required" };
       }
 
       // Call real API endpoint
-      const response = await fetch('/api/ActiveDirectory/test-connection', {
-        method: 'POST',
+      const response = await fetch("/api/ActiveDirectory/test-connection", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(config)
       });
@@ -80,11 +129,11 @@ class AuthService {
       }
 
       const result = await response.json();
-      console.log('AD connection test result:', result);
+      console.log("AD connection test result:", result);
       
       return result;
     } catch (error) {
-      console.error('AD connection test failed:', error);
+      console.error("AD connection test failed:", error);
       return { 
         success: false, 
         message: `Connection failed: ${error instanceof Error ? error.message : String(error)}` 
@@ -97,7 +146,7 @@ class AuthService {
     const config = this.getADConfig();
     
     if (!config || !config.enabled) {
-      return { success: false, error: 'Active Directory authentication is not enabled' };
+      return { success: false, error: "Active Directory authentication is not enabled" };
     }
 
     try {
@@ -119,11 +168,11 @@ class AuthService {
           username: username,
           email: `${username}@${config.domain}`,
           displayName: this.generateDisplayName(username),
-          firstName: username.split('.')[0] || username,
-          lastName: username.split('.')[1] || '',
-          department: 'IT Department',
-          title: 'Employee',
-          groups: ['Domain Users', 'ToDoOS Users'],
+          firstName: username.split(".")[0] || username,
+          lastName: username.split(".")[1] || "",
+          department: "IT Department",
+          title: "Employee",
+          groups: ["Domain Users", "ToDoOS Users"],
           isActive: true
         };
 
@@ -134,7 +183,7 @@ class AuthService {
         };
       }
 
-      return { success: false, error: 'Invalid credentials' };
+      return { success: false, error: "Invalid credentials" };
     } catch (error) {
       return { 
         success: false, 
@@ -148,13 +197,13 @@ class AuthService {
     const config = this.getADConfig();
     
     if (!config || !config.office365Integration) {
-      return { success: false, error: 'Office 365 integration is not enabled' };
+      return { success: false, error: "Office 365 integration is not enabled" };
     }
 
     try {
       // In real implementation, this would use Microsoft Graph API
       // and MSAL (Microsoft Authentication Library)
-      console.log('Authenticating with Office 365...');
+      console.log("Authenticating with Office 365...");
       
       // Simulate OAuth flow
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -162,14 +211,14 @@ class AuthService {
       // Mock successful O365 authentication
       const mockUser: ADUser = {
         id: `o365_${Date.now()}`,
-        username: 'user@organization.gov.sa',
-        email: 'user@organization.gov.sa',
-        displayName: 'أحمد محمد السعودي',
-        firstName: 'أحمد',
-        lastName: 'السعودي',
-        department: 'وزارة التقنية',
-        title: 'مطور أنظمة',
-        groups: ['ToDoOS Users', 'Developers'],
+        username: "user@organization.gov.sa",
+        email: "user@organization.gov.sa",
+        displayName: "أحمد محمد السعودي",
+        firstName: "أحمد",
+        lastName: "السعودي",
+        department: "وزارة التقنية",
+        title: "مطور أنظمة",
+        groups: ["ToDoOS Users", "Developers"],
         isActive: true
       };
 
@@ -200,34 +249,34 @@ class AuthService {
       
       // Mock groups based on username
       const mockGroups = [
-        'Domain Users',
-        'ToDoOS Users',
-        username.includes('admin') ? 'Administrators' : 'Employees',
-        username.includes('manager') ? 'Managers' : 'Staff'
+        "Domain Users",
+        "ToDoOS Users",
+        username.includes("admin") ? "Administrators" : "Employees",
+        username.includes("manager") ? "Managers" : "Staff"
       ];
 
       return mockGroups;
     } catch (error) {
-      console.error('Failed to get user groups:', error);
+      console.error("Failed to get user groups:", error);
       return [];
     }
   }
 
   // Sync users from AD
-  async syncUsersFromAD(searchQuery: string = ''): Promise<ADUser[]> {
+  async syncUsersFromAD(searchQuery: string = ""): Promise<ADUser[]> {
     const config = this.getADConfig();
     
-    console.log('=== AD Sync Started ===');
-    console.log('Config:', config);
-    console.log('Search Query:', searchQuery);
+    console.log("=== AD Sync Started ===");
+    console.log("Config:", config);
+    console.log("Search Query:", searchQuery);
     
     if (!config || !config.enabled) {
-      console.error('AD not enabled or config missing');
+      console.error("AD not enabled or config missing");
       return [];
     }
 
     try {
-      console.log('Calling API endpoint: /api/ActiveDirectory/search-users');
+      console.log("Calling API endpoint: /api/ActiveDirectory/search-users");
       
       const requestBody = {
         config: {
@@ -242,50 +291,50 @@ class AuthService {
         searchQuery: searchQuery
       };
       
-      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+      console.log("Request body:", JSON.stringify(requestBody, null, 2));
       
       // Call real API endpoint
-      const response = await fetch('/api/ActiveDirectory/search-users', {
-        method: 'POST',
+      const response = await fetch("/api/ActiveDirectory/search-users", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(requestBody)
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API Error:', errorText);
+        console.error("API Error:", errorText);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
       const users: ADUser[] = await response.json();
-      console.log('Received users from API:', users.length, 'users');
-      console.log('First 3 users:', users.slice(0, 3));
+      console.log("Received users from API:", users.length, "users");
+      console.log("First 3 users:", users.slice(0, 3));
       
       // Transform API response to ADUser format
       const transformedUsers = users.map(user => ({
         id: user.id || `ad_${Date.now()}`,
-        username: user.username || '',
-        email: user.email || '',
-        displayName: user.displayName || '',
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        department: user.department || '',
-        title: user.title || '',
+        username: user.username || "",
+        email: user.email || "",
+        displayName: user.displayName || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        department: user.department || "",
+        title: user.title || "",
         manager: user.manager,
         groups: user.groups || [],
         isActive: user.isActive !== false
       }));
       
-      console.log('=== AD Sync Completed Successfully ===');
+      console.log("=== AD Sync Completed Successfully ===");
       return transformedUsers;
     } catch (error) {
-      console.error('=== AD Sync Failed ===');
-      console.error('Error details:', error);
+      console.error("=== AD Sync Failed ===");
+      console.error("Error details:", error);
       
       // Return empty array on error so UI can show appropriate message
       return [];
@@ -296,7 +345,7 @@ class AuthService {
   validateToken(token: string): boolean {
     try {
       // In real implementation, validate JWT signature and expiration
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return payload.exp > Date.now() / 1000;
     } catch {
       return false;
@@ -305,7 +354,7 @@ class AuthService {
 
   // Generate display name from username
   private generateDisplayName(username: string): string {
-    const parts = username.split('.');
+    const parts = username.split(".");
     if (parts.length >= 2) {
       return `${parts[0]} ${parts[1]}`;
     }
@@ -314,7 +363,7 @@ class AuthService {
 
   // Generate JWT token (mock implementation)
   private generateJWTToken(user: ADUser): string {
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
     const payload = btoa(JSON.stringify({
       sub: user.id,
       username: user.username,
@@ -324,15 +373,15 @@ class AuthService {
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
     }));
-    const signature = btoa('mock-signature');
+    const signature = btoa("mock-signature");
     
     return `${header}.${payload}.${signature}`;
   }
 
   // Logout and clear tokens
   logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("currentUser");
   }
 }
 

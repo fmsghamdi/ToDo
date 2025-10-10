@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaqTask.Domain\TaqTask.Domain.csproj" />
+    <ProjectReference Include="..\TaqTask.Data\TaqTask.Data.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

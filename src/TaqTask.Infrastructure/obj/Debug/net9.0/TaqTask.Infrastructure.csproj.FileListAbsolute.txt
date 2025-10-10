@@ -16,3 +16,7 @@ C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\obj\Debug\net9.0\T
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\obj\Debug\net9.0\TaqTask.Infrastructure.genruntimeconfig.cache
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\obj\Debug\net9.0\ref\TaqTask.Infrastructure.dll
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\obj\Debug\net9.0\TaqTask.Infrastructure.sourcelink.json
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\bin\Debug\net9.0\TaqTask.Application.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\bin\Debug\net9.0\TaqTask.Data.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\bin\Debug\net9.0\TaqTask.Application.pdb
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Infrastructure\bin\Debug\net9.0\TaqTask.Data.pdb

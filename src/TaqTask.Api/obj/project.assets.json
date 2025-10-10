@@ -2412,6 +2412,7 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
+          "TaqTask.Data": "1.0.0",
           "TaqTask.Domain": "1.0.0"
         },
         "compile": {
@@ -2419,6 +2420,23 @@
         },
         "runtime": {
           "bin/placeholder/TaqTask.Application.dll": {}
+        }
+      },
+      "TaqTask.Data/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "9.0.1",
+          "Microsoft.EntityFrameworkCore.SqlServer": "9.0.0",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
+          "Pomelo.EntityFrameworkCore.MySql": "9.0.0",
+          "TaqTask.Domain": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/TaqTask.Data.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/TaqTask.Data.dll": {}
         }
       },
       "TaqTask.Domain/1.0.0": {
@@ -2438,8 +2456,11 @@
           "AWSSDK.S3": "4.0.7.1",
           "Hangfire": "1.8.21",
           "Hangfire.PostgreSql": "1.20.12",
+          "Microsoft.EntityFrameworkCore": "9.0.1",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
           "StackExchange.Redis": "2.9.17",
+          "TaqTask.Application": "1.0.0",
+          "TaqTask.Data": "1.0.0",
           "TaqTask.Domain": "1.0.0"
         },
         "compile": {
@@ -6352,6 +6373,11 @@
       "path": "../TaqTask.Application/TaqTask.Application.csproj",
       "msbuildProject": "../TaqTask.Application/TaqTask.Application.csproj"
     },
+    "TaqTask.Data/1.0.0": {
+      "type": "project",
+      "path": "../TaqTask.Data/TaqTask.Data.csproj",
+      "msbuildProject": "../TaqTask.Data/TaqTask.Data.csproj"
+    },
     "TaqTask.Domain/1.0.0": {
       "type": "project",
       "path": "../TaqTask.Domain/TaqTask.Domain.csproj",
@@ -6378,6 +6404,8 @@
       "Novell.Directory.Ldap.NETStandard >= 3.6.0",
       "Pomelo.EntityFrameworkCore.MySql >= 9.0.0",
       "TaqTask.Application >= 1.0.0",
+      "TaqTask.Data >= 1.0.0",
+      "TaqTask.Domain >= 1.0.0",
       "TaqTask.Infrastructure >= 1.0.0"
     ]
   },
@@ -6408,6 +6436,12 @@
           "projectReferences": {
             "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj": {
               "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj"
+            },
+            "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj": {
+              "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj"
+            },
+            "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
+              "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj"
             },
             "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Infrastructure\\TaqTask.Infrastructure.csproj": {
               "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Infrastructure\\TaqTask.Infrastructure.csproj"

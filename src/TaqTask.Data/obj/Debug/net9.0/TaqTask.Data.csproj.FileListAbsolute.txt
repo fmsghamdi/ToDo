@@ -1,0 +1,16 @@
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\bin\Debug\net9.0\TaqTask.Data.deps.json
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\bin\Debug\net9.0\TaqTask.Data.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\bin\Debug\net9.0\TaqTask.Data.pdb
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\bin\Debug\net9.0\TaqTask.Domain.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\bin\Debug\net9.0\TaqTask.Domain.pdb
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.csproj.AssemblyReference.cache
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.AssemblyInfoInputs.cache
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.AssemblyInfo.cs
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.csproj.CoreCompileInputs.cache
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.sourcelink.json
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask..9738E70E.Up2Date
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\refint\TaqTask.Data.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\TaqTask.Data.pdb
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Data\obj\Debug\net9.0\ref\TaqTask.Data.dll

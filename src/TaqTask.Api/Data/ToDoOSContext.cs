@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TaqTask.Api.Models;
+using TaqTask.Domain;
 
 namespace TaqTask.Api.Data;
 
@@ -10,6 +11,7 @@ public class ToDoOSContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<ActiveDirectoryConfig> ActiveDirectoryConfigurations { get; set; }
     public DbSet<Board> Boards { get; set; }
     public DbSet<BoardColumn> Columns { get; set; }
     public DbSet<Card> Cards { get; set; }

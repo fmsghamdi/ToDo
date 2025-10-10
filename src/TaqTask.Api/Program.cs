@@ -3,12 +3,19 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaqTask.Api.Data;
+using TaqTask.Application.Interfaces;
+using TaqTask.Infrastructure.Repositories;
+using TaqTask.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Register AD Configuration services
+builder.Services.AddScoped<IActiveDirectoryConfigRepository, ActiveDirectoryConfigRepository>();
+builder.Services.AddScoped<IActiveDirectoryConfigService, ActiveDirectoryConfigService>();
 
 // Add Entity Framework for MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

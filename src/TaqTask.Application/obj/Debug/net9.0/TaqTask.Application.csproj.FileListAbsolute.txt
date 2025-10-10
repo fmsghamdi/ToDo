@@ -14,3 +14,5 @@ C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Application\obj\Debug\net9.0\refi
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Application\obj\Debug\net9.0\TaqTask.Application.pdb
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Application\obj\Debug\net9.0\ref\TaqTask.Application.dll
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Application\obj\Debug\net9.0\TaqTask.Application.sourcelink.json
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Application\bin\Debug\net9.0\TaqTask.Data.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Application\bin\Debug\net9.0\TaqTask.Data.pdb

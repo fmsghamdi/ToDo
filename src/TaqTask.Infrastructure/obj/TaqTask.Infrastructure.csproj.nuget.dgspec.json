@@ -4,6 +4,153 @@
     "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Infrastructure\\TaqTask.Infrastructure.csproj": {}
   },
   "projects": {
+    "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj",
+        "projectName": "TaqTask.Application",
+        "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj",
+        "packagesPath": "C:\\Users\\fmghamdi\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\fmghamdi\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj": {
+                "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj"
+              },
+              "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
+                "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj",
+        "projectName": "TaqTask.Data",
+        "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj",
+        "packagesPath": "C:\\Users\\fmghamdi\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\fmghamdi\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
+                "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.300"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.1, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[9.0.4, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
     "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
@@ -85,6 +232,12 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
+              "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj": {
+                "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj"
+              },
+              "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj": {
+                "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj"
+              },
               "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
                 "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj"
               }
@@ -119,11 +272,15 @@
               "target": "Package",
               "version": "[1.20.12, )"
             },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.1, )"
+            },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.9, )"
+              "version": "[9.0.1, )"
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",

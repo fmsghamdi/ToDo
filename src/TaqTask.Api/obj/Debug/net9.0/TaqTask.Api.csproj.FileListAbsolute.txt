@@ -199,3 +199,5 @@ C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Api\bin\Debug\net9.0\tr\Microsoft
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Api\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Api\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Api\obj\Debug\net9.0\TaqTask.Api.sourcelink.json
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Api\bin\Debug\net9.0\TaqTask.Data.dll
+C:\Users\fmghamdi\Documents\ToDoOS\src\TaqTask.Api\bin\Debug\net9.0\TaqTask.Data.pdb

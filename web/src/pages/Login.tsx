@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "../i18n/useLanguage";
 import { authService, type ADUser } from "../services/AuthService";
 
@@ -16,10 +16,20 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'local' | 'ad' | 'office365'>('local');
+  const [isADConfigLoading, setIsADConfigLoading] = useState(true);
 
-  const adConfig = authService.getADConfig();
-  const isADEnabled = adConfig?.enabled || false;
-  const isOffice365Enabled = adConfig?.office365Integration || false;
+  useEffect(() => {
+    const fetchConfig = async () => {
+      setIsADConfigLoading(true);
+      await authService.fetchADConfigFromServer();
+      setIsADConfigLoading(false);
+    };
+    fetchConfig();
+  }, []);
+
+  const isADEnabled = authService.isADEnabled();
+  const isOffice365Enabled = authService.isOffice365Enabled();
+  const adConfig = authService.getADConfig(); // Get the fetched config for display if needed
 
   const handleLocalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,34 +115,40 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
         </div>
 
         {/* Login Method Selector */}
-        <div className="mb-6">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              type="button"
-              onClick={() => setLoginMethod('local')}
-              className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                loginMethod === 'local'
-                  ? 'bg-white text-green-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              حساب محلي
-            </button>
-            {isADEnabled && (
+        {isADConfigLoading ? (
+          <div className="mb-6 text-center text-gray-500">
+            جاري تحميل إعدادات الدخول...
+          </div>
+        ) : (
+          <div className="mb-6">
+            <div className="flex bg-gray-100 rounded-lg p-1">
               <button
                 type="button"
-                onClick={() => setLoginMethod('ad')}
+                onClick={() => setLoginMethod('local')}
                 className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                  loginMethod === 'ad'
+                  loginMethod === 'local'
                     ? 'bg-white text-green-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Active Directory
+                حساب محلي
               </button>
-            )}
+              {isADEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setLoginMethod('ad')}
+                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                    loginMethod === 'ad'
+                      ? 'bg-white text-green-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Active Directory
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -172,7 +188,7 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || isADConfigLoading}
             className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
@@ -203,7 +219,7 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
             <button
               type="button"
               onClick={handleOffice365Login}
-              disabled={isLoading}
+              disabled={isLoading || isADConfigLoading}
               className="w-full mt-4 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (

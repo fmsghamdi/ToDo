@@ -21,6 +21,8 @@
           "Novell.Directory.Ldap.NETStandard": "3.6.0",
           "Pomelo.EntityFrameworkCore.MySql": "9.0.0",
           "TaqTask.Application": "1.0.0",
+          "TaqTask.Data": "1.0.0",
+          "TaqTask.Domain": "1.0.0",
           "TaqTask.Infrastructure": "1.0.0"
         },
         "runtime": {
@@ -1426,10 +1428,26 @@
       },
       "TaqTask.Application/1.0.0": {
         "dependencies": {
+          "TaqTask.Data": "1.0.0",
           "TaqTask.Domain": "1.0.0"
         },
         "runtime": {
           "TaqTask.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "TaqTask.Data/1.0.0": {
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "9.0.1",
+          "Microsoft.EntityFrameworkCore.SqlServer": "9.0.0",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
+          "Pomelo.EntityFrameworkCore.MySql": "9.0.0",
+          "TaqTask.Domain": "1.0.0"
+        },
+        "runtime": {
+          "TaqTask.Data.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -1448,8 +1466,11 @@
           "AWSSDK.S3": "4.0.7.1",
           "Hangfire": "1.8.21",
           "Hangfire.PostgreSql": "1.20.12",
+          "Microsoft.EntityFrameworkCore": "9.0.1",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
           "StackExchange.Redis": "2.9.17",
+          "TaqTask.Application": "1.0.0",
+          "TaqTask.Data": "1.0.0",
           "TaqTask.Domain": "1.0.0"
         },
         "runtime": {
@@ -2329,6 +2350,11 @@
       "hashPath": "system.windows.extensions.6.0.0.nupkg.sha512"
     },
     "TaqTask.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "TaqTask.Data/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

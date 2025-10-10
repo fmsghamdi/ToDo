@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Novell.Directory.Ldap;
 using System.Net.Sockets;
 using System.Text.Json;
+using TaqTask.Application.Services;
+using TaqTask.Domain;
+using TaqTask.Api.Models;
 
 namespace TaqTask.Api.Controllers
 {
@@ -13,11 +16,71 @@ namespace TaqTask.Api.Controllers
     {
         private readonly ILogger<ActiveDirectoryController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IActiveDirectoryConfigService _adConfigService;
 
-        public ActiveDirectoryController(ILogger<ActiveDirectoryController> logger, IConfiguration configuration)
+        public ActiveDirectoryController(ILogger<ActiveDirectoryController> logger, IConfiguration configuration, IActiveDirectoryConfigService adConfigService)
         {
             _logger = logger;
             _configuration = configuration;
+            _adConfigService = adConfigService;
+        }
+
+        // Get AD Configuration
+        [HttpGet("config")]
+        public async Task<IActionResult> GetConfig()
+        {
+            _logger.LogInformation("Fetching AD configuration.");
+            var config = await _adConfigService.GetActiveDirectoryConfigAsync();
+            if (config == null)
+            {
+                return NotFound(new { message = "Active Directory configuration not found." });
+            }
+            return Ok(config);
+        }
+
+        // Save AD Configuration
+        [HttpPost("config")]
+        public async Task<IActionResult> SaveConfig([FromBody] ADConfigSaveDto configDto)
+        {
+            _logger.LogInformation($"Saving AD configuration: {JsonSerializer.Serialize(configDto)}");
+            var existingConfig = await _adConfigService.GetActiveDirectoryConfigAsync();
+            ActiveDirectoryConfig config;
+
+            if (existingConfig == null)
+            {
+                config = new ActiveDirectoryConfig
+                {
+                    Enabled = configDto.Enabled,
+                    Domain = configDto.Domain,
+                    ServerUrl = configDto.ServerUrl,
+                    BaseDN = configDto.BaseDN,
+                    BindUsername = configDto.BindUsername,
+                    BindPassword = configDto.BindPassword,
+                    UseSSL = configDto.UseSSL,
+                    Office365Integration = configDto.Office365Integration,
+                    TenantId = configDto.TenantId,
+                    ClientId = configDto.ClientId,
+                    ClientSecret = configDto.ClientSecret
+                };
+            }
+            else
+            {
+                config = existingConfig;
+                config.Enabled = configDto.Enabled;
+                config.Domain = configDto.Domain;
+                config.ServerUrl = configDto.ServerUrl;
+                config.BaseDN = configDto.BaseDN;
+                config.BindUsername = configDto.BindUsername;
+                config.BindPassword = configDto.BindPassword;
+                config.UseSSL = config.UseSSL;
+                config.Office365Integration = configDto.Office365Integration;
+                config.TenantId = configDto.TenantId;
+                config.ClientId = configDto.ClientId;
+                config.ClientSecret = configDto.ClientSecret;
+            }
+
+            var savedConfig = await _adConfigService.SaveActiveDirectoryConfigAsync(config);
+            return Ok(savedConfig);
         }
 
         // Test AD Connection
@@ -25,409 +88,108 @@ namespace TaqTask.Api.Controllers
         public async Task<IActionResult> TestConnection([FromBody] ADConfigDto config)
         {
             _logger.LogInformation($"Starting AD connection test with config: {JsonSerializer.Serialize(config)}");
-            
+
+            if (string.IsNullOrEmpty(config.ServerUrl) || string.IsNullOrEmpty(config.BindUsername) || string.IsNullOrEmpty(config.BindPassword))
+            {
+                return BadRequest(new { success = false, message = "Server URL, Bind Username, and Bind Password are required for connection test." });
+            }
+
             try
             {
-                // Validate required fields
-                if (string.IsNullOrWhiteSpace(config.ServerUrl))
+                using (var ldapConnection = new LdapConnection { SecureSocketLayer = config.UseSSL })
                 {
-                    return Ok(new { 
-                        success = false, 
-                        message = "Server URL is required" 
-                    });
+                    await Task.Run(() => ldapConnection.Connect(config.ServerUrl, config.UseSSL ? LdapConnection.DefaultSslPort : LdapConnection.DefaultPort));
+                    await Task.Run(() => ldapConnection.Bind(config.BindUsername, config.BindPassword));
+                    return Ok(new { success = true, message = "Active Directory connection successful." });
                 }
-                
-                if (string.IsNullOrWhiteSpace(config.Domain))
-                {
-                    return Ok(new { 
-                        success = false, 
-                        message = "Domain is required" 
-                    });
-                }
-                
-                var port = config.UseSSL ? 636 : 389;
-                _logger.LogInformation($"Attempting to connect to: {config.ServerUrl}:{port}");
-                
-                using var connection = new LdapConnection();
-                
-                try
-                {
-                    // Set timeout
-                    connection.ConnectionTimeout = 10000; // 10 seconds
-                    
-                    // Connect to server
-                    connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
-                    
-                    if (config.UseSSL)
-                    {
-                        _logger.LogInformation("Enabling SSL...");
-                        connection.SecureSocketLayer = true;
-                    }
-                    
-                    _logger.LogInformation("Connected successfully, attempting to bind...");
-                    
-                    var bindDn = FormatBindDn(config);
-                    _logger.LogInformation($"Binding with DN: {bindDn}");
-                    
-                    connection.Bind(bindDn, config.BindPassword);
-                    
-                    _logger.LogInformation("Bind successful!");
-                    
-                    return Ok(new { 
-                        success = true, 
-                        message = $"Successfully connected to {config.Domain}" 
-                    });
-                }
-                catch (LdapException ldapEx)
-                {
-                    _logger.LogError(ldapEx, "LDAP Exception occurred");
-                    return Ok(new { 
-                        success = false, 
-                        message = $"LDAP Error: {ldapEx.Message} (Code: {ldapEx.ResultCode})" 
-                    });
-                }
-            }
-            catch (SocketException socketEx)
-            {
-                _logger.LogError(socketEx, "Socket Exception occurred");
-                var port = config.UseSSL ? 636 : 389;
-                return Ok(new { 
-                    success = false, 
-                    message = $"Connection Error: Unable to connect to {config.ServerUrl}:{port}. Please check:\n1. Server address is correct\n2. Firewall allows port {port}\n3. LDAP service is running" 
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "AD connection test failed");
-                var port = config.UseSSL ? 636 : 389;
-                return Ok(new { 
-                    success = false, 
-                    message = $"Connection failed: {ex.Message}\n\nTroubleshooting tips:\n1. Check server address\n2. Verify port {port} is open\n3. Check if LDAP service is running\n4. Verify credentials" 
-                });
-            }
-        }
-
-        // Search users in AD
-        [HttpPost("search-users")]
-        public async Task<IActionResult> SearchUsers([FromBody] ADSearchRequest request)
-        {
-            try
-            {
-                var config = request.Config;
-                var users = new List<ADUserDto>();
-
-                _logger.LogInformation($"Connecting to AD: {config.ServerUrl}");
-
-                using var connection = new LdapConnection();
-                connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
-                
-                if (config.UseSSL)
-                {
-                    connection.SecureSocketLayer = true;
-                }
-
-                var bindDn = FormatBindDn(config);
-                _logger.LogInformation($"Binding with: {bindDn}");
-                connection.Bind(bindDn, config.BindPassword);
-                
-                _logger.LogInformation("Connected and bound successfully");
-
-                // Build LDAP filter
-                string filter = BuildSearchFilter(request.SearchQuery);
-                _logger.LogInformation($"Search filter: {filter}");
-                
-                var searchConstraints = new LdapSearchConstraints
-                {
-                    MaxResults = 1000,
-                    TimeLimit = 30000 // 30 seconds
-                };
-
-                var searchResults = connection.Search(
-                    config.BaseDN,
-                    LdapConnection.ScopeSub,
-                    filter,
-                    new string[] { 
-                        "sAMAccountName", 
-                        "mail", 
-                        "displayName", 
-                        "givenName", 
-                        "sn", 
-                        "department", 
-                        "title", 
-                        "manager",
-                        "memberOf",
-                        "userAccountControl"
-                    },
-                    false,
-                    searchConstraints
-                );
-
-                var count = 0;
-                while (searchResults.HasMore())
-                {
-                    try
-                    {
-                        var entry = searchResults.Next();
-                        count++;
-                        
-                        var user = new ADUserDto
-                        {
-                            Id = Guid.NewGuid().ToString(),
-                            Username = GetAttributeValue(entry, "sAMAccountName"),
-                            Email = GetAttributeValue(entry, "mail"),
-                            DisplayName = GetAttributeValue(entry, "displayName"),
-                            FirstName = GetAttributeValue(entry, "givenName"),
-                            LastName = GetAttributeValue(entry, "sn"),
-                            Department = GetAttributeValue(entry, "department"),
-                            Title = GetAttributeValue(entry, "title"),
-                            Manager = GetAttributeValue(entry, "manager"),
-                            Groups = GetAttributeValues(entry, "memberOf")
-                                .Select(dn => ExtractCNFromDN(dn))
-                                .ToList(),
-                            IsActive = IsUserActive(entry)
-                        };
-
-                        // Only add users with email addresses
-                        if (!string.IsNullOrEmpty(user.Email))
-                        {
-                            users.Add(user);
-                        }
-                    }
-                    catch (LdapException ex)
-                    {
-                        if (ex.ResultCode == LdapException.SizeLimitExceeded)
-                        {
-                            break;
-                        }
-                        _logger.LogWarning(ex, "Error processing AD entry");
-                    }
-                }
-
-                _logger.LogInformation($"Found {count} total entries, returning {users.Count} users with email");
-                return Ok(users);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "AD search failed");
-                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
-            }
-        }
-
-        // Authenticate user with AD
-        [HttpPost("authenticate")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Authenticate([FromBody] ADAuthRequest request)
-        {
-            try
-            {
-                var config = request.Config;
-                
-                using var connection = new LdapConnection();
-                connection.Connect(config.ServerUrl, config.UseSSL ? 636 : 389);
-                
-                if (config.UseSSL)
-                {
-                    connection.SecureSocketLayer = true;
-                }
-
-                // Try to bind with user credentials
-                var userDn = $"{request.Username}@{config.Domain}";
-                connection.Bind(userDn, request.Password);
-
-                // Get user information
-                var searchResults = connection.Search(
-                    config.BaseDN,
-                    LdapConnection.ScopeSub,
-                    $"(sAMAccountName={request.Username})",
-                    new string[] { 
-                        "sAMAccountName", 
-                        "mail", 
-                        "displayName", 
-                        "givenName", 
-                        "sn", 
-                        "department", 
-                        "title",
-                        "memberOf"
-                    },
-                    false
-                );
-
-                if (searchResults.HasMore())
-                {
-                    var entry = searchResults.Next();
-                    var user = new ADUserDto
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Username = GetAttributeValue(entry, "sAMAccountName"),
-                        Email = GetAttributeValue(entry, "mail"),
-                        DisplayName = GetAttributeValue(entry, "displayName"),
-                        FirstName = GetAttributeValue(entry, "givenName"),
-                        LastName = GetAttributeValue(entry, "sn"),
-                        Department = GetAttributeValue(entry, "department"),
-                        Title = GetAttributeValue(entry, "title"),
-                        Groups = GetAttributeValues(entry, "memberOf")
-                            .Select(dn => ExtractCNFromDN(dn))
-                            .ToList(),
-                        IsActive = true
-                    };
-
-                    return Ok(new { success = true, user });
-                }
-
-                return Ok(new { success = false, error = "User not found" });
             }
             catch (LdapException ex)
             {
-                _logger.LogError(ex, "AD authentication failed");
-                return Ok(new { success = false, error = "Invalid credentials" });
+                _logger.LogError(ex, "Active Directory connection failed with LDAP error.");
+                return StatusCode(500, new { success = false, message = $"LDAP connection failed: {ex.Message}" });
+            }
+            catch (SocketException ex)
+            {
+                _logger.LogError(ex, "Active Directory connection failed with socket error.");
+                return StatusCode(500, new { success = false, message = $"Network connection failed: {ex.Message}" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "AD authentication error");
-                return StatusCode(500, new { error = ex.Message });
+                _logger.LogError(ex, "An unexpected error occurred during Active Directory connection test.");
+                return StatusCode(500, new { success = false, message = $"An unexpected error occurred: {ex.Message}" });
             }
         }
 
-        // Helper methods
-        private string FormatBindDn(ADConfigDto config)
+        // Search AD Users
+        [HttpPost("search-users")]
+        public async Task<IActionResult> SearchUsers([FromBody] ADSearchDto searchDto)
         {
-            // If username already contains @domain, use it as-is
-            if (config.BindUsername.Contains("@"))
-            {
-                return config.BindUsername;
-            }
-            // If username contains backslash (DOMAIN\user), convert to UPN
-            else if (config.BindUsername.Contains("\\"))
-            {
-                var parts = config.BindUsername.Split('\\');
-                return $"{parts[1]}@{config.Domain}";
-            }
-            // Otherwise, append @domain
-            else
-            {
-                return $"{config.BindUsername}@{config.Domain}";
-            }
-        }
+            _logger.LogInformation($"Searching AD users with config: {JsonSerializer.Serialize(searchDto.Config)} and query: {searchDto.SearchQuery}");
 
-        private string BuildSearchFilter(string searchQuery)
-        {
-            if (string.IsNullOrWhiteSpace(searchQuery))
+            var config = searchDto.Config;
+            if (string.IsNullOrEmpty(config.ServerUrl) || string.IsNullOrEmpty(config.BindUsername) || string.IsNullOrEmpty(config.BindPassword) || string.IsNullOrEmpty(config.BaseDN))
             {
-                return "(&(objectClass=user)(objectCategory=person)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))";
+                return BadRequest(new { success = false, message = "Server URL, Bind Username, Bind Password, and Base DN are required for user search." });
             }
 
-            return $"(&(objectClass=user)(objectCategory=person)(!(userAccountControl:1.2.840.113556.1.4.803:=2))(|(sAMAccountName=*{searchQuery}*)(mail=*{searchQuery}*)(displayName=*{searchQuery}*)(givenName=*{searchQuery}*)(sn=*{searchQuery}*)(department=*{searchQuery}*)))";
-        }
-
-        private string GetAttributeValue(LdapEntry entry, string attributeName)
-        {
             try
             {
-                var attribute = entry.GetAttribute(attributeName);
-                return attribute?.StringValue ?? string.Empty;
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
-
-        private List<string> GetAttributeValues(LdapEntry entry, string attributeName)
-        {
-            var values = new List<string>();
-            try
-            {
-                var attribute = entry.GetAttribute(attributeName);
-                if (attribute != null)
+                using (var ldapConnection = new LdapConnection { SecureSocketLayer = config.UseSSL })
                 {
-                    foreach (var value in attribute.StringValueArray)
+                    await Task.Run(() => ldapConnection.Connect(config.ServerUrl, config.UseSSL ? LdapConnection.DefaultSslPort : LdapConnection.DefaultPort));
+                    await Task.Run(() => ldapConnection.Bind(config.BindUsername, config.BindPassword));
+
+                    string searchFilter = string.IsNullOrEmpty(searchDto.SearchQuery)
+                        ? "(objectClass=user)"
+                        : $"(&(objectClass=user)(|(sAMAccountName=*{searchDto.SearchQuery}*)(displayName=*{searchDto.SearchQuery}*)(mail=*{searchDto.SearchQuery}*)))";
+
+                    var searchResults = await Task.Run(() => ldapConnection.Search(
+                        config.BaseDN,
+                        2, // SCOPE_SUB
+                        searchFilter,
+                        new[] { "sAMAccountName", "displayName", "mail", "givenName", "sn", "department", "title", "manager" },
+                        false
+                    ));
+
+                    var users = new List<ADUserDto>();
+                    while (searchResults.HasMore())
                     {
-                        if (!string.IsNullOrEmpty(value))
+                        var entry = searchResults.Next();
+                        if (entry != null)
                         {
-                            values.Add(value);
+                            users.Add(new ADUserDto
+                            {
+                                Id = entry.GetAttribute("sAMAccountName")?.StringValue,
+                                Username = entry.GetAttribute("sAMAccountName")?.StringValue,
+                                Email = entry.GetAttribute("mail")?.StringValue,
+                                DisplayName = entry.GetAttribute("displayName")?.StringValue,
+                                FirstName = entry.GetAttribute("givenName")?.StringValue,
+                                LastName = entry.GetAttribute("sn")?.StringValue,
+                                Department = entry.GetAttribute("department")?.StringValue,
+                                Title = entry.GetAttribute("title")?.StringValue,
+                                Manager = entry.GetAttribute("manager")?.StringValue,
+                                IsActive = true // Assuming all found users are active
+                            });
                         }
                     }
+                    return Ok(users);
                 }
             }
-            catch { }
-            return values;
-        }
-
-        private string ExtractCNFromDN(string dn)
-        {
-            try
+            catch (LdapException ex)
             {
-                if (string.IsNullOrEmpty(dn)) return string.Empty;
-                
-                var cnIndex = dn.IndexOf("CN=", StringComparison.OrdinalIgnoreCase);
-                if (cnIndex < 0) return dn;
-                
-                var start = cnIndex + 3;
-                var commaIndex = dn.IndexOf(',', start);
-                
-                if (commaIndex < 0) return dn.Substring(start);
-                
-                return dn.Substring(start, commaIndex - start);
+                _logger.LogError(ex, "Active Directory user search failed with LDAP error.");
+                return StatusCode(500, new { success = false, message = $"LDAP search failed: {ex.Message}" });
             }
-            catch
+            catch (SocketException ex)
             {
-                return dn;
+                _logger.LogError(ex, "Active Directory user search failed with socket error.");
+                return StatusCode(500, new { success = false, message = $"Network connection failed: {ex.Message}" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An unexpected error occurred during Active Directory user search.");
+                return StatusCode(500, new { success = false, message = $"An unexpected error occurred: {ex.Message}" });
             }
         }
-
-        private bool IsUserActive(LdapEntry entry)
-        {
-            try
-            {
-                var uacValue = GetAttributeValue(entry, "userAccountControl");
-                if (int.TryParse(uacValue, out int uac))
-                {
-                    // Check if account is disabled (bit 2)
-                    return (uac & 0x0002) == 0;
-                }
-            }
-            catch { }
-            return true;
-        }
-    }
-
-    // DTOs
-    public class ADConfigDto
-    {
-        public bool Enabled { get; set; }
-        public string Domain { get; set; } = string.Empty;
-        public string ServerUrl { get; set; } = string.Empty;
-        public string BaseDN { get; set; } = string.Empty;
-        public string BindUsername { get; set; } = string.Empty;
-        public string BindPassword { get; set; } = string.Empty;
-        public bool UseSSL { get; set; }
-    }
-
-    public class ADSearchRequest
-    {
-        public ADConfigDto Config { get; set; } = new();
-        public string SearchQuery { get; set; } = string.Empty;
-    }
-
-    public class ADAuthRequest
-    {
-        public ADConfigDto Config { get; set; } = new();
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
-    public class ADUserDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string DisplayName { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Department { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Manager { get; set; } = string.Empty;
-        public List<string> Groups { get; set; } = new();
-        public bool IsActive { get; set; }
     }
 }
