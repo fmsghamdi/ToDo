@@ -14,7 +14,9 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // Register AD Configuration services
-builder.Services.AddScoped<IActiveDirectoryConfigRepository, ActiveDirectoryConfigRepository>();
+// تعديل هنا: تأكد من أن الـ Repository يستخدم ToDoOSContext المحدد
+builder.Services.AddScoped<IActiveDirectoryConfigRepository>(provider => 
+    new ActiveDirectoryConfigRepository(provider.GetRequiredService<ToDoOSContext>()));
 builder.Services.AddScoped<IActiveDirectoryConfigService, ActiveDirectoryConfigService>();
 
 // Add Entity Framework for MySQL
@@ -33,7 +35,6 @@ builder.Services.AddDbContext<ToDoOSContext>(options =>
         options.EnableDetailedErrors();
     }
 });
-
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
