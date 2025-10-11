@@ -80,9 +80,11 @@ export default function UserManagement({ users, currentUser, onAddUser, onUpdate
 
   // Load users from AD
   const handleLoadADUsers = async () => {
+    // Fetch latest AD config from server
+    await authService.fetchADConfigFromServer();
     const config = authService.getADConfig();
     if (!config || !config.enabled) {
-      alert(language === 'ar' 
+      alert(language === 'ar'
         ? 'الدليل النشط غير مفعل. يرجى تفعيله من إعدادات النظام.'
         : 'Active Directory is not enabled. Please enable it in System Settings.');
       return;
