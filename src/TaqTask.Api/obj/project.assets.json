@@ -6398,10 +6398,10 @@
       "Microsoft.Data.SqlClient >= 5.1.6",
       "Microsoft.EntityFrameworkCore >= 9.0.1",
       "Microsoft.EntityFrameworkCore.Design >= 9.0.0",
-      "Microsoft.EntityFrameworkCore.SqlServer >= 9.0.0",
       "Microsoft.EntityFrameworkCore.Tools >= 9.0.0",
       "MySqlConnector >= 2.4.0",
       "Novell.Directory.Ldap.NETStandard >= 3.6.0",
+      "Npgsql.EntityFrameworkCore.PostgreSQL >= 9.0.4",
       "Pomelo.EntityFrameworkCore.MySql >= 9.0.0",
       "TaqTask.Application >= 1.0.0",
       "TaqTask.Data >= 1.0.0",
@@ -6410,19 +6410,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\fmghamdi\\.nuget\\packages\\": {}
+    "/home/todoos/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Api\\TaqTask.Api.csproj",
+      "projectUniqueName": "/home/todoos/todoos-project/src/TaqTask.Api/TaqTask.Api.csproj",
       "projectName": "TaqTask.Api",
-      "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Api\\TaqTask.Api.csproj",
-      "packagesPath": "C:\\Users\\fmghamdi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Api\\obj\\",
+      "projectPath": "/home/todoos/todoos-project/src/TaqTask.Api/TaqTask.Api.csproj",
+      "packagesPath": "/home/todoos/.nuget/packages/",
+      "outputPath": "/home/todoos/todoos-project/src/TaqTask.Api/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\fmghamdi\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "/home/todoos/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -6434,17 +6434,17 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj": {
-              "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj"
+            "/home/todoos/todoos-project/src/TaqTask.Application/TaqTask.Application.csproj": {
+              "projectPath": "/home/todoos/todoos-project/src/TaqTask.Application/TaqTask.Application.csproj"
             },
-            "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj": {
-              "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj"
+            "/home/todoos/todoos-project/src/TaqTask.Data/TaqTask.Data.csproj": {
+              "projectPath": "/home/todoos/todoos-project/src/TaqTask.Data/TaqTask.Data.csproj"
             },
-            "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
-              "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj"
+            "/home/todoos/todoos-project/src/TaqTask.Domain/TaqTask.Domain.csproj": {
+              "projectPath": "/home/todoos/todoos-project/src/TaqTask.Domain/TaqTask.Domain.csproj"
             },
-            "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Infrastructure\\TaqTask.Infrastructure.csproj": {
-              "projectPath": "C:\\Users\\fmghamdi\\Documents\\ToDoOS\\src\\TaqTask.Infrastructure\\TaqTask.Infrastructure.csproj"
+            "/home/todoos/todoos-project/src/TaqTask.Infrastructure/TaqTask.Infrastructure.csproj": {
+              "projectPath": "/home/todoos/todoos-project/src/TaqTask.Infrastructure/TaqTask.Infrastructure.csproj"
             }
           }
         }
@@ -6459,7 +6459,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.300"
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net9.0": {
@@ -6493,10 +6493,6 @@
             "target": "Package",
             "version": "[9.0.0, )"
           },
-          "Microsoft.EntityFrameworkCore.SqlServer": {
-            "target": "Package",
-            "version": "[9.0.0, )"
-          },
           "Microsoft.EntityFrameworkCore.Tools": {
             "target": "Package",
             "version": "[9.0.0, )"
@@ -6508,6 +6504,10 @@
           "Novell.Directory.Ldap.NETStandard": {
             "target": "Package",
             "version": "[3.6.0, )"
+          },
+          "Npgsql.EntityFrameworkCore.PostgreSQL": {
+            "target": "Package",
+            "version": "[9.0.4, )"
           },
           "Pomelo.EntityFrameworkCore.MySql": {
             "target": "Package",
@@ -6533,7 +6533,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

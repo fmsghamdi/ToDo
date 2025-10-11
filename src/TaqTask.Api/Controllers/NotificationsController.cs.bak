@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using TaqTask.Api.Data;
+using TaqTask.Data;
+using TaqTask.Domain;
 using TaqTask.Api.Models;
 using System.Security.Claims;
 

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using TaqTask.Api.Data;
+using TaqTask.Data;
 using TaqTask.Application.Interfaces;
 using TaqTask.Infrastructure.Repositories;
 using TaqTask.Application.Services;

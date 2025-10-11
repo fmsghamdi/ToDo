@@ -2,34 +2,35 @@ using Microsoft.EntityFrameworkCore;
 using TaqTask.Application.Interfaces;
 using TaqTask.Domain;
 using System.Threading.Tasks;
+using TaqTask.Data;
 
 namespace TaqTask.Infrastructure.Repositories
 {
     public class ActiveDirectoryConfigRepository : IActiveDirectoryConfigRepository
     {
-        private readonly DbContext _context;
+        private readonly ToDoOSContext _context;
 
-        public ActiveDirectoryConfigRepository(DbContext context)
+        public ActiveDirectoryConfigRepository(ToDoOSContext context)
         {
             _context = context;
         }
 
         public async Task<ActiveDirectoryConfig?> GetConfigAsync()
         {
-            return await ((dynamic)_context).ActiveDirectoryConfigurations.AsNoTracking().FirstOrDefaultAsync();
+            // <-- تم التعديل هنا للاسم الصحيح للجدول في DbContext
+            return await _context.ActiveDirectoryConfigurations.AsNoTracking().FirstOrDefaultAsync();
         }
 
         public async Task<ActiveDirectoryConfig> SaveConfigAsync(ActiveDirectoryConfig config)
         {
-            // Check if a configuration already exists (assuming only one AD config)
-            var adConfigs = ((dynamic)_context).ActiveDirectoryConfigurations;
-            var existingConfig = await adConfigs.FirstOrDefaultAsync();
+            // <-- تم التعديل هنا للاسم الصحيح للجدول في DbContext
+            var existingConfig = await _context.ActiveDirectoryConfigurations.FirstOrDefaultAsync();
 
             if (existingConfig == null) // No existing configuration, add new one
             {
                 config.CreatedAt = DateTime.UtcNow;
                 config.UpdatedAt = DateTime.UtcNow;
-                adConfigs.Add(config);
+                _context.ActiveDirectoryConfigurations.Add(config); // <-- تم التعديل هنا
             }
             else // Existing configuration found, update it
             {
@@ -49,7 +50,6 @@ namespace TaqTask.Infrastructure.Repositories
 
                 // Mark the existing entity as modified
                 _context.Entry(existingConfig).State = EntityState.Modified;
-                config = existingConfig; // Ensure the returned config has the updated values and ID
             }
 
             await _context.SaveChangesAsync();

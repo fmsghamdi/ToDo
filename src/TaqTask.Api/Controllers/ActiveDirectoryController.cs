@@ -1,3 +1,4 @@
+using TaqTask.Api.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Novell.Directory.Ldap;
@@ -6,6 +7,7 @@ using System.Text.Json;
 using TaqTask.Application.Services;
 using TaqTask.Domain;
 using TaqTask.Api.Models;
+
 
 namespace TaqTask.Api.Controllers
 {
@@ -39,7 +41,8 @@ namespace TaqTask.Api.Controllers
         }
 
         // Save AD Configuration
-        [HttpPost("config")]
+        // التعديل هنا: تم إعادة "config" إلى [HttpPost]
+        [HttpPost("config")] // <-- تم التعديل هنا
         public async Task<IActionResult> SaveConfig([FromBody] ADConfigSaveDto configDto)
         {
             _logger.LogInformation($"Saving AD configuration: {JsonSerializer.Serialize(configDto)}");
@@ -72,7 +75,7 @@ namespace TaqTask.Api.Controllers
                 config.BaseDN = configDto.BaseDN;
                 config.BindUsername = configDto.BindUsername;
                 config.BindPassword = configDto.BindPassword;
-                config.UseSSL = config.UseSSL;
+                config.UseSSL = configDto.UseSSL;
                 config.Office365Integration = configDto.Office365Integration;
                 config.TenantId = configDto.TenantId;
                 config.ClientId = configDto.ClientId;
@@ -98,6 +101,7 @@ namespace TaqTask.Api.Controllers
             {
                 using (var ldapConnection = new LdapConnection { SecureSocketLayer = config.UseSSL })
                 {
+
                     await Task.Run(() => ldapConnection.Connect(config.ServerUrl, config.UseSSL ? LdapConnection.DefaultSslPort : LdapConnection.DefaultPort));
                     await Task.Run(() => ldapConnection.Bind(config.BindUsername, config.BindPassword));
                     return Ok(new { success = true, message = "Active Directory connection successful." });
@@ -149,7 +153,7 @@ namespace TaqTask.Api.Controllers
                         searchFilter,
                         new[] { "sAMAccountName", "displayName", "mail", "givenName", "sn", "department", "title", "manager" },
                         false
-                    ));
+ ));
 
                     var users = new List<ADUserDto>();
                     while (searchResults.HasMore())

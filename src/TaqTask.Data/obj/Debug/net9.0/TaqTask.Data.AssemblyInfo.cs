@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TaqTask.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80f96f96ffadceb91554bac8e1ee8b195c48f1e3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f53bd518c33b0f5596a6c4f0b5e50a6bc545e5a")]
 [assembly: System.Reflection.AssemblyProductAttribute("TaqTask.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TaqTask.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

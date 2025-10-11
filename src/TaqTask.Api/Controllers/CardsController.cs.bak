@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaqTask.Api.Data;
+using TaqTask.Data;
+using TaqTask.Domain;
 using TaqTask.Api.Models;
 
 namespace TaqTask.Api.Controllers;
