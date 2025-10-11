@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { databaseService, getActiveDirectoryConfig } from '../services/DatabaseService.js';
 import { useLanguage } from '../i18n/useLanguage';
 import { authService } from '../services/AuthService';
-import { databaseService } from '../services/DatabaseService';
+import { databaseService } from '../services/DatabaseService'; // تأكد من وجود هذا الاستيراد
 
 interface DatabaseConfig {
   type: 'mysql' | 'postgresql' | 'sqlserver' | 'oracle';
@@ -218,8 +219,9 @@ const SystemSettings: React.FC = () => {
           console.log('Database config loaded from server:', dbConfig);
         }
 
-        // Load AD config
-        const savedConfig = authService.getADConfig();
+        // === التعديل الرئيسي هنا ===
+        // Load AD config from server
+        const savedConfig = await databaseService.getActiveDirectoryConfig();
         if (savedConfig) {
           setAdConfig({
             enabled: savedConfig.enabled,
@@ -235,7 +237,28 @@ const SystemSettings: React.FC = () => {
             clientId: savedConfig.clientId || '',
             clientSecret: savedConfig.clientSecret || ''
           });
-          console.log('AD config loaded:', savedConfig);
+          console.log('AD config loaded from server:', savedConfig);
+        } else {
+          // Fallback to localStorage if server is not available
+          console.log('AD config not found on server, checking localStorage...');
+          const localConfig = authService.getADConfig();
+          if (localConfig) {
+            setAdConfig({
+              enabled: localConfig.enabled,
+              domain: localConfig.domain,
+              server: localConfig.serverUrl,
+              port: '389',
+              baseDN: localConfig.baseDN,
+              bindUsername: localConfig.bindUsername,
+              bindPassword: localConfig.bindPassword,
+              useSSL: localConfig.useSSL,
+              office365Integration: localConfig.office365Integration,
+              tenantId: localConfig.tenantId || '',
+              clientId: localConfig.clientId || '',
+              clientSecret: localConfig.clientSecret || ''
+            });
+            console.log('AD config loaded from localStorage as fallback.');
+          }
         }
 
         // Load email config from server
@@ -378,8 +401,15 @@ const SystemSettings: React.FC = () => {
           clientSecret: adConfig.clientSecret
         };
         
-        authService.setADConfig(adConfigToSave);
-        result = { success: true, message: 'تم حفظ إعدادات Active Directory بنجاح' };
+        // Save to server using the new method
+        try {
+          result = await databaseService.saveActiveDirectoryConfig(adConfigToSave);
+        } catch (error) {
+          console.error('Failed to save AD config to server, falling back to local storage:', error);
+          // Fallback to local storage
+          authService.setADConfig(adConfigToSave);
+          result = { success: true, message: 'تم حفظ إعدادات Active Directory محلياً' };
+        }
         console.log('AD config saved:', adConfigToSave);
       } else if (activeTab === 'email') {
         // Save email configuration to server

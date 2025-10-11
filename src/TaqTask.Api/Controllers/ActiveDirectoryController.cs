@@ -6,8 +6,6 @@ using System.Net.Sockets;
 using System.Text.Json;
 using TaqTask.Application.Services;
 using TaqTask.Domain;
-using TaqTask.Api.Models;
-
 
 namespace TaqTask.Api.Controllers
 {
@@ -41,8 +39,7 @@ namespace TaqTask.Api.Controllers
         }
 
         // Save AD Configuration
-        // التعديل هنا: تم إعادة "config" إلى [HttpPost]
-        [HttpPost("config")] // <-- تم التعديل هنا
+        [HttpPost("config")]
         public async Task<IActionResult> SaveConfig([FromBody] ADConfigSaveDto configDto)
         {
             _logger.LogInformation($"Saving AD configuration: {JsonSerializer.Serialize(configDto)}");
@@ -101,6 +98,7 @@ namespace TaqTask.Api.Controllers
             {
                 using (var ldapConnection = new LdapConnection { SecureSocketLayer = config.UseSSL })
                 {
+                    ldapConnection.Constraints.ReferralFollowing = false;
 
                     await Task.Run(() => ldapConnection.Connect(config.ServerUrl, config.UseSSL ? LdapConnection.DefaultSslPort : LdapConnection.DefaultPort));
                     await Task.Run(() => ldapConnection.Bind(config.BindUsername, config.BindPassword));
@@ -124,6 +122,19 @@ namespace TaqTask.Api.Controllers
             }
         }
 
+        // === الدالة المساعدة الجديدة ===
+        private string? GetSafely(LdapEntry entry, string attributeName)
+        {
+            try
+            {
+                return entry.GetAttribute(attributeName)?.StringValue;
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+        }
+
         // Search AD Users
         [HttpPost("search-users")]
         public async Task<IActionResult> SearchUsers([FromBody] ADSearchDto searchDto)
@@ -131,10 +142,28 @@ namespace TaqTask.Api.Controllers
             _logger.LogInformation($"Searching AD users with config: {JsonSerializer.Serialize(searchDto.Config)} and query: {searchDto.SearchQuery}");
 
             var config = searchDto.Config;
-            if (string.IsNullOrEmpty(config.ServerUrl) || string.IsNullOrEmpty(config.BindUsername) || string.IsNullOrEmpty(config.BindPassword) || string.IsNullOrEmpty(config.BaseDN))
+            if (string.IsNullOrEmpty(config.ServerUrl) || string.IsNullOrEmpty(config.BindUsername) || string.IsNullOrEmpty(config.BindPassword))
             {
-                return BadRequest(new { success = false, message = "Server URL, Bind Username, Bind Password, and Base DN are required for user search." });
+                return BadRequest(new { success = false, message = "Server URL, Bind Username, and Bind Password are required for user search." });
             }
+
+            // === قائمة OUs التي سنبحث فيها ===
+            // تم تحديثها بالأسماء الصحيحة من مجالك
+            var baseDNsToSearch = new List<string>
+            {
+                "OU=Administrations,OU=UQUPortal,DC=UQU,DC=LOCAL",
+                "OU=CollaborativeInstructors,OU=UQUPortal,DC=UQU,DC=LOCAL",
+                "OU=ContractedEmployees,OU=UQUPortal,DC=UQU,DC=LOCAL",
+                "OU=Employees,OU=UQUPortal,DC=UQU,DC=LOCAL",
+                "OU=GraduateStudents,OU=UQUPortal,DC=UQU,DC=LOCAL",
+                "OU=Instructors,OU=UQUPortal,DC=UQU,DC=LOCAL",
+                "CN=Users,DC=UQU,DC=LOCAL",
+                "OU=Administration,OU=IT Deanship,DC=UQU,DC=LOCAL",
+                "OU=Application,OU=IT Deanship,DC=UQU,DC=LOCAL"
+                // يمكنك إضافة أو إزالة OUs من هنا حسب الحاجة
+            };
+
+            var allUsers = new List<ADUserDto>();
 
             try
             {
@@ -144,40 +173,53 @@ namespace TaqTask.Api.Controllers
                     await Task.Run(() => ldapConnection.Bind(config.BindUsername, config.BindPassword));
 
                     string searchFilter = string.IsNullOrEmpty(searchDto.SearchQuery)
-                        ? "(objectClass=user)"
-                        : $"(&(objectClass=user)(|(sAMAccountName=*{searchDto.SearchQuery}*)(displayName=*{searchDto.SearchQuery}*)(mail=*{searchDto.SearchQuery}*)))";
+                        ? "(&(objectClass=user)(objectCategory=person))"
+                        : $"(&(objectClass=user)(objectCategory=person)(|(sAMAccountName=*{searchDto.SearchQuery}*)(displayName=*{searchDto.SearchQuery}*)(mail=*{searchDto.SearchQuery}*)))";
 
-                    var searchResults = await Task.Run(() => ldapConnection.Search(
-                        config.BaseDN,
-                        2, // SCOPE_SUB
-                        searchFilter,
-                        new[] { "sAMAccountName", "displayName", "mail", "givenName", "sn", "department", "title", "manager" },
-                        false
- ));
-
-                    var users = new List<ADUserDto>();
-                    while (searchResults.HasMore())
+                    // === الحلقة الجديدة: البحث في كل OU ===
+                    foreach (var baseDn in baseDNsToSearch)
                     {
-                        var entry = searchResults.Next();
-                        if (entry != null)
+                        _logger.LogInformation($"Searching in OU: {baseDn}");
+                        try
                         {
-                            users.Add(new ADUserDto
+                            var searchResults = await Task.Run(() => ldapConnection.Search(
+                                baseDn,
+                                2, // SCOPE_SUB
+                                searchFilter,
+                                new[] { "sAMAccountName", "displayName", "mail", "givenName", "sn", "department", "title", "manager" },
+                                false
+                            ));
+
+                            while (searchResults.HasMore())
                             {
-                                Id = entry.GetAttribute("sAMAccountName")?.StringValue,
-                                Username = entry.GetAttribute("sAMAccountName")?.StringValue,
-                                Email = entry.GetAttribute("mail")?.StringValue,
-                                DisplayName = entry.GetAttribute("displayName")?.StringValue,
-                                FirstName = entry.GetAttribute("givenName")?.StringValue,
-                                LastName = entry.GetAttribute("sn")?.StringValue,
-                                Department = entry.GetAttribute("department")?.StringValue,
-                                Title = entry.GetAttribute("title")?.StringValue,
-                                Manager = entry.GetAttribute("manager")?.StringValue,
-                                IsActive = true // Assuming all found users are active
-                            });
+                                var entry = searchResults.Next();
+                                if (entry != null)
+                                {
+                                    allUsers.Add(new ADUserDto
+                                    {
+                                        Id = GetSafely(entry, "sAMAccountName"),
+                                        Username = GetSafely(entry, "sAMAccountName"),
+                                        Email = GetSafely(entry, "mail"),
+                                        DisplayName = GetSafely(entry, "displayName"),
+                                        FirstName = GetSafely(entry, "givenName"),
+                                        LastName = GetSafely(entry, "sn"),
+                                        Department = GetSafely(entry, "department"),
+                                        Title = GetSafely(entry, "title"),
+                                        Manager = GetSafely(entry, "manager"),
+                                        IsActive = true
+                                    });
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"An error occurred while searching in OU: {baseDn}. Skipping this OU.");
+                            // تابع إلى OU التالي
                         }
                     }
-                    return Ok(users);
                 }
+                _logger.LogInformation($"Search complete. Total users found: {allUsers.Count}");
+                return Ok(allUsers);
             }
             catch (LdapException ex)
             {

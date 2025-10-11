@@ -347,6 +347,44 @@ class DatabaseService {
       };
     }
   }
+       // أضف هذه الدالة في نهاية ملف services/DatabaseService.js
+
+export const getActiveDirectoryConfig = async () => {
+  try {
+    const response = await fetch('/api/ActiveDirectory/config');
+    if (!response.ok) {
+      throw new Error('Failed to fetch AD config');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching AD config:', error);
+    throw error;
+  }
+};
 }
+
+// أضف هذه الدالة في نهاية الملف قبل export const databaseService = new DatabaseService();
+
+// Save Active Directory configuration
+export const saveActiveDirectoryConfig = async (config: any): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await fetch('/api/ActiveDirectory/config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+      console.error('Error saving AD config:', error);
+      return {
+        success: false,
+        message: `خطأ في حفظ إعدادات Active Directory: ${error}`
+      };
+  }
+};
 
 export const databaseService = new DatabaseService();
