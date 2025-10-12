@@ -68,11 +68,15 @@ public class ToDoOSContext : DbContext
             .HasKey(bm => new { bm.BoardId, bm.UserId });
 
         // Configure check constraints
-        modelBuilder.Entity<User>()
-            .HasCheckConstraint("CK_User_Role", "role IN ('admin', 'manager', 'user')");
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable(table => table.HasCheckConstraint("CK_User_Role", "role IN ('admin', 'manager', 'user')"));
+        });
 
-        modelBuilder.Entity<Card>()
-            .HasCheckConstraint("CK_Card_Priority", "priority IN ('Low', 'Medium', 'High')");
+        modelBuilder.Entity<Card>(entity =>
+        {
+            entity.ToTable(table => table.HasCheckConstraint("CK_Card_Priority", "priority IN ('Low', 'Medium', 'High')"));
+        });
 
         // Configure indexes
         modelBuilder.Entity<User>()
