@@ -2928,19 +2928,19 @@
     ]
   },
   "packageFolders": {
-    "/home/todoos/.nuget/packages/": {}
+    "C:\\Users\\fmghamdi.UQU\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/todoos/todoos-project/src/TaqTask.Application/TaqTask.Application.csproj",
+      "projectUniqueName": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj",
       "projectName": "TaqTask.Application",
-      "projectPath": "/home/todoos/todoos-project/src/TaqTask.Application/TaqTask.Application.csproj",
-      "packagesPath": "/home/todoos/.nuget/packages/",
-      "outputPath": "/home/todoos/todoos-project/src/TaqTask.Application/obj/",
+      "projectPath": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Application\\TaqTask.Application.csproj",
+      "packagesPath": "C:\\Users\\fmghamdi.UQU\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Application\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/todoos/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\fmghamdi.UQU\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -2952,11 +2952,11 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/home/todoos/todoos-project/src/TaqTask.Data/TaqTask.Data.csproj": {
-              "projectPath": "/home/todoos/todoos-project/src/TaqTask.Data/TaqTask.Data.csproj"
+            "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj": {
+              "projectPath": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Data\\TaqTask.Data.csproj"
             },
-            "/home/todoos/todoos-project/src/TaqTask.Domain/TaqTask.Domain.csproj": {
-              "projectPath": "/home/todoos/todoos-project/src/TaqTask.Domain/TaqTask.Domain.csproj"
+            "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj": {
+              "projectPath": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj"
             }
           }
         }
@@ -2971,7 +2971,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -2992,7 +2992,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

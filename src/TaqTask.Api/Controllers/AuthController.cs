@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,7 +7,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using TaqTask.Data;
-using TaqTask.Domain;
 using TaqTask.Api.Models;
 
 namespace TaqTask.Api.Controllers;
@@ -17,56 +17,115 @@ public class AuthController : ControllerBase
 {
     private readonly ToDoOSContext _context;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(ToDoOSContext context, IConfiguration configuration)
+    public AuthController(
+        ToDoOSContext context, 
+        IConfiguration configuration,
+        ILogger<AuthController> logger)
     {
         _context = context;
         _configuration = configuration;
+        _logger = logger;
     }
 
     // POST: api/auth/login
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
+        _logger.LogInformation("Login attempt for email: {Email}", request.Email);
+
+        // ✅ CRITICAL FIX: Always fetch fresh user data from DB including role
         var user = await _context.Users
+            .AsNoTracking() // Ensure no caching
             .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
 
         if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
         {
+            _logger.LogWarning("Failed login attempt for email: {Email}", request.Email);
             return BadRequest(new { message = "Invalid email or password" });
         }
 
+        _logger.LogInformation("Successful login for user: {Username}, Role: {Role}", user.Username, user.Role);
+
         // Update last login
-        user.LastLogin = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
+        _context.Users.Update(user);
         await _context.SaveChangesAsync();
 
-        // Generate JWT token
+        // ✅ Generate JWT token with FRESH role from database
         var token = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
-
-        // Store refresh token (in a real app, you'd store this in database)
-        // For now, we'll just return it
 
         var response = new LoginResponse
         {
             Token = token,
             RefreshToken = refreshToken,
-            User = new UserDto
+            User = MapUserToDto(user),
+            ExpiresAt = DateTime.UtcNow.AddHours(24)
+        };
+
+        return Ok(response);
+    }
+
+    // POST: api/auth/ad-login - For Active Directory authenticated users
+    [HttpPost("ad-login")]
+    public async Task<ActionResult<LoginResponse>> ADLogin(ADLoginRequest request)
+    {
+        _logger.LogInformation("AD login attempt for username: {Username}", request.Username);
+
+        // ✅ CRITICAL FIX: For AD users, ALWAYS fetch user data from DB by username/email
+        // This ensures roles are pulled from the central database, not client cache
+        var user = await _context.Users
+            .AsNoTracking() // No cache
+            .FirstOrDefaultAsync(u => 
+                (u.Username == request.Username || u.Email == request.Email) && 
+                u.IsActive);
+
+        if (user == null)
+        {
+            // If user doesn't exist in DB yet, create them with default role
+            _logger.LogInformation("Creating new AD user in database: {Username}", request.Username);
+            
+            user = new User
             {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Avatar = user.Avatar,
-                Role = user.Role,
-                IsActive = user.IsActive,
-                IsAdUser = user.IsAdUser,
-                Department = user.Department,
-                JobTitle = user.JobTitle,
-                Phone = user.Phone,
-                CreatedAt = user.CreatedAt,
-                LastLogin = user.LastLogin
-            },
+                Username = request.Username,
+                Email = request.Email,
+                FullName = request.DisplayName,
+                PasswordHash = GenerateRandomPasswordHash(), // AD users don't use local password
+                Role = "user", // Default role - admin must assign proper role
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Created new AD user: {Username} with default role: user", request.Username);
+        }
+        else
+        {
+            // ✅ Update user info but PRESERVE the role assigned by admin
+            _logger.LogInformation("Existing AD user login: {Username}, Current Role: {Role}", user.Username, user.Role);
+            
+            user.FullName = request.DisplayName;
+            user.UpdatedAt = DateTime.UtcNow;
+            
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        // ✅ CRITICAL: Generate token with role DIRECTLY from database
+        _logger.LogInformation("Generating token for AD user: {Username} with role: {Role}", user.Username, user.Role);
+        var token = GenerateJwtToken(user);
+        var refreshToken = GenerateRefreshToken();
+
+        var response = new LoginResponse
+        {
+            Token = token,
+            RefreshToken = refreshToken,
+            User = MapUserToDto(user),
             ExpiresAt = DateTime.UtcNow.AddHours(24)
         };
 
@@ -95,13 +154,10 @@ public class AuthController : ControllerBase
             Email = request.Email,
             PasswordHash = HashPassword(request.Password),
             FullName = request.FullName,
-            Avatar = request.Avatar,
             Role = "user", // Default role
             IsActive = true,
-            IsAdUser = false,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            LastLogin = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
@@ -115,19 +171,7 @@ public class AuthController : ControllerBase
         {
             Token = token,
             RefreshToken = refreshToken,
-            User = new UserDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Avatar = user.Avatar,
-                Role = user.Role,
-                IsActive = user.IsActive,
-                IsAdUser = user.IsAdUser,
-                CreatedAt = user.CreatedAt,
-                LastLogin = user.LastLogin
-            },
+            User = MapUserToDto(user),
             ExpiresAt = DateTime.UtcNow.AddHours(24)
         };
 
@@ -138,12 +182,6 @@ public class AuthController : ControllerBase
     [HttpPost("refresh")]
     public async Task<ActionResult<LoginResponse>> RefreshToken(RefreshTokenRequest request)
     {
-        // In a real application, you would:
-        // 1. Validate the refresh token from database
-        // 2. Check if it's not expired
-        // 3. Get the user associated with the refresh token
-
-        // For now, we'll extract user info from the expired JWT token
         var principal = GetPrincipalFromExpiredToken(request.Token);
         if (principal == null)
         {
@@ -156,13 +194,19 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Invalid token" });
         }
 
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || !user.IsActive)
+        // ✅ CRITICAL: Fetch fresh user data with current role from DB
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            
+        if (user == null)
         {
             return BadRequest(new { message = "User not found or inactive" });
         }
 
-        // Generate new tokens
+        _logger.LogInformation("Token refresh for user: {Username}, Current Role: {Role}", user.Username, user.Role);
+
+        // Generate new tokens with FRESH role data
         var newToken = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
@@ -170,90 +214,16 @@ public class AuthController : ControllerBase
         {
             Token = newToken,
             RefreshToken = newRefreshToken,
-            User = new UserDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FullName = user.FullName,
-                Avatar = user.Avatar,
-                Role = user.Role,
-                IsActive = user.IsActive,
-                IsAdUser = user.IsAdUser,
-                Department = user.Department,
-                JobTitle = user.JobTitle,
-                Phone = user.Phone,
-                CreatedAt = user.CreatedAt,
-                LastLogin = user.LastLogin
-            },
+            User = MapUserToDto(user),
             ExpiresAt = DateTime.UtcNow.AddHours(24)
         };
 
         return Ok(response);
     }
 
-    // POST: api/auth/logout
-    [HttpPost("logout")]
-    public IActionResult Logout()
-    {
-        // In a real application, you would:
-        // 1. Invalidate the refresh token in database
-        // 2. Add the JWT token to a blacklist (optional)
-        
-        return Ok(new { message = "Logged out successfully" });
-    }
-
-    // POST: api/auth/forgot-password
-    [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
-    {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
-
-        if (user == null)
-        {
-            // Don't reveal if email exists or not for security
-            return Ok(new { message = "If the email exists, a reset link has been sent" });
-        }
-
-        // In a real application, you would:
-        // 1. Generate a password reset token
-        // 2. Store it in database with expiration
-        // 3. Send email with reset link
-
-        // For now, just return success
-        return Ok(new { message = "If the email exists, a reset link has been sent" });
-    }
-
-    // POST: api/auth/reset-password
-    [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
-    {
-        // In a real application, you would:
-        // 1. Validate the reset token
-        // 2. Check if it's not expired
-        // 3. Get the user associated with the token
-
-        // For demo purposes, we'll just find user by email
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
-
-        if (user == null)
-        {
-            return BadRequest(new { message = "Invalid reset request" });
-        }
-
-        // Update password
-        user.PasswordHash = HashPassword(request.NewPassword);
-        user.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Password reset successfully" });
-    }
-
-    // GET: api/auth/me
+    // GET: api/auth/me - Get current user with FRESH data from DB
     [HttpGet("me")]
+    [Authorize]
     public async Task<ActionResult<UserDto>> GetCurrentUser()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -262,54 +232,52 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || !user.IsActive)
+        // ✅ CRITICAL: Always fetch fresh data from DB
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            
+        if (user == null)
         {
             return Unauthorized();
         }
 
-        var userDto = new UserDto
-        {
-            Id = user.Id,
-            Username = user.Username,
-            Email = user.Email,
-            FullName = user.FullName,
-            Avatar = user.Avatar,
-            Role = user.Role,
-            IsActive = user.IsActive,
-            IsAdUser = user.IsAdUser,
-            Department = user.Department,
-            JobTitle = user.JobTitle,
-            Phone = user.Phone,
-            CreatedAt = user.CreatedAt,
-            LastLogin = user.LastLogin
-        };
+        _logger.LogInformation("Fetching current user: {Username}, Role: {Role}", user.Username, user.Role);
 
-        return Ok(userDto);
+        return Ok(MapUserToDto(user));
     }
 
+    // POST: api/auth/logout
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        return Ok(new { message = "Logged out successfully" });
+    }
+
+    // Helper Methods
     private string GenerateJwtToken(User user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"] ?? "ToDoOS_Super_Secret_Key_2024_Change_In_Production");
         
+        // ✅ CRITICAL: Include role claim from database
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role),
-            new Claim("FullName", user.FullName),
-            new Claim("Avatar", user.Avatar ?? ""),
-            new Claim("Department", user.Department ?? ""),
-            new Claim("JobTitle", user.JobTitle ?? "")
+            new Claim(ClaimTypes.Role, user.Role), // ← Role from DB
+            new Claim("FullName", user.FullName ?? ""),
+            new Claim("username", user.Username)
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(24),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key), 
+                SecurityAlgorithms.HmacSha256Signature),
             Issuer = jwtSettings["Issuer"] ?? "ToDoOS",
             Audience = jwtSettings["Audience"] ?? "ToDoOS-Users"
         };
@@ -327,6 +295,12 @@ public class AuthController : ControllerBase
         return Convert.ToBase64String(randomNumber);
     }
 
+    private string GenerateRandomPasswordHash()
+    {
+        var randomPassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        return HashPassword(randomPassword);
+    }
+
     private ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
@@ -338,7 +312,7 @@ public class AuthController : ControllerBase
             ValidateIssuer = false,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateLifetime = false // We want to get principal from expired token
+            ValidateLifetime = false
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -369,13 +343,36 @@ public class AuthController : ControllerBase
     {
         return HashPassword(password) == hash;
     }
+
+    private static UserDto MapUserToDto(User user)
+    {
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role, // ← Always from DB
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+    }
 }
 
-// DTOs for Auth
+// DTOs
 public class LoginRequest
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+}
+
+public class ADLoginRequest
+{
+    public string Username { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string? Department { get; set; }
+    public string? JobTitle { get; set; }
 }
 
 public class RegisterRequest
@@ -384,7 +381,6 @@ public class RegisterRequest
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
-    public string? Avatar { get; set; }
 }
 
 public class LoginResponse
@@ -401,14 +397,13 @@ public class RefreshTokenRequest
     public string RefreshToken { get; set; } = string.Empty;
 }
 
-public class ForgotPasswordRequest
+public class UserDto
 {
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-}
-
-public class ResetPasswordRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Token { get; set; } = string.Empty;
-    public string NewPassword { get; set; } = string.Empty;
+    public string? FullName { get; set; }
+    public string Role { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

@@ -69,7 +69,7 @@ class ApiService {
       this.baseUrl = '/api';
     } else {
       // For local development, try multiple possible URLs
-      this.baseUrl = 'http://localhost:5000/api';
+      this.baseUrl = 'http://localhost:5169/api';
     }
     
     this.token = localStorage.getItem('authToken');

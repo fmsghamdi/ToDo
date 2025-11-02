@@ -8,19 +8,19 @@
     "net9.0": []
   },
   "packageFolders": {
-    "/home/todoos/.nuget/packages/": {}
+    "C:\\Users\\fmghamdi.UQU\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/todoos/todoos-project/src/TaqTask.Domain/TaqTask.Domain.csproj",
+      "projectUniqueName": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj",
       "projectName": "TaqTask.Domain",
-      "projectPath": "/home/todoos/todoos-project/src/TaqTask.Domain/TaqTask.Domain.csproj",
-      "packagesPath": "/home/todoos/.nuget/packages/",
-      "outputPath": "/home/todoos/todoos-project/src/TaqTask.Domain/obj/",
+      "projectPath": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Domain\\TaqTask.Domain.csproj",
+      "packagesPath": "C:\\Users\\fmghamdi.UQU\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\fmghamdi.UQU\\Documents\\ToDoOS\\src\\TaqTask.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/todoos/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\fmghamdi.UQU\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -44,7 +44,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -65,7 +65,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
