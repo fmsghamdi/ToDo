@@ -22,6 +22,10 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   const [selectedMember, setSelectedMember] = useState("");
   const [selectedLabel, setSelectedLabel] = useState("");
   const [showOverdue, setShowOverdue] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [searchInDescription, setSearchInDescription] = useState(true);
+  const [searchInComments, setSearchInComments] = useState(false);
 
   // Get all unique labels from all cards
   const allLabels = Array.from(
@@ -35,7 +39,8 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
 
   // Apply filters
   useEffect(() => {
-    if (!searchTerm && !selectedPriority && !selectedMember && !selectedLabel && !showOverdue) {
+    const hasFilters = searchTerm || selectedPriority || selectedMember || selectedLabel || showOverdue || dateFrom || dateTo;
+    if (!hasFilters) {
       onClearFilters();
       return;
     }
@@ -45,40 +50,39 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     const filteredColumns = columns.map(column => ({
       ...column,
       cards: column.cards.filter(card => {
-        // Search term filter
-        if (searchTerm && !card.title.toLowerCase().includes(searchTerm.toLowerCase()) && 
-            !card.description.toLowerCase().includes(searchTerm.toLowerCase())) {
-          return false;
+        // Search term filter (title, optionally description, optionally comments)
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase();
+          const titleMatch = card.title.toLowerCase().includes(term);
+          const descMatch = searchInDescription && card.description.toLowerCase().includes(term);
+          const commentMatch = searchInComments && card.comments.some(c => c.text.toLowerCase().includes(term));
+          if (!titleMatch && !descMatch && !commentMatch) return false;
         }
 
         // Priority filter
-        if (selectedPriority && card.priority !== selectedPriority) {
-          return false;
-        }
+        if (selectedPriority && card.priority !== selectedPriority) return false;
 
         // Member filter
-        if (selectedMember && !card.members.some(member => member.id === selectedMember)) {
-          return false;
-        }
+        if (selectedMember && !card.members.some(member => member.id === selectedMember)) return false;
 
         // Label filter
-        if (selectedLabel && !card.labels.some(label => label.name === selectedLabel)) {
-          return false;
-        }
+        if (selectedLabel && !card.labels.some(label => label.name === selectedLabel)) return false;
 
         // Overdue filter
         if (showOverdue) {
-          if (!card.dueDate || card.dueDate >= today) {
-            return false;
-          }
+          if (!card.dueDate || card.dueDate >= today) return false;
         }
+
+        // Date range filter
+        if (dateFrom && card.dueDate && card.dueDate < dateFrom) return false;
+        if (dateTo && card.dueDate && card.dueDate > dateTo) return false;
 
         return true;
       })
     }));
 
     onFilteredResults(filteredColumns);
-  }, [searchTerm, selectedPriority, selectedMember, selectedLabel, showOverdue, columns, onFilteredResults, onClearFilters]);
+  }, [searchTerm, selectedPriority, selectedMember, selectedLabel, showOverdue, dateFrom, dateTo, searchInDescription, searchInComments, columns, onFilteredResults, onClearFilters]);
 
   const clearAllFilters = () => {
     setSearchTerm("");
@@ -86,10 +90,12 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     setSelectedMember("");
     setSelectedLabel("");
     setShowOverdue(false);
+    setDateFrom("");
+    setDateTo("");
     onClearFilters();
   };
 
-  const hasActiveFilters = searchTerm || selectedPriority || selectedMember || selectedLabel || showOverdue;
+  const hasActiveFilters = searchTerm || selectedPriority || selectedMember || selectedLabel || showOverdue || dateFrom || dateTo;
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -142,7 +148,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
         </select>
 
         {/* Overdue Filter */}
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm whitespace-nowrap">
           <input
             type="checkbox"
             checked={showOverdue}
@@ -151,6 +157,24 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           />
           <span>{language === 'ar' ? 'متأخرة' : 'Overdue'}</span>
         </label>
+
+        {/* Date Range Filters */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-gray-500">{language === 'ar' ? 'من' : 'From'}</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+          />
+          <label className="text-xs text-gray-500">{language === 'ar' ? 'إلى' : 'To'}</label>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="px-2 py-1.5 border border-gray-300 rounded text-sm"
+          />
+        </div>
 
         {/* Clear Filters */}
         {hasActiveFilters && (
@@ -162,6 +186,20 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           </button>
         )}
       </div>
+
+      {/* Search options */}
+      {searchTerm && (
+        <div className="mt-2 flex gap-4 text-xs text-gray-500">
+          <label className="flex items-center gap-1">
+            <input type="checkbox" checked={searchInDescription} onChange={(e) => setSearchInDescription(e.target.checked)} />
+            {language === 'ar' ? 'بحث في الوصف' : 'Search description'}
+          </label>
+          <label className="flex items-center gap-1">
+            <input type="checkbox" checked={searchInComments} onChange={(e) => setSearchInComments(e.target.checked)} />
+            {language === 'ar' ? 'بحث في التعليقات' : 'Search comments'}
+          </label>
+        </div>
+      )}
 
       {/* Active Filters Summary */}
       {hasActiveFilters && (
@@ -189,6 +227,16 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           {showOverdue && (
             <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
               {language === 'ar' ? 'متأخرة' : 'Overdue'}
+            </span>
+          )}
+          {dateFrom && (
+            <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs">
+              {language === 'ar' ? 'من' : 'From'}: {dateFrom}
+            </span>
+          )}
+          {dateTo && (
+            <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded text-xs">
+              {language === 'ar' ? 'إلى' : 'To'}: {dateTo}
             </span>
           )}
         </div>

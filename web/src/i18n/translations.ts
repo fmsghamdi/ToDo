@@ -48,6 +48,7 @@ export interface Translation {
   // Columns
   todo: string;
   inProgress: string;
+  onHold: string;
   done: string;
 
   // Auth
@@ -443,6 +444,7 @@ export const translations: Record<'ar' | 'en', Translation> = {
     // Columns
     todo: 'للقيام',
     inProgress: 'قيد التنفيذ',
+    onHold: 'معلّقة',
     done: 'مكتمل',
 
     // Auth
@@ -831,6 +833,7 @@ export const translations: Record<'ar' | 'en', Translation> = {
     // Columns
     todo: 'To Do',
     inProgress: 'In Progress',
+    onHold: 'On Hold',
     done: 'Done',
 
     // Auth

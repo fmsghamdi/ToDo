@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { databaseService, getActiveDirectoryConfig, saveActiveDirectoryConfig } from '../services/DatabaseService';
 import { useLanguage } from '../i18n/useLanguage';
 import { authService } from '../services/AuthService';
+import apiService from '../services/ApiService';
 
 interface DatabaseConfig {
 type: 'mysql' | 'postgresql' | 'sqlserver' | 'oracle';
@@ -54,7 +55,7 @@ sessionTimeout: number;
 
 const SystemSettings: React.FC = () => {
 const { t } = useLanguage();
-const [activeTab, setActiveTab] = useState<'database' | 'ad' | 'email' | 'system'>('database');
+  const [activeTab, setActiveTab] = useState<'database' | 'ad' | 'email' | 'system' | 'branding'>('database');
 const [isLoading, setIsLoading] = useState(false);
 const [testResults, setTestResults] = useState<{ [key: string]: { success: boolean; message: string } }>({});
 const [databaseStatus, setDatabaseStatus] = useState<{ connected: boolean; tablesCount: number; message: string }>({
@@ -121,16 +122,26 @@ taskEmailAddress: '',
 autoCreateTasks: true
 });
 
-const [systemConfig, setSystemConfig] = useState<SystemConfig>({
-organizationName: '',
-systemUrl: '',
-defaultLanguage: 'en',
-timezone: 'Asia/Riyadh',
-dateFormat: 'DD/MM/YYYY',
-allowSelfRegistration: true,
-requireEmailVerification: false,
-sessionTimeout: 480
-});
+  const [systemConfig, setSystemConfig] = useState<SystemConfig>({
+    organizationName: '',
+    systemUrl: '',
+    defaultLanguage: 'en',
+    timezone: 'Asia/Riyadh',
+    dateFormat: 'DD/MM/YYYY',
+    allowSelfRegistration: true,
+    requireEmailVerification: false,
+    sessionTimeout: 480
+  });
+
+  const [branding, setBranding] = useState({
+    logoUrl: localStorage.getItem('tenantLogoUrl') || '',
+    primaryColor: getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#4A7C59',
+    secondaryColor: getComputedStyle(document.documentElement).getPropertyValue('--secondary').trim() || '#7FB069',
+    companyName: localStorage.getItem('tenantName') || '',
+    companyAddress: '',
+    companyPhone: '',
+    companyWebsite: '',
+  });
 
 const testDatabaseConnection = async () => {
 setIsLoading(true);
@@ -419,17 +430,51 @@ if (!result.success) {
 localStorage.setItem('emailConfig', JSON.stringify(emailConfig));
 result = { success: true, message: 'تم حفظ إعدادات البريد الإلكتروني محلياً (الخادم غير متاح)' };
 }
-} else if (activeTab === 'system') {
-// Save system configuration to server
-result = await databaseService.saveSystemSettings(systemConfig);
-console.log('System config save result:', result);
+    } else if (activeTab === 'system') {
+        // Save system configuration to server
+        result = await databaseService.saveSystemSettings(systemConfig);
+        console.log('System config save result:', result);
 
-// Fallback to localStorage if server fails
-if (!result.success) {
-localStorage.setItem('systemConfig', JSON.stringify(systemConfig));
-result = { success: true, message: 'تم حفظ الإعدادات العامة محلياً (الخادم غير متاح)' };
-}
-}
+        // Fallback to localStorage if server fails
+        if (!result.success) {
+          localStorage.setItem('systemConfig', JSON.stringify(systemConfig));
+          result = { success: true, message: 'تم حفظ الإعدادات العامة محلياً (الخادم غير متاح)' };
+        }
+      } else if (activeTab === 'branding') {
+        // Apply branding to UI immediately
+        const root = document.documentElement;
+        root.style.setProperty('--primary', branding.primaryColor);
+        root.style.setProperty('--secondary', branding.secondaryColor);
+        localStorage.setItem('tenantLogoUrl', branding.logoUrl);
+        localStorage.setItem('tenantName', branding.companyName);
+
+        // Try to save to server via API
+        try {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const tenantId = payload.TenantId;
+            if (tenantId) {
+              await apiService.updateTenant(parseInt(tenantId), {
+                logoUrl: branding.logoUrl || undefined,
+                primaryColor: branding.primaryColor || undefined,
+                secondaryColor: branding.secondaryColor || undefined,
+                companyAddress: branding.companyAddress || undefined,
+                companyPhone: branding.companyPhone || undefined,
+                companyWebsite: branding.companyWebsite || undefined,
+                name: branding.companyName || undefined,
+              });
+              result = { success: true, message: '✅ تم حفظ العلامة التجارية بنجاح' };
+            } else {
+              result = { success: true, message: '✅ تم حفظ العلامة التجارية محلياً' };
+            }
+          } else {
+            result = { success: true, message: '✅ تم حفظ العلامة التجارية محلياً' };
+          }
+        } catch {
+          result = { success: true, message: '✅ تم حفظ العلامة التجارية محلياً (الخادم غير متاح)' };
+        }
+      }
 
 // Show result message
 if (result.success) {
@@ -442,13 +487,16 @@ console.error('Error saving configuration:', error);
 
 // Fallback save to localStorage
 try {
-if (activeTab === 'database') {
-localStorage.setItem('databaseConfig', JSON.stringify(databaseConfig));
-} else if (activeTab === 'email') {
-localStorage.setItem('emailConfig', JSON.stringify(emailConfig));
-} else if (activeTab === 'system') {
-localStorage.setItem('systemConfig', JSON.stringify(systemConfig));
-}
+      if (activeTab === 'database') {
+          localStorage.setItem('databaseConfig', JSON.stringify(databaseConfig));
+        } else if (activeTab === 'email') {
+          localStorage.setItem('emailConfig', JSON.stringify(emailConfig));
+        } else if (activeTab === 'system') {
+          localStorage.setItem('systemConfig', JSON.stringify(systemConfig));
+        } else if (activeTab === 'branding') {
+          localStorage.setItem('tenantLogoUrl', branding.logoUrl);
+          localStorage.setItem('tenantName', branding.companyName);
+        }
 alert('✅ تم حفظ الإعدادات محلياً (الخادم غير متاح)');
 } catch (fallbackError) {
 console.error('Fallback save failed:', fallbackError);
@@ -834,8 +882,126 @@ className="px-4 py-2 bg-purple-600 text-white rounded-lg"
 </div>
 );
 
-// ====== System Tab ======
-const renderSystemTab = () => (
+  // ====== Branding Tab ======
+  const renderBrandingTab = () => (
+    <div className="space-y-6">
+      <div className="bg-pink-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold text-pink-800 mb-2">🎨 العلامة التجارية للجهة</h3>
+        <p className="text-pink-600">تخصيص الألوان والشعار الخاص بجهتك</p>
+      </div>
+
+      {/* Preview */}
+      <div className="border rounded-lg p-6 bg-white">
+        <h4 className="font-semibold mb-4">معاينة حية</h4>
+        <div className="flex items-center gap-4 p-4 rounded-lg" style={{
+          background: `linear-gradient(135deg, ${branding.primaryColor} 0%, ${branding.secondaryColor} 100%)`,
+        }}>
+          {branding.logoUrl && (
+            <img src={branding.logoUrl} alt="logo" className="w-12 h-12 object-contain bg-white rounded-lg p-1" />
+          )}
+          <span className="text-white font-bold text-lg">{branding.companyName || 'اسم الجهة'}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium mb-2">اللون الأساسي</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={branding.primaryColor}
+              onChange={(e) => setBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
+              className="w-12 h-12 rounded cursor-pointer border"
+            />
+            <input
+              type="text"
+              value={branding.primaryColor}
+              onChange={(e) => setBranding(prev => ({ ...prev, primaryColor: e.target.value }))}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono"
+              placeholder="#4A7C59"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">اللون الثانوي</label>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              value={branding.secondaryColor}
+              onChange={(e) => setBranding(prev => ({ ...prev, secondaryColor: e.target.value }))}
+              className="w-12 h-12 rounded cursor-pointer border"
+            />
+            <input
+              type="text"
+              value={branding.secondaryColor}
+              onChange={(e) => setBranding(prev => ({ ...prev, secondaryColor: e.target.value }))}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg font-mono"
+              placeholder="#7FB069"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">رابط الشعار</label>
+          <input
+            type="url"
+            value={branding.logoUrl}
+            onChange={(e) => setBranding(prev => ({ ...prev, logoUrl: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            placeholder="https://example.com/logo.png"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">اسم الجهة</label>
+          <input
+            type="text"
+            value={branding.companyName}
+            onChange={(e) => setBranding(prev => ({ ...prev, companyName: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            placeholder="شركة الأمل"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">العنوان</label>
+          <input
+            type="text"
+            value={branding.companyAddress}
+            onChange={(e) => setBranding(prev => ({ ...prev, companyAddress: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            placeholder="الرياض، المملكة العربية السعودية"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
+          <input
+            type="text"
+            value={branding.companyPhone}
+            onChange={(e) => setBranding(prev => ({ ...prev, companyPhone: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            placeholder="+966 5X XXX XXXX"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium mb-2">الموقع الإلكتروني</label>
+          <input
+            type="url"
+            value={branding.companyWebsite}
+            onChange={(e) => setBranding(prev => ({ ...prev, companyWebsite: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            placeholder="https://company.com"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // ====== System Tab ======
+  const renderSystemTab = () => (
 <div className="space-y-6">
 <div className="bg-gray-50 p-4 rounded-lg">
 <h3 className="text-lg font-semibold text-gray-800 mb-2">{t.generalSettings}</h3>
@@ -891,7 +1057,10 @@ return (
 {t.emailSettings}
 </button>
 <button onClick={() => setActiveTab('system')} className={`py-4 px-1 border-b-2 ${activeTab === 'system' ? 'border-gray-500 text-gray-600' : 'border-transparent text-gray-500'}`}>
-{t.generalSettings}
+  {t.generalSettings}
+</button>
+<button onClick={() => setActiveTab('branding')} className={`py-4 px-1 border-b-2 ${activeTab === 'branding' ? 'border-pink-500 text-pink-600' : 'border-transparent text-gray-500'}`}>
+  🎨 العلامة التجارية
 </button>
 </nav>
 </div>
@@ -901,8 +1070,9 @@ return (
 {activeTab === 'database' && renderDatabaseTab()}
 {activeTab === 'ad' && renderADTab()}
 {activeTab === 'email' && renderEmailTab()}
-{activeTab === 'system' && renderSystemTab()}
-</div>
+          {activeTab === 'system' && renderSystemTab()}
+          {activeTab === 'branding' && renderBrandingTab()}
+        </div>
 
 {/* Footer */}
 <div className="border-t border-gray-200 p-6 bg-gray-50 flex justify-end gap-4">

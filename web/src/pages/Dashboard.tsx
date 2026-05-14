@@ -61,6 +61,7 @@ export default function Dashboard({ columns }: Props) {
   const getColTitle = (id: string, fallback: string) => {
     if (id === "todo") return t.todo;
     if (id === "in-progress") return t.inProgress;
+    if (id === "on-hold") return t.onHold;
     if (id === "done") return t.done;
     return fallback;
   };

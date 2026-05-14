@@ -44,4 +44,6 @@ export type User = {
   department?: string; // AD user department
   title?: string; // AD user job title
   isADUser?: boolean; // Flag to identify AD users
+  tenantId?: number; // Multi-tenant support
+  tenantName?: string;
 };

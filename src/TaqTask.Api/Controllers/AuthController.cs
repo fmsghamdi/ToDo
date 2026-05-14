@@ -147,6 +147,9 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Username already taken" });
         }
 
+        // Assign default tenant or use provided tenant
+        var tenantId = request.TenantId > 0 ? request.TenantId : 1;
+
         // Create new user
         var user = new User
         {
@@ -154,8 +157,9 @@ public class AuthController : ControllerBase
             Email = request.Email,
             PasswordHash = HashPassword(request.Password),
             FullName = request.FullName,
-            Role = "user", // Default role
+            Role = "user",
             IsActive = true,
+            TenantId = tenantId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -260,13 +264,19 @@ public class AuthController : ControllerBase
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"] ?? "ToDoOS_Super_Secret_Key_2024_Change_In_Production");
         
-        // ✅ CRITICAL: Include role claim from database
+        var tenantName = _context.Tenants
+            .Where(t => t.Id == user.TenantId)
+            .Select(t => t.Name)
+            .FirstOrDefault() ?? "";
+
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role), // ← Role from DB
+            new Claim(ClaimTypes.Role, user.Role),
+            new Claim("TenantId", user.TenantId.ToString()),
+            new Claim("TenantName", tenantName),
             new Claim("FullName", user.FullName ?? ""),
             new Claim("username", user.Username)
         };
@@ -344,16 +354,23 @@ public class AuthController : ControllerBase
         return HashPassword(password) == hash;
     }
 
-    private static UserDto MapUserToDto(User user)
+    private UserDto MapUserToDto(User user)
     {
+        var tenantName = _context.Tenants
+            .Where(t => t.Id == user.TenantId)
+            .Select(t => t.Name)
+            .FirstOrDefault();
+
         return new UserDto
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
             FullName = user.FullName,
-            Role = user.Role, // ← Always from DB
+            Role = user.Role,
             IsActive = user.IsActive,
+            TenantId = user.TenantId,
+            TenantName = tenantName,
             CreatedAt = user.CreatedAt
         };
     }
@@ -381,6 +398,7 @@ public class RegisterRequest
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
+    public int TenantId { get; set; }
 }
 
 public class LoginResponse
@@ -405,5 +423,7 @@ public class UserDto
     public string? FullName { get; set; }
     public string Role { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+    public int TenantId { get; set; }
+    public string? TenantName { get; set; }
     public DateTime CreatedAt { get; set; }
 }

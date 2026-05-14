@@ -8,10 +8,12 @@ import type {
   Comment,
   Member,
   Priority,
+  AssignRequest,
 } from "./Types";
 import { LABEL_PRESETS, PRIORITY_PRESETS } from "./Types";
 import TimeTracker from "./components/TimeTracker";
 import RecurringTaskModal from "./components/RecurringTaskModal";
+import AssignRequestsPanel from "./components/AssignRequestsPanel";
 import type { User } from "./UserTypes";
 import { useLanguage } from "./i18n/useLanguage";
 
@@ -22,10 +24,14 @@ type Props = {
   onClose: () => void;
   availableMembers: Member[];
   currentUser?: User;
+  assignRequests: AssignRequest[];
+  onRequestAssign: (req: Omit<AssignRequest, "id" | "createdAt" | "updatedAt">) => void;
+  onApproveAssign: (reqId: string) => void;
+  onRejectAssign: (reqId: string) => void;
 };
 
-const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availableMembers, currentUser }) => {
-  const { t } = useLanguage();
+const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availableMembers, currentUser, assignRequests, onRequestAssign, onApproveAssign, onRejectAssign }) => {
+  const { t, language } = useLanguage();
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description);
   const [subtasks, setSubtasks] = useState<Subtask[]>(card.subtasks || []);
@@ -40,6 +46,9 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
   const [commentInput, setCommentInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
   const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [mentionSearch, setMentionSearch] = useState("");
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionIndex, setMentionIndex] = useState(-1);
 
   // --- Activity logger ---
   const logActivity = (type: Activity["type"], message: string) => {
@@ -132,6 +141,18 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
     } else {
       setMembers((prev) => [...prev, member]);
       logActivity("member", `Added member "${member.name}"`);
+      if (window.addNotification) {
+        window.addNotification({
+          type: "task_assigned",
+          title: language === "ar" ? "تم تعيينك في مهمة" : "Task Assigned",
+          message: language === "ar"
+            ? `تم تعيينك في مهمة "${card.title}" بواسطة ${currentUser?.name || "مستخدم"}`
+            : `You were assigned to "${card.title}" by ${currentUser?.name || "a user"}`,
+          cardId: card.id,
+          cardTitle: card.title,
+          priority: "medium",
+        });
+      }
     }
   };
 
@@ -178,15 +199,90 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
   };
 
   // ---------- Comments ----------
+  const handleCommentChange = (value: string) => {
+    setCommentInput(value);
+    const atMatch = value.lastIndexOf("@");
+    if (atMatch !== -1 && (atMatch === 0 || value[atMatch - 1] === " ")) {
+      const search = value.slice(atMatch + 1).split(" ")[0];
+      if (search.length > 0) {
+        setMentionSearch(search);
+        setShowMentions(true);
+        setMentionIndex(0);
+        return;
+      }
+    }
+    setShowMentions(false);
+  };
+
+  const selectMention = (user: Member) => {
+    const atMatch = commentInput.lastIndexOf("@");
+    const before = commentInput.slice(0, atMatch);
+    const after = commentInput.slice(atMatch + mentionSearch.length + 1);
+    setCommentInput(`${before}@${user.name} ${after}`);
+    setShowMentions(false);
+  };
+
+  const handleCommentKeyDown = (e: React.KeyboardEvent) => {
+    if (showMentions) {
+      const filtered = availableMembers.filter(m =>
+        m.name.toLowerCase().includes(mentionSearch.toLowerCase())
+      );
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setMentionIndex(prev => Math.min(prev + 1, filtered.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setMentionIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === "Enter" && mentionIndex >= 0 && filtered[mentionIndex]) {
+        e.preventDefault();
+        selectMention(filtered[mentionIndex]);
+      } else if (e.key === "Escape") {
+        setShowMentions(false);
+      }
+    }
+  };
+
+  const renderCommentText = (text: string) => {
+    const parts = text.split(/(@\w+)/g);
+    return parts.map((part, i) =>
+      part.startsWith("@") ? (
+        <span key={i} className="text-blue-600 font-medium">{part}</span>
+      ) : (
+        part
+      )
+    );
+  };
+
   const handleAddComment = () => {
     if (!commentInput.trim()) return;
+    const text = commentInput.trim();
     const newComment: Comment = {
       id: Date.now().toString(),
-      text: commentInput.trim(),
+      text,
       at: Date.now(),
     };
     setComments((prev) => [...prev, newComment]);
-    logActivity("comment", `Added comment: "${commentInput.trim()}"`);
+    logActivity("comment", `Added comment: "${text}"`);
+
+    // Fire @mention notifications
+    const mentionMatches = text.match(/@(\w+)/g);
+    if (mentionMatches) {
+      mentionMatches.forEach(match => {
+        const name = match.slice(1);
+        const mentionedUser = availableMembers.find(m => m.name === name);
+        if (mentionedUser && window.addNotification) {
+          window.addNotification({
+            type: "user_mentioned",
+            title: "تم ذكرك",
+            message: `تم ذكرك بواسطة ${currentUser?.name || "مستخدم"} في تعليق: "${text}"`,
+            cardId: card.id,
+            cardTitle: card.title,
+            priority: "medium",
+          });
+        }
+      });
+    }
+
     setCommentInput("");
   };
 
@@ -271,14 +367,36 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
 
           {/* Comments */}
           <h3 className="font-semibold mt-2">Comments</h3>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Write a comment..."
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              className="border p-2 rounded flex-1"
-            />
+          <div className="flex gap-2 mb-2 relative">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder='Write a comment... (use @ to mention)'
+                value={commentInput}
+                onChange={(e) => handleCommentChange(e.target.value)}
+                onKeyDown={handleCommentKeyDown}
+                className="border p-2 rounded w-full"
+              />
+              {showMentions && (
+                <div className="absolute top-full left-0 right-0 bg-white border rounded shadow-lg z-10 max-h-32 overflow-y-auto">
+                  {availableMembers
+                    .filter(m => m.name.toLowerCase().includes(mentionSearch.toLowerCase()))
+                    .slice(0, 5)
+                    .map((m, i) => (
+                      <button
+                        key={m.id}
+                        onClick={() => selectMention(m)}
+                        className={`w-full text-left px-3 py-1.5 text-sm flex items-center gap-2 ${
+                          i === mentionIndex ? "bg-blue-100" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{m.avatar || "👤"}</span>
+                        <span>{m.name}</span>
+                      </button>
+                    ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={handleAddComment}
               className="bg-green-500 text-white px-3 rounded hover:bg-green-600"
@@ -289,7 +407,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
           <ul className="mb-3 max-h-32 overflow-y-auto border p-2 rounded text-sm">
             {comments.map((c) => (
               <li key={c.id} className="mb-1">
-                <span className="text-gray-700">{c.text}</span>{" "}
+                <span className="text-gray-700">{renderCommentText(c.text)}</span>{" "}
                 <span className="text-xs text-gray-400">
                   ({new Date(c.at).toLocaleString()})
                 </span>
@@ -408,6 +526,20 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
             <p className="text-xs text-gray-500 mb-3">
               {members.length} من {availableMembers.length} أعضاء محددين
             </p>
+          )}
+
+          {/* Assign Requests */}
+          {currentUser && (
+            <AssignRequestsPanel
+              requests={assignRequests}
+              currentUser={currentUser}
+              cardMembers={members}
+              cardId={card.id}
+              cardTitle={card.title}
+              onRequestAssign={onRequestAssign}
+              onApprove={onApproveAssign}
+              onReject={onRejectAssign}
+            />
           )}
 
           {/* Priority */}

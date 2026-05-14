@@ -1,5 +1,6 @@
 import type { User } from "../UserTypes";
 import UserManagement from "./UserManagement";
+import InviteUsers from "../components/InviteUsers";
 import { useLanguage } from "../i18n/useLanguage";
 
 type Props = {
@@ -26,7 +27,7 @@ export default function ControlPanel({
 
       {/* User Management - Only for admins */}
       {currentUser.permissions.includes("manage_users") && (
-        <div>
+        <div className="space-y-6">
           <UserManagement
             users={users}
             currentUser={currentUser}
@@ -34,6 +35,7 @@ export default function ControlPanel({
             onUpdateUser={onUpdateUser}
             onDeleteUser={onDeleteUser}
           />
+          <InviteUsers />
         </div>
       )}
 

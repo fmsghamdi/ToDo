@@ -4,16 +4,17 @@ import type { User } from "../UserTypes";
 import type { Chat } from "../ChatTypes";
 import { useLanguage } from "../i18n/useLanguage";
 
-// Extend Window interface to include our custom function
+// Extend Window interface to include our custom functions
 declare global {
   interface Window {
     clearChatNotifications?: (chatId: string) => void;
+    addNotification?: (notification: Omit<Notification, "id" | "timestamp" | "isRead">) => void;
   }
 }
 
 interface Notification {
   id: string;
-  type: "task_assigned" | "due_date_approaching" | "task_overdue" | "task_completed" | "task_commented" | "new_message";
+  type: "task_assigned" | "due_date_approaching" | "task_overdue" | "task_completed" | "task_commented" | "new_message" | "user_mentioned" | "assign_requested" | "assign_approved" | "assign_rejected";
   title: string;
   message: string;
   cardId?: string;
@@ -175,23 +176,26 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
     }
   }, [onClearChatNotifications]);
 
-  // Expose clearChatNotifications function globally
+  // Function to add notification (for @mention, delegation, assign requests)
+  const addNotification = useCallback((notification: Omit<Notification, "id" | "timestamp" | "isRead">) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: `${notification.type}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: Date.now(),
+      isRead: false,
+    };
+    setNotifications(prev => [...prev, newNotification]);
+  }, []);
+
+  // Expose functions globally
   useEffect(() => {
     window.clearChatNotifications = clearChatNotifications;
+    window.addNotification = addNotification;
     return () => {
       delete window.clearChatNotifications;
+      delete window.addNotification;
     };
-  }, [clearChatNotifications]);
-
-  // Function to add notification (available for future use)
-  // const addNotification = (notification: Omit<Notification, "id" | "timestamp">) => {
-  //   const newNotification: Notification = {
-  //     ...notification,
-  //     id: `${notification.type}_${Date.now()}`,
-  //     timestamp: Date.now(),
-  //   };
-  //   setNotifications(prev => [...prev, newNotification]);
-  // };
+  }, [clearChatNotifications, addNotification]);
 
   // Mark notification as read
   const markAsRead = (notificationId: string) => {
@@ -245,6 +249,10 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
       case "task_completed": return "✅";
       case "task_commented": return "💬";
       case "new_message": return "💬";
+      case "user_mentioned": return "@";
+      case "assign_requested": return "🙋";
+      case "assign_approved": return "👍";
+      case "assign_rejected": return "👎";
       default: return "📢";
     }
   };

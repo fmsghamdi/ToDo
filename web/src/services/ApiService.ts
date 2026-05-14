@@ -1,4 +1,4 @@
-// API Service for connecting to backend
+  // API Service for connecting to backend
 import type { Card, Board, Column } from '../Types';
 import type { User } from '../UserTypes';
 import type { Chat, Message } from '../ChatTypes';
@@ -390,6 +390,125 @@ class ApiService {
       };
       return newMessage;
     }
+  }
+
+  // Tenant API
+  async registerTenant(data: {
+    name: string;
+    subdomain: string;
+    email: string;
+    companyAddress?: string;
+    companyPhone?: string;
+    companyWebsite?: string;
+  }): Promise<{ id: number; name: string; subdomain: string }> {
+    return this.apiCall('/tenant/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getTenantBranding(tenantId: number): Promise<{
+    tenantId: number;
+    name: string;
+    logoUrl: string | null;
+    primaryColor: string;
+    secondaryColor: string;
+    companyAddress: string | null;
+    companyPhone: string | null;
+    companyWebsite: string | null;
+  }> {
+    return this.apiCall(`/tenant/${tenantId}/branding`);
+  }
+
+  async getCurrentTenant(): Promise<{
+    id: number;
+    name: string;
+    subdomain: string;
+    email: string;
+    logoUrl: string | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
+    subscriptionPlan: string;
+    maxUsers: number;
+    maxBoards: number;
+  }> {
+    return this.apiCall('/tenant/current');
+  }
+
+  async updateTenant(id: number, data: {
+    name?: string;
+    logoUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    companyAddress?: string;
+    companyPhone?: string;
+    companyWebsite?: string;
+  }): Promise<any> {
+    return this.apiCall(`/tenant/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Invitations API
+  async createInvitations(emails: string[], role?: string): Promise<{
+    id: number;
+    inviteeEmail: string;
+    token: string;
+    status: string;
+    role: string | null;
+    createdAt: string;
+    expiresAt: string;
+  }[]> {
+    return this.apiCall('/tenant/invitations', {
+      method: 'POST',
+      body: JSON.stringify({ emails, role: role || 'user' }),
+    });
+  }
+
+  async getInvitations(): Promise<{
+    id: number;
+    inviteeEmail: string;
+    token: string;
+    status: string;
+    role: string | null;
+    createdAt: string;
+    expiresAt: string;
+    acceptedAt?: string;
+  }[]> {
+    return this.apiCall('/tenant/invitations');
+  }
+
+  async getInvitationByToken(token: string): Promise<{
+    id: number;
+    inviteeEmail: string;
+    token: string;
+    status: string;
+    role: string | null;
+    tenantName?: string;
+    tenantSubdomain?: string;
+    createdAt: string;
+    expiresAt: string;
+  }> {
+    return this.apiCall(`/tenant/invitations/by-token/${token}`);
+  }
+
+  async acceptInvitation(token: string, data: {
+    username: string;
+    email: string;
+    password: string;
+    fullName: string;
+  }): Promise<{ message: string; tenantId: number }> {
+    return this.apiCall(`/tenant/invitations/${token}/accept`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async cancelInvitation(id: number): Promise<{ message: string }> {
+    return this.apiCall(`/tenant/invitations/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Test if API server is available

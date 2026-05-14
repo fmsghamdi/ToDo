@@ -1,12 +1,11 @@
-
-
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   variant?: 'full' | 'icon' | 'text' | 'logo-only';
   className?: string;
+  tenantLogoUrl?: string | null;
 }
 
-export default function Logo({ size = 'lg', variant = 'logo-only', className = '' }: LogoProps) {
+export default function Logo({ size = 'lg', variant = 'logo-only', className = '', tenantLogoUrl }: LogoProps) {
   const sizeClasses = {
     sm: 'w-12 h-12',
     md: 'w-16 h-16',
@@ -23,15 +22,18 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
     xxl: 'text-4xl'
   };
 
-  // استخدام الصورة الفعلية بدلاً من التصميم المرسوم
-  const logoImagePath = '/images/todooos-logo.svg';
+  const defaultLogoPath = '/images/todooos-logo.svg';
+  const logoUrl = tenantLogoUrl || defaultLogoPath;
+  const tenantName = localStorage.getItem('tenantName') || 'ToDoOS';
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#4A7C59';
+  const primaryDark = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim() || '#2D5A3D';
 
   if (variant === 'icon') {
     return (
       <div className={`inline-flex items-center justify-center ${sizeClasses[size]} ${className}`}>
         <img
-          src={logoImagePath}
-          alt="ToDoOS Logo"
+          src={logoUrl}
+          alt={tenantName}
           className="w-full h-full object-contain"
           style={{
             filter: 'brightness(1.2) contrast(1.3) drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
@@ -46,13 +48,13 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
   if (variant === 'text') {
     return (
       <span className={`font-bold ${textSizeClasses[size]} ${className}`} style={{
-        background: 'linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%)',
+        background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`,
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
         backgroundClip: 'text',
-        color: '#2D5A3D'
+        color: primaryDark
       }}>
-        ToDoOS
+        {tenantName}
       </span>
     );
   }
@@ -61,8 +63,8 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
     return (
       <div className={`inline-flex items-center justify-center ${sizeClasses[size]} ${className}`}>
         <img
-          src={logoImagePath}
-          alt="ToDoOS Logo"
+          src={logoUrl}
+          alt={tenantName}
           className="w-full h-full object-contain"
           style={{
             filter: 'brightness(1.2) contrast(1.3) drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
@@ -74,13 +76,12 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
     );
   }
 
-  // Full logo with image and text (fallback for backward compatibility)
   return (
     <div className={`inline-flex items-center gap-3 sm:gap-4 ${className}`}>
       <div className={`${sizeClasses[size]} relative flex-shrink-0`}>
         <img
-          src={logoImagePath}
-          alt="ToDoOS Logo"
+          src={logoUrl}
+          alt={tenantName}
           className="w-full h-full object-contain"
           style={{
             filter: 'brightness(1.2) contrast(1.3) drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
@@ -90,13 +91,13 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
         />
       </div>
       <span className={`font-bold ${textSizeClasses[size]} truncate`} style={{
-        background: 'linear-gradient(135deg, #2D5A3D 0%, #4A7C59 100%)',
+        background: `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`,
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
         backgroundClip: 'text',
-        color: '#2D5A3D'
+        color: primaryDark
       }}>
-        ToDoOS
+        {tenantName}
       </span>
     </div>
   );

@@ -54,6 +54,7 @@ const ColumnManager: React.FC<ColumnManagerProps> = ({
     if (col.isDefault) {
       if (col.id === "todo") return t.todo;
       if (col.id === "in-progress") return t.inProgress;
+      if (col.id === "on-hold") return t.onHold;
       if (col.id === "done") return t.done;
     }
     return col.title;

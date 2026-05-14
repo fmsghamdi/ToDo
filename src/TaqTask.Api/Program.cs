@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaqTask.Data;
+using TaqTask.Domain;
 using TaqTask.Application.Interfaces;
 using TaqTask.Infrastructure.Repositories;
 using TaqTask.Application.Services;
+using TaqTask.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,21 +16,22 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // Register AD Configuration services
-// تعديل هنا: تأكد من أن الـ Repository يستخدم ToDoOSContext المحدد
 builder.Services.AddScoped<IActiveDirectoryConfigRepository>(provider => 
     new ActiveDirectoryConfigRepository(provider.GetRequiredService<ToDoOSContext>()));
 builder.Services.AddScoped<IActiveDirectoryConfigService, ActiveDirectoryConfigService>();
+
+// Register multi-tenant services
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<ITenantProvider, TenantProvider>();
 
 // Add Entity Framework for MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ToDoOSContext>(options =>
 {
-    // Pomelo can auto-detect the MySQL server version, which is more reliable.
     var serverVersion = ServerVersion.AutoDetect(connectionString);
     options.UseMySql(connectionString, serverVersion);
 
-    // Enable sensitive data logging in development
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging();

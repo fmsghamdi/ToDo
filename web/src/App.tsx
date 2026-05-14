@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 import CardModal from "./CardModal";
-import type { Card, Column } from "./Types";
+import type { Card, Column, AssignRequest } from "./Types";
 import AddTaskModal from "./AddTaskModal";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ControlPanel from "./pages/ControlPanel";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import TenantRegister from "./pages/TenantRegister";
 import PasswordChangeModal from "./components/PasswordChangeModal";
 import ChatPage from "./pages/Chat";
 import ColumnManager from "./components/ColumnManager";
@@ -48,7 +49,7 @@ const App: React.FC = () => {
   );
 
   const [view, setView] = useState<View>("board");
-  const [authView, setAuthView] = useState<"login" | "register" | "forgot">("login");
+  const [authView, setAuthView] = useState<"login" | "register" | "forgot" | "tenant-register">("login");
   
   // Password change modal state
   const [passwordChangeModal, setPasswordChangeModal] = useState<{
@@ -69,11 +70,12 @@ const App: React.FC = () => {
       id: "default-board",
       title: language === 'ar' ? "اللوحة الرئيسية" : "Main Board",
       description: t.defaultTaskBoard,
-      columns: [
-        { id: "todo", title: language === 'ar' ? "قائمة المهام" : "To Do", cards: [], position: 0, isDefault: true, createdAt: Date.now() },
-        { id: "in-progress", title: language === 'ar' ? "قيد التنفيذ" : "In Progress", cards: [], position: 1, isDefault: true, createdAt: Date.now() },
-        { id: "done", title: language === 'ar' ? "مكتمل" : "Done", cards: [], position: 2, isDefault: true, createdAt: Date.now() },
-      ],
+        columns: [
+          { id: "todo", title: language === 'ar' ? "قائمة المهام" : "To Do", cards: [], position: 0, isDefault: true, createdAt: Date.now() },
+          { id: "in-progress", title: language === 'ar' ? "قيد التنفيذ" : "In Progress", cards: [], position: 1, isDefault: true, createdAt: Date.now() },
+          { id: "on-hold", title: language === 'ar' ? "معلّقة" : "On Hold", cards: [], position: 2, isDefault: true, createdAt: Date.now() },
+          { id: "done", title: language === 'ar' ? "مكتمل" : "Done", cards: [], position: 3, isDefault: true, createdAt: Date.now() },
+        ],
       members: [],
       isArchived: false,
       createdAt: Date.now(),
@@ -90,6 +92,15 @@ const App: React.FC = () => {
     return saved || "default-board";
   });
 
+  const [assignRequests, setAssignRequests] = useState<AssignRequest[]>(() => {
+    const saved = localStorage.getItem("assignRequests");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("assignRequests", JSON.stringify(assignRequests));
+  }, [assignRequests]);
+
   const currentBoard = boards.find(b => b.id === currentBoardId) || boards[0];
   const columns = currentBoard?.columns || [];
 
@@ -104,6 +115,89 @@ const App: React.FC = () => {
     const saved = localStorage.getItem("chats");
     return saved ? JSON.parse(saved) : [];
   });
+
+    // Helper to decode JWT payload
+  const decodeJwt = (token: string): Record<string, any> | null => {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  };
+
+  // Apply tenant branding to CSS variables
+  const applyBranding = (branding: {
+    primaryColor: string;
+    secondaryColor: string;
+    logoUrl?: string | null;
+    name?: string;
+  }) => {
+    const root = document.documentElement;
+    root.style.setProperty('--primary', branding.primaryColor || '#4A7C59');
+    root.style.setProperty('--secondary', branding.secondaryColor || '#7FB069');
+
+    // Derive darker/lighter shades
+    const darken = (hex: string, amount: number) => {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const r = Math.max(0, (num >> 16) - amount);
+      const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+      const b = Math.max(0, (num & 0x0000FF) - amount);
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    };
+    const lighten = (hex: string, amount: number) => {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const r = Math.min(255, (num >> 16) + amount);
+      const g = Math.min(255, ((num >> 8) & 0x00FF) + amount);
+      const b = Math.min(255, (num & 0x0000FF) + amount);
+      return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+    };
+    root.style.setProperty('--primary-dark', darken(branding.primaryColor || '#4A7C59', 30));
+    root.style.setProperty('--primary-darkest', darken(branding.primaryColor || '#4A7C59', 60));
+    root.style.setProperty('--primary-light', lighten(branding.primaryColor || '#4A7C59', 50));
+    root.style.setProperty('--primary-bright', lighten(branding.primaryColor || '#4A7C59', 90));
+    root.style.setProperty('--secondary-light', lighten(branding.secondaryColor || '#7FB069', 50));
+
+    if (branding.logoUrl) {
+      root.style.setProperty('--tenant-logo-url', `url(${branding.logoUrl})`);
+      localStorage.setItem('tenantLogoUrl', branding.logoUrl);
+    }
+    if (branding.name) {
+      localStorage.setItem('tenantName', branding.name);
+    }
+  };
+
+  // Load tenant branding on mount or when user changes
+  useEffect(() => {
+    const loadBranding = async () => {
+      const token = localStorage.getItem('authToken');
+      let tenantId: number | null = null;
+
+      if (token) {
+        const claims = decodeJwt(token);
+        if (claims?.TenantId) {
+          tenantId = parseInt(claims.TenantId);
+        }
+      }
+
+      // Also check user object in state
+      if (!tenantId && currentUser?.tenantId) {
+        tenantId = currentUser.tenantId;
+      }
+
+      if (tenantId) {
+        try {
+          const branding = await apiService.getTenantBranding(tenantId);
+          applyBranding(branding);
+        } catch (err) {
+          console.warn('Failed to load tenant branding:', err);
+        }
+      }
+    };
+
+    loadBranding();
+  }, [currentUserId]);
 
   // Auto-save boards, users, and chats
   useEffect(() => {
@@ -642,13 +736,150 @@ const App: React.FC = () => {
   };
 
   const handleArchiveBoard = (boardId: string) => {
+    const activeBoards = boards.filter(b => !b.isArchived);
+    if (activeBoards.length <= 1) return; // Can't archive the last active board
     handleUpdateBoard(boardId, { isArchived: true });
+    if (currentBoardId === boardId) {
+      const nextBoard = activeBoards.find(b => b.id !== boardId);
+      if (nextBoard) setCurrentBoardId(nextBoard.id);
+    }
+  };
+
+  const handleUnarchiveBoard = (boardId: string) => {
+    handleUpdateBoard(boardId, { isArchived: false });
   };
 
   const handleStarBoard = (boardId: string) => {
     const board = boards.find(b => b.id === boardId);
     if (board) {
       handleUpdateBoard(boardId, { isStarred: !board.isStarred });
+    }
+  };
+
+  // Board export handlers
+  const handleExportBoard = (format: "json" | "csv") => {
+    if (!currentBoard) return;
+    const fileName = `${currentBoard.title.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}`;
+
+    if (format === "json") {
+      const exportData = {
+        title: currentBoard.title,
+        description: currentBoard.description,
+        exportedAt: new Date().toISOString(),
+        columns: currentBoard.columns.map(col => ({
+          title: col.title,
+          cards: col.cards.map(card => ({
+            title: card.title,
+            description: card.description,
+            priority: card.priority,
+            dueDate: card.dueDate,
+            labels: card.labels.map(l => l.name),
+            members: card.members.map(m => m.name),
+            subtasks: card.subtasks.map(s => ({ title: s.title, done: s.done })),
+            comments: card.comments.map(c => ({ text: c.text })),
+          })),
+        })),
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const rows: string[][] = [];
+      const BOM = "\uFEFF";
+      rows.push(["المهمة", "الوصف", "الأولوية", "تاريخ الاستحقاق", "التصنيفات", "الأعضاء", "المهام الفرعية", "التعليقات"]);
+      currentBoard.columns.forEach(col => {
+        col.cards.forEach(card => {
+          rows.push([
+            card.title,
+            card.description,
+            card.priority || "",
+            card.dueDate || "",
+            card.labels.map(l => l.name).join("; "),
+            card.members.map(m => m.name).join("; "),
+            card.subtasks.map(s => `${s.title} (${s.done ? "✓" : "○"})`).join("; "),
+            card.comments.map(c => c.text).join(" | "),
+          ]);
+        });
+      });
+      const csv = BOM + rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  // Assign request handlers
+  const handleRequestAssign = (req: Omit<AssignRequest, "id" | "createdAt" | "updatedAt">) => {
+    const newReq: AssignRequest = {
+      ...req,
+      id: `req-${Date.now()}`,
+      createdAt: Date.now(),
+    };
+    setAssignRequests(prev => [...prev, newReq]);
+    if (window.addNotification) {
+      window.addNotification({
+        type: "assign_requested",
+        title: "طلب تعيين جديد",
+        message: `المستخدم ${req.userName} طلب التعيين في مهمة "${req.cardTitle}"`,
+        cardId: req.cardId,
+        cardTitle: req.cardTitle,
+        priority: "medium",
+      });
+    }
+  };
+
+  const handleApproveAssign = (reqId: string) => {
+    const req = assignRequests.find(r => r.id === reqId);
+    if (!req) return;
+    setAssignRequests(prev => prev.map(r =>
+      r.id === reqId ? { ...r, status: "approved", updatedAt: Date.now() } : r
+    ));
+    // Add the user as member to the card in the current board
+    setBoards(prev => prev.map(board => ({
+      ...board,
+      columns: board.columns.map(col => ({
+        ...col,
+        cards: col.cards.map(card =>
+          card.id === req.cardId
+            ? { ...card, members: [...card.members, { id: req.userId, name: req.userName, avatar: req.userAvatar || "👤" }] }
+            : card
+        ),
+      })),
+    })));
+    if (window.addNotification) {
+      window.addNotification({
+        type: "assign_approved",
+        title: "تم قبول طلب التعيين",
+        message: `تمت الموافقة على تعيين ${req.userName} في مهمة "${req.cardTitle}"`,
+        cardId: req.cardId,
+        cardTitle: req.cardTitle,
+        priority: "low",
+      });
+    }
+  };
+
+  const handleRejectAssign = (reqId: string) => {
+    setAssignRequests(prev => prev.map(r =>
+      r.id === reqId ? { ...r, status: "rejected", updatedAt: Date.now() } : r
+    ));
+    const req = assignRequests.find(r => r.id === reqId);
+    if (req && window.addNotification) {
+      window.addNotification({
+        type: "assign_rejected",
+        title: "تم رفض طلب التعيين",
+        message: `تم رفض تعيين ${req.userName} في مهمة "${req.cardTitle}"`,
+        cardId: req.cardId,
+        cardTitle: req.cardTitle,
+        priority: "low",
+      });
     }
   };
 
@@ -659,6 +890,7 @@ const App: React.FC = () => {
     if (col.isDefault) {
       if (col.id === "todo") return t.todo;
       if (col.id === "in-progress") return t.inProgress;
+      if (col.id === "on-hold") return t.onHold;
       if (col.id === "done") return t.done;
     }
     return col.title;
@@ -679,6 +911,7 @@ const App: React.FC = () => {
           onADLogin={handleADLogin}
           onShowRegister={() => setAuthView("register")}
           onShowForgotPassword={() => setAuthView("forgot")}
+          onShowTenantRegister={() => setAuthView("tenant-register")}
         />
       );
     } else if (authView === "register") {
@@ -693,6 +926,15 @@ const App: React.FC = () => {
         <ForgotPassword
           onForgotPassword={handleForgotPassword}
           onBackToLogin={() => setAuthView("login")}
+        />
+      );
+    } else if (authView === "tenant-register") {
+      return (
+        <TenantRegister
+          onRegisterSuccess={(tenantId, tenantName) => {
+            setAuthView("login");
+          }}
+          onShowLogin={() => setAuthView("login")}
         />
       );
     }
@@ -979,8 +1221,23 @@ const App: React.FC = () => {
                   onSelectBoard={handleSelectBoard}
                   onDeleteBoard={handleDeleteBoard}
                   onArchiveBoard={handleArchiveBoard}
+                  onUnarchiveBoard={handleUnarchiveBoard}
                   onStarBoard={handleStarBoard}
                 />
+              )}
+              {/* Export Section */}
+              {currentBoard && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-gray-500">{language === 'ar' ? 'تصدير:' : 'Export:'}</span>
+                  <button
+                    onClick={() => handleExportBoard("json")}
+                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200"
+                  >JSON</button>
+                  <button
+                    onClick={() => handleExportBoard("csv")}
+                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200"
+                  >CSV</button>
+                </div>
               )}
             </div>
 
@@ -1137,7 +1394,7 @@ const App: React.FC = () => {
               />
             </div>
 
-            {selectedCard && (
+            {selectedCard && currentUser && (
               <CardModal
                 card={selectedCard}
                 onClose={closeCard}
@@ -1148,6 +1405,11 @@ const App: React.FC = () => {
                   name: u.name,
                   avatar: u.avatar || "👤"
                 }))}
+                currentUser={currentUser}
+                assignRequests={assignRequests}
+                onRequestAssign={handleRequestAssign}
+                onApproveAssign={handleApproveAssign}
+                onRejectAssign={handleRejectAssign}
               />
             )}
 

@@ -7,9 +7,10 @@ type Props = {
   onADLogin: (user: ADUser) => void;
   onShowRegister: () => void;
   onShowForgotPassword?: () => void;
+  onShowTenantRegister?: () => void;
 };
 
-export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgotPassword }: Props) {
+export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgotPassword, onShowTenantRegister }: Props) {
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -260,6 +261,17 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
                 className="text-green-600 hover:text-green-700 font-medium mr-1 transition-colors"
               >
                 {t.registerButton}
+              </button>
+            </div>
+          )}
+
+          {loginMethod === 'local' && onShowTenantRegister && (
+            <div className="text-center pt-2 border-t border-gray-100">
+              <button 
+                onClick={onShowTenantRegister} 
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+              >
+                🏢 تسجيل جهة جديدة (منظمة)
               </button>
             </div>
           )}

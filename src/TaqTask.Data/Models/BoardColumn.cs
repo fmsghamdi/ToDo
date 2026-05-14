@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using TaqTask.Domain;
+
 namespace TaqTask.Api.Models;
 
 [Table("board_columns")]
@@ -31,9 +33,18 @@ public class BoardColumn
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
+    
+    [Column("tenant_id")]
+    public int TenantId { get; set; }
+
+    [ForeignKey("TenantId")]
+    public virtual Tenant? Tenant { get; set; }
+// Navigation properties
     [ForeignKey("BoardId")]
     public virtual Board Board { get; set; } = null!;
 
     public virtual ICollection<Card> Cards { get; set; } = new List<Card>();
 }
+
+
+

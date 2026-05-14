@@ -196,6 +196,19 @@ export const MEMBER_PRESETS: Member[] = [
 
 export const PRIORITY_PRESETS: Priority[] = ["Low", "Medium", "High"];
 
+// === Assign Request ===
+export type AssignRequest = {
+  id: string;
+  cardId: string;
+  cardTitle: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: number;
+  updatedAt?: number;
+};
+
 // === Board Templates ===
 export const BOARD_TEMPLATES = [
   {

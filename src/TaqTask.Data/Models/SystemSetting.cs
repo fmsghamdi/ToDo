@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using TaqTask.Domain;
+
 namespace TaqTask.Api.Models;
 
 [Table("system_settings")]
@@ -27,4 +29,10 @@ public class SystemSetting
 
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [Column("tenant_id")]
+    public int TenantId { get; set; }
+
+    [ForeignKey("TenantId")]
+    public virtual Tenant? Tenant { get; set; }
 }

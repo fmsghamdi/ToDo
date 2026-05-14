@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using TaqTask.Domain;
+
 namespace TaqTask.Api.Models;
 
 [Table("boards")]
@@ -25,6 +27,9 @@ public class Board
     [Column("background_color")]
     public string? BackgroundColor { get; set; }
 
+    [Column("is_archived")]
+    public bool IsArchived { get; set; } = false;
+
     [Column("is_public")]
     public bool IsPublic { get; set; } = false;
 
@@ -34,9 +39,18 @@ public class Board
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation properties
+    
+    [Column("tenant_id")]
+    public int TenantId { get; set; }
+
+    [ForeignKey("TenantId")]
+    public virtual Tenant? Tenant { get; set; }
+// Navigation properties
     [ForeignKey("OwnerId")]
     public virtual User Owner { get; set; } = null!;
 
     public virtual ICollection<BoardColumn> Columns { get; set; } = new List<BoardColumn>();
 }
+
+
+
