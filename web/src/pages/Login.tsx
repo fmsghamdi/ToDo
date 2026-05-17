@@ -107,11 +107,10 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <span className="text-3xl">🇸🇦</span>
             <h1 className="text-3xl font-bold text-gray-800">ToDoOS</h1>
           </div>
           <p className="text-gray-600">
-            نظام إدارة المهام الحكومي السعودي
+            نظام إدارة المهام السحابي
           </p>
         </div>
 

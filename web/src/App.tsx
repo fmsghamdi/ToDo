@@ -1183,7 +1183,7 @@ const App: React.FC = () => {
 
       {/* Views */}
       <main className="min-h-screen pt-32 pb-8 transition-all duration-500" style={{
-        background: 'linear-gradient(135deg, var(--saudi-cream) 0%, var(--gray-50) 50%, var(--saudi-beige) 100%)'
+        background: 'linear-gradient(135deg, var(--accent-cream) 0%, var(--gray-50) 50%, var(--accent-beige) 100%)'
       }}>
         {view === "board" && (
           <div className="max-w-7xl mx-auto p-6 animate-fadeIn">

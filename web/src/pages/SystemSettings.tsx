@@ -971,7 +971,7 @@ className="px-4 py-2 bg-purple-600 text-white rounded-lg"
             value={branding.companyAddress}
             onChange={(e) => setBranding(prev => ({ ...prev, companyAddress: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-            placeholder="الرياض، المملكة العربية السعودية"
+            placeholder="ادخل عنوان الشركة"
           />
         </div>
 

@@ -32,11 +32,16 @@
   --neutral-light: #FFFFFF;
   --neutral-gray: #CCCCCC;
 
-  /* Saudi Gold Colors (keeping for cultural relevance) */
-  --saudi-gold: #d4af37;
-  --saudi-gold-light: #e6c866;
-  --saudi-beige: #f5f1e8;
-  --saudi-cream: #faf8f3;
+  /* Accent Gold Colors */
+  --accent-gold: #d4af37;
+  --accent-gold-light: #e6c866;
+  --accent-beige: #f5f1e8;
+  --accent-cream: #faf8f3;
+
+  /* Accent Green Colors */
+  --accent-green-dark: #2D5A3D;
+  --accent-green: #4A7C59;
+  --accent-green-light: #7FB069;
   
   /* Neutral Colors */
   --white: #ffffff;
@@ -156,8 +161,8 @@ body {
   transform: translateY(-1px);
 }
 
-.btn-gold {
-  background: linear-gradient(135deg, var(--saudi-gold) 0%, #b8941f 100%);
+.btn-accent {
+  background: linear-gradient(135deg, var(--accent-gold) 0%, #b8941f 100%);
   color: var(--white);
   border: none;
   padding: var(--spacing-sm) var(--spacing-lg);
@@ -168,8 +173,8 @@ body {
   box-shadow: var(--shadow);
 }
 
-.btn-gold:hover {
-  background: linear-gradient(135deg, #b8941f 0%, var(--saudi-gold) 100%);
+.btn-accent:hover {
+  background: linear-gradient(135deg, #b8941f 0%, var(--accent-gold) 100%);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
@@ -213,7 +218,7 @@ body {
 
 .input:focus {
   outline: none;
-  border-color: var(--saudi-green);
+  border-color: var(--accent-green);
   box-shadow: 0 0 0 3px rgba(45, 122, 79, 0.1);
 }
 
@@ -224,7 +229,7 @@ body {
 }
 
 .priority-medium {
-  background: linear-gradient(135deg, var(--saudi-gold) 0%, #d97706 100%);
+  background: linear-gradient(135deg, var(--accent-gold) 0%, #d97706 100%);
   color: var(--white);
 }
 
@@ -241,44 +246,44 @@ body {
 }
 
 .status-progress {
-  background: linear-gradient(135deg, var(--saudi-gold-light) 0%, var(--saudi-gold) 100%);
+  background: linear-gradient(135deg, var(--accent-gold-light) 0%, var(--accent-gold) 100%);
   color: var(--gray-800);
-  border-left: 4px solid var(--saudi-gold);
+  border-left: 4px solid var(--accent-gold);
 }
 
 .status-done {
-  background: linear-gradient(135deg, var(--saudi-green-light) 0%, var(--saudi-green) 100%);
+  background: linear-gradient(135deg, var(--accent-green-light) 0%, var(--accent-green) 100%);
   color: var(--white);
-  border-left: 4px solid var(--saudi-green-dark);
+  border-left: 4px solid var(--accent-green-dark);
 }
 
 /* Navigation Styles */
 .nav-item {
   background: var(--white);
-  color: var(--saudi-green);
+  color: var(--accent-green);
   border: 1px solid var(--gray-200);
   transition: all 0.3s ease;
 }
 
 .nav-item:hover {
-  background: var(--saudi-beige);
-  color: var(--saudi-green-dark);
+  background: var(--accent-beige);
+  color: var(--accent-green-dark);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, var(--saudi-green) 0%, var(--saudi-green-dark) 100%);
+  background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-green-dark) 100%);
   color: var(--white);
   box-shadow: var(--shadow);
 }
 
 /* Header Gradient */
 .header-gradient {
-  background: linear-gradient(135deg, var(--saudi-green-dark) 0%, var(--saudi-green) 50%, var(--saudi-green-light) 100%);
+  background: linear-gradient(135deg, var(--accent-green-dark) 0%, var(--accent-green) 50%, var(--accent-green-light) 100%);
 }
 
 /* Sidebar Styles */
 .sidebar {
-  background: linear-gradient(180deg, var(--white) 0%, var(--saudi-cream) 100%);
+  background: linear-gradient(180deg, var(--white) 0%, var(--accent-cream) 100%);
   border-right: 1px solid var(--gray-200);
 }
 
@@ -290,7 +295,7 @@ body {
 }
 
 .progress-fill {
-  background: linear-gradient(90deg, var(--saudi-green) 0%, var(--saudi-green-light) 100%);
+  background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-green-light) 100%);
   height: 100%;
   transition: width 0.3s ease;
 }
@@ -334,7 +339,7 @@ body {
   
   .btn-primary,
   .btn-secondary,
-  .btn-gold {
+  .btn-accent {
     padding: var(--spacing-xs) var(--spacing-md);
     font-size: 0.875rem;
   }
@@ -365,14 +370,14 @@ body {
 
 /* Focus Styles */
 *:focus {
-  outline: 2px solid var(--saudi-green);
+  outline: 2px solid var(--accent-green);
   outline-offset: 2px;
 }
 
 /* Loading Spinner */
 .spinner {
   border: 3px solid var(--gray-200);
-  border-top: 3px solid var(--saudi-green);
+  border-top: 3px solid var(--accent-green);
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -406,5 +411,5 @@ body {
 }
 
 .notification.info {
-  border-left: 4px solid var(--saudi-green);
+  border-left: 4px solid var(--accent-green);
 }

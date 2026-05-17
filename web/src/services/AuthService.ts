@@ -236,12 +236,12 @@ class AuthService {
       // Mock successful O365 authentication
       const mockUser: ADUser = {
         id: `o365_${Date.now()}`,
-        username: "user@organization.gov.sa",
-        email: "user@organization.gov.sa",
-        displayName: "أحمد محمد السعودي",
+        username: "user@example.com",
+        email: "user@example.com",
+        displayName: "أحمد محمد",
         firstName: "أحمد",
-        lastName: "السعودي",
-        department: "وزارة التقنية",
+        lastName: "محمد",
+        department: "تقنية المعلومات",
         title: "مطور أنظمة",
         groups: ["ToDoOS Users", "Developers"],
         isActive: true
