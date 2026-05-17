@@ -48,7 +48,8 @@ const App: React.FC = () => {
     localStorage.getItem("currentUserId")
   );
 
-  const [view, setView] = useState<View>("board");
+  const [view, setView] = useState<View>("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authView, setAuthView] = useState<"login" | "register" | "forgot" | "tenant-register">("login");
   
   // Password change modal state
@@ -135,10 +136,9 @@ const App: React.FC = () => {
     name?: string;
   }) => {
     const root = document.documentElement;
-    root.style.setProperty('--primary', branding.primaryColor || '#4A7C59');
-    root.style.setProperty('--secondary', branding.secondaryColor || '#7FB069');
+    root.style.setProperty('--primary', branding.primaryColor || '#D97706');
+    root.style.setProperty('--secondary', branding.secondaryColor || '#059669');
 
-    // Derive darker/lighter shades
     const darken = (hex: string, amount: number) => {
       const num = parseInt(hex.replace('#', ''), 16);
       const r = Math.max(0, (num >> 16) - amount);
@@ -153,11 +153,11 @@ const App: React.FC = () => {
       const b = Math.min(255, (num & 0x0000FF) + amount);
       return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
     };
-    root.style.setProperty('--primary-dark', darken(branding.primaryColor || '#4A7C59', 30));
-    root.style.setProperty('--primary-darkest', darken(branding.primaryColor || '#4A7C59', 60));
-    root.style.setProperty('--primary-light', lighten(branding.primaryColor || '#4A7C59', 50));
-    root.style.setProperty('--primary-bright', lighten(branding.primaryColor || '#4A7C59', 90));
-    root.style.setProperty('--secondary-light', lighten(branding.secondaryColor || '#7FB069', 50));
+    root.style.setProperty('--primary-dark', darken(branding.primaryColor || '#D97706', 30));
+    root.style.setProperty('--primary-darkest', darken(branding.primaryColor || '#D97706', 60));
+    root.style.setProperty('--primary-light', lighten(branding.primaryColor || '#D97706', 50));
+    root.style.setProperty('--primary-bright', lighten(branding.primaryColor || '#D97706', 90));
+    root.style.setProperty('--secondary-light', lighten(branding.secondaryColor || '#059669', 50));
 
     if (branding.logoUrl) {
       root.style.setProperty('--tenant-logo-url', `url(${branding.logoUrl})`);
@@ -941,266 +941,153 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header / Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 shadow-sm border-b" style={{background: `linear-gradient(135deg, var(--primary-darkest) 0%, var(--primary) 50%, var(--primary-bright) 100%)`}}>
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center relative">
-          <div className="absolute left-4 flex items-center">
-            <LanguageSwitcher />
+    <div className="app-layout">
+      {/* Sidebar */}
+      <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <LanguageSwitcher />
+              <Logo size="sm" variant="logo-only" />
+              <span className="font-bold text-base" style={{color: 'var(--text-primary)'}}>ToDoOS</span>
+            </div>
+            <button className="btn-ghost p-1 lg:hidden" onClick={() => setSidebarOpen(false)}>✕</button>
           </div>
-          <div className="absolute right-4 flex items-center">
-            <Logo size="lg" variant="logo-only" className="text-white" />
-          </div>
-          <nav className="flex gap-2 bg-white/10 backdrop-blur-sm rounded-2xl p-2">
-            {hasPermission("view_board") && (
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "board"
-                    ? "bg-white shadow-lg scale-105"
-                    : "text-white hover:bg-white/20"
-                }`}
-                style={{
-                  color: view === "board" ? "var(--primary)" : "white"
-                }}
-                onClick={() => setView("board")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">📋</span>
-                  <span className="text-xs">{language === 'en' ? 'Board' : 'اللوحة'}</span>
-                </div>
-                {view === "board" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
-                )}
-              </button>
-            )}
-            {hasPermission("view_dashboard") && (
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "dashboard"
-                    ? "bg-white shadow-lg scale-105"
-                    : "text-white hover:bg-white/20"
-                }`}
-                style={{
-                  color: view === "dashboard" ? "var(--primary)" : "white"
-                }}
-                onClick={() => setView("dashboard")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">📊</span>
-                  <span className="text-xs">{language === 'en' ? 'Dashboard' : 'الرئيسية'}</span>
-                </div>
-                {view === "dashboard" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
-                )}
-              </button>
-            )}
-            {hasPermission("view_control_panel") && (
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "control"
-                    ? "bg-white shadow-lg scale-105"
-                    : "text-white hover:bg-white/20"
-                }`}
-                style={{
-                  color: view === "control" ? "var(--primary)" : "white"
-                }}
-                onClick={() => setView("control")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">👥</span>
-                  <span className="text-xs">{language === 'en' ? 'Control Panel' : 'لوحة التحكم'}</span>
-                </div>
-                {view === "control" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
-                )}
-              </button>
-            )}
-            <button
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                view === "chat"
-                  ? "bg-white shadow-lg scale-105"
-                  : "text-white hover:bg-white/20"
-              }`}
-              style={{
-                color: view === "chat" ? "var(--primary)" : "white"
-              }}
-              onClick={() => setView("chat")}
-              onDoubleClick={clearAllUnreadMessages}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <div className="relative">
-                  <span className="text-lg">💬</span>
-                  {getTotalUnreadCount() > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-bounce">
-                      {getTotalUnreadCount()}
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs">{language === 'en' ? 'Chat' : 'المحادثة'}</span>
-              </div>
-              {view === "chat" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 rounded-full animate-pulse" style={{backgroundColor: 'var(--primary)'}}></div>
-              )}
-            </button>
-            <button
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                view === "calendar"
-                  ? "bg-white shadow-lg scale-105"
-                  : "text-white hover:bg-white/20"
-              }`}
-              style={{
-                color: view === "calendar" ? "var(--primary)" : "white"
-              }}
-              onClick={() => setView("calendar")}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-lg">📅</span>
-                <span className="text-xs">{language === 'en' ? 'Calendar' : 'التقويم'}</span>
-              </div>
-              {view === "calendar" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-              )}
-            </button>
-            <button
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                view === "reports" 
-                  ? "bg-white text-green-700 shadow-lg scale-105" 
-                  : "text-white hover:bg-white/20"
-              }`}
-              onClick={() => setView("reports")}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-lg">📈</span>
-                <span className="text-xs">{language === 'en' ? 'Reports' : 'التقارير'}</span>
-              </div>
-              {view === "reports" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-              )}
-            </button>
-            <button
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                view === "timeline" 
-                  ? "bg-white text-green-700 shadow-lg scale-105" 
-                  : "text-white hover:bg-white/20"
-              }`}
-              onClick={() => setView("timeline")}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-lg">📊</span>
-                <span className="text-xs">{language === 'en' ? 'Timeline' : 'الخط الزمني'}</span>
-              </div>
-              {view === "timeline" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-              )}
-            </button>
-            <button
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                view === "integrations" 
-                  ? "bg-white text-green-700 shadow-lg scale-105" 
-                  : "text-white hover:bg-white/20"
-              }`}
-              onClick={() => setView("integrations")}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-lg">🔌</span>
-                <span className="text-xs">{language === 'en' ? 'Integrations' : 'التكاملات'}</span>
-              </div>
-              {view === "integrations" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-              )}
-            </button>
-            <button
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                view === "workflows" 
-                  ? "bg-white text-green-700 shadow-lg scale-105" 
-                  : "text-white hover:bg-white/20"
-              }`}
-              onClick={() => setView("workflows")}
-            >
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-lg">🔄</span>
-                <span className="text-xs">{language === 'en' ? 'Workflows' : 'سير العمل'}</span>
-              </div>
-              {view === "workflows" && (
-                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-              )}
-            </button>
-            {currentUser?.role === "admin" && (
-              <button
-                className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
-                  view === "settings" 
-                    ? "bg-white text-green-700 shadow-lg scale-105" 
-                    : "text-white hover:bg-white/20"
-                }`}
-                onClick={() => setView("settings")}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-lg">⚙️</span>
-                  <span className="text-xs">{language === 'en' ? 'System Settings' : 'إعدادات النظام'}</span>
-                </div>
-                {view === "settings" && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-green-700 rounded-full animate-pulse"></div>
-                )}
-              </button>
-            )}
-          </nav>
         </div>
-        <div className="flex items-center gap-3">
-          {currentUser && (
-            <NotificationSystem
-              currentUser={currentUser}
-              columns={columns}
-              users={users}
-              chats={chats}
-              onClearChatNotifications={(chatId) => {
-                // This function will be called when chat notifications are cleared
-                console.log(`Clearing notifications for chat: ${chatId}`);
-              }}
-            />
+
+        <nav className="sidebar-nav">
+          <div className="sidebar-nav-label">{language === 'ar' ? 'رئيسي' : 'Main'}</div>
+          
+          {hasPermission("view_dashboard") && (
+            <button className={`sidebar-item ${view === "dashboard" ? "active" : ""}`} onClick={() => { setView("dashboard"); setSidebarOpen(false); }}>
+              <span className="sidebar-icon">📊</span>
+              {language === 'en' ? 'Dashboard' : 'لوحة المهام'}
+            </button>
           )}
-          {/* Connection Status Indicator */}
-          <DataStorageIndicator />
-          <div className="relative group">
-            <span className="text-sm text-white cursor-pointer font-medium">{t.welcome}، {currentUser?.name}</span>
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <button
-                onClick={() => currentUser && setPasswordChangeModal({ isOpen: true, user: currentUser })}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-md"
-              >
-                {t.changePassword}
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-md"
-              >
-                {t.logout}
-              </button>
+          {hasPermission("view_board") && (
+            <button className={`sidebar-item ${view === "board" ? "active" : ""}`} onClick={() => { setView("board"); setSidebarOpen(false); }}>
+              <span className="sidebar-icon">📋</span>
+              {language === 'en' ? 'Board' : 'اللوحة'}
+            </button>
+          )}
+          <button className={`sidebar-item ${view === "calendar" ? "active" : ""}`} onClick={() => { setView("calendar"); setSidebarOpen(false); }}>
+            <span className="sidebar-icon">📅</span>
+            {language === 'en' ? 'Calendar' : 'التقويم'}
+          </button>
+          <button className={`sidebar-item ${view === "chat" ? "active" : ""}`} onClick={() => { setView("chat"); setSidebarOpen(false); }} onDoubleClick={clearAllUnreadMessages}>
+            <span className="sidebar-icon relative">
+              💬
+              {getTotalUnreadCount() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-error text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center font-bold">{getTotalUnreadCount()}</span>
+              )}
+            </span>
+            {language === 'en' ? 'Chat' : 'المحادثة'}
+          </button>
+
+          <div className="sidebar-nav-label" style={{marginTop: 12}}>{language === 'ar' ? 'تحليلات' : 'Analytics'}</div>
+          <button className={`sidebar-item ${view === "reports" ? "active" : ""}`} onClick={() => { setView("reports"); setSidebarOpen(false); }}>
+            <span className="sidebar-icon">📈</span>
+            {language === 'en' ? 'Reports' : 'التقارير'}
+          </button>
+          <button className={`sidebar-item ${view === "timeline" ? "active" : ""}`} onClick={() => { setView("timeline"); setSidebarOpen(false); }}>
+            <span className="sidebar-icon">📊</span>
+            {language === 'en' ? 'Timeline' : 'الخط الزمني'}
+          </button>
+
+          <div className="sidebar-nav-label" style={{marginTop: 12}}>{language === 'ar' ? 'إعدادات' : 'Settings'}</div>
+          {hasPermission("view_control_panel") && (
+            <button className={`sidebar-item ${view === "control" ? "active" : ""}`} onClick={() => { setView("control"); setSidebarOpen(false); }}>
+              <span className="sidebar-icon">👥</span>
+              {language === 'en' ? 'Team' : 'الفريق'}
+            </button>
+          )}
+          <button className={`sidebar-item ${view === "integrations" ? "active" : ""}`} onClick={() => { setView("integrations"); setSidebarOpen(false); }}>
+            <span className="sidebar-icon">🔌</span>
+            {language === 'en' ? 'Integrations' : 'التكاملات'}
+          </button>
+          <button className={`sidebar-item ${view === "workflows" ? "active" : ""}`} onClick={() => { setView("workflows"); setSidebarOpen(false); }}>
+            <span className="sidebar-icon">🔄</span>
+            {language === 'en' ? 'Workflows' : 'سير العمل'}
+          </button>
+          {currentUser?.role === "admin" && (
+            <button className={`sidebar-item ${view === "settings" ? "active" : ""}`} onClick={() => { setView("settings"); setSidebarOpen(false); }}>
+              <span className="sidebar-icon">⚙️</span>
+              {language === 'en' ? 'System' : 'النظام'}
+            </button>
+          )}
+
+          {/* Boards in sidebar */}
+          <div className="sidebar-nav-label" style={{marginTop: 12}}>{language === 'ar' ? 'اللوحات' : 'Boards'}</div>
+          {boards.filter(b => !b.isArchived).slice(0, 5).map(board => (
+            <button
+              key={board.id}
+              className={`sidebar-item ${currentBoardId === board.id ? 'active' : ''}`}
+              onClick={() => { handleSelectBoard(board.id); setView("board"); setSidebarOpen(false); }}
+            >
+              <span className="sidebar-icon" style={{fontSize: 10}}>⬤</span>
+              <span className="truncate">{board.title}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="flex items-center gap-3 px-2 py-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate" style={{color: 'var(--text-primary)'}}>{currentUser?.name}</p>
+              <p className="text-xs truncate" style={{color: 'var(--text-tertiary)'}}>{currentUser?.email}</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <NotificationSystem
+                currentUser={currentUser!}
+                columns={columns}
+                users={users}
+                chats={chats}
+                onClearChatNotifications={() => {}}
+              />
             </div>
           </div>
+          <div className="flex gap-1 mt-1">
+            <button
+              onClick={() => currentUser && setPasswordChangeModal({ isOpen: true, user: currentUser })}
+              className="sidebar-item text-xs justify-center flex-1"
+            >
+              {t.changePassword}
+            </button>
+            <button onClick={handleLogout} className="sidebar-item text-xs justify-center flex-1">
+              {t.logout}
+            </button>
+          </div>
         </div>
-      </header>
+      </aside>
 
+      {/* Mobile overlay */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Views */}
-      <main className="min-h-screen pt-32 pb-8 transition-all duration-500" style={{
-        background: 'linear-gradient(135deg, var(--accent-cream) 0%, var(--gray-50) 50%, var(--accent-beige) 100%)'
-      }}>
+      {/* Main Content */}
+      <main className="main-content">
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border-light sticky top-0 z-20">
+          <button onClick={() => setSidebarOpen(true)} className="btn-ghost p-1 text-xl">☰</button>
+          <span className="font-bold text-sm" style={{color: 'var(--text-primary)'}}>ToDoOS</span>
+          <DataStorageIndicator />
+        </div>
+
+        {/* Views */}
         {view === "board" && (
-          <div className="max-w-7xl mx-auto p-6 animate-fadeIn">
-            {/* Header Section with improved styling */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-100">
+            <div className="max-w-7xl mx-auto p-6 animate-fadeIn">
+            {/* Board Header - Modern Card */}
+            <div className="card p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)'}}>
                     <span className="text-2xl">📋</span>
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-800">{t.tasks}</h1>
-                    <p className="text-gray-500 text-sm">{boardDescription || t.tasks}</p>
+                    <h1 className="text-2xl font-bold" style={{color: 'var(--text-primary)'}}>{t.tasks}</h1>
+                    <p className="text-sm" style={{color: 'var(--text-tertiary)'}}>{boardDescription || t.tasks}</p>
                   </div>
                 </div>
                 
-                {/* Search and Filter - positioned based on language direction */}
                 <div className={`${language === 'ar' ? 'order-first' : 'order-last'}`}>
                   <SearchAndFilter
                     columns={getFilteredColumns()}
@@ -1211,7 +1098,6 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Board Management */}
               {currentUser && (
                 <BoardManager
                   boards={boards}
@@ -1225,173 +1111,160 @@ const App: React.FC = () => {
                   onStarBoard={handleStarBoard}
                 />
               )}
-              {/* Export Section */}
               {currentBoard && (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-gray-500">{language === 'ar' ? 'تصدير:' : 'Export:'}</span>
-                  <button
-                    onClick={() => handleExportBoard("json")}
-                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200"
-                  >JSON</button>
-                  <button
-                    onClick={() => handleExportBoard("csv")}
-                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200"
-                  >CSV</button>
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-light">
+                  <span className="text-xs" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'تصدير:' : 'Export:'}</span>
+                  <button onClick={() => handleExportBoard("json")} className="chip hover:bg-border-light cursor-pointer">JSON</button>
+                  <button onClick={() => handleExportBoard("csv")} className="chip hover:bg-border-light cursor-pointer">CSV</button>
                 </div>
               )}
             </div>
 
-            {/* Columns Section */}
-            <DragDropContext onDragEnd={onDragEnd}>
-              <div className="grid grid-cols-3 gap-6 pb-6">
-                {getDisplayColumns().map((col, colIndex) => (
-                  <Droppable droppableId={col.id} key={col.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        className={`bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 h-96 flex flex-col ${
-                          snapshot.isDraggingOver ? 'bg-blue-50 border-blue-300 shadow-md' : ''
-                        }`}
-                      >
-                        {/* Column Header */}
-                        <div className="flex items-center justify-between p-4 pb-3 flex-shrink-0">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              colIndex === 0 ? 'bg-red-400' : 
-                              colIndex === 1 ? 'bg-yellow-400' : 
-                              'bg-green-400'
-                            }`}></div>
-                            <h2 className="font-semibold text-sm text-gray-800">{getColumnTitle(col)}</h2>
-                          </div>
-                          <div className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">
-                            {col.cards.length}
-                          </div>
-                        </div>
+            {/* Board Content: Sidebar + Columns */}
+            <div className={`flex gap-6 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+              {/* Column Management Sidebar */}
+              {hasPermission("manage_board") && (
+                <div className="w-[260px] flex-shrink-0">
+                  <div className="card p-4">
+                    <ColumnManager
+                      columns={columns}
+                      onAddColumn={handleAddColumn}
+                      onUpdateColumn={handleUpdateColumn}
+                      onDeleteColumn={handleDeleteColumn}
+                      hasPermission={hasPermission("manage_board")}
+                    />
+                  </div>
+                </div>
+              )}
 
-                        {/* Scrollable Cards Area */}
-                        <div 
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                          className="flex-1 overflow-y-auto px-4 pb-4 space-y-2"
-                          style={{ maxHeight: 'calc(100% - 120px)' }}
-                        >
-                          {col.cards.map((card, index) => {
-                            const completed = card.subtasks.filter((s) => s.done).length;
-                            const total = card.subtasks.length;
-                            const progress =
-                              total === 0 ? 0 : Math.round((completed / total) * 100);
+              {/* Columns Grid */}
+              <div className="flex-1 min-w-0">
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-5">
+                    {getDisplayColumns().map((col, colIndex) => (
+                      <Droppable droppableId={col.id} key={col.id}>
+                        {(provided, snapshot) => (
+                          <div
+                            className={`kanban-column flex flex-col ${
+                              snapshot.isDraggingOver ? 'ring-2 ring-primary ring-opacity-40' : ''
+                            }`}
+                          >
+                            {/* Column Header */}
+                            <div className="kanban-column-header flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  colIndex === 0 ? 'priority-high' : 
+                                  colIndex === 1 ? 'priority-medium' : 
+                                  colIndex === 2 ? 'bg-accent-coral' :
+                                  'priority-low'
+                                }`}></div>
+                                <h2 className="font-semibold text-sm">{getColumnTitle(col)}</h2>
+                              </div>
+                              <span className="badge badge-primary">{col.cards.length}</span>
+                            </div>
 
-                            return (
-                              <Draggable key={card.id} draggableId={card.id} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    onClick={() => openCard(card)}
-                                    className={`bg-white p-3 mb-2 rounded-lg shadow-sm border border-gray-100 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-300 ${
-                                      snapshot.isDragging ? 'shadow-lg rotate-1 scale-105 border-blue-300' : ''
-                                    }`}
-                                  >
-                                    <div>
-                                      {/* Title */}
-                                      <div className="font-medium text-sm text-gray-900 mb-2">{card.title}</div>
+                            {/* Scrollable Cards Area */}
+                            <div 
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                              className="flex-1 overflow-y-auto px-3 pb-3 space-y-2"
+                              style={{ maxHeight: 'calc(100% - 100px)' }}
+                            >
+                              {col.cards.map((card, index) => {
+                                const completed = card.subtasks.filter((s) => s.done).length;
+                                const total = card.subtasks.length;
+                                const progress =
+                                  total === 0 ? 0 : Math.round((completed / total) * 100);
 
-                                      {/* Priority and Due Date in one line */}
-                                      <div className="flex items-center justify-between mb-2">
-                                        {card.priority && (
-                                          <span
-                                            className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${
-                                              card.priority === "High"
-                                                ? "bg-red-500"
-                                                : card.priority === "Medium"
-                                                ? "bg-yellow-500"
-                                                : "bg-green-500"
-                                            }`}
-                                          >
-                                            {card.priority === "High" ? (language === 'ar' ? "عالية" : "High") : 
-                                             card.priority === "Medium" ? (language === 'ar' ? "متوسطة" : "Medium") : 
-                                             (language === 'ar' ? "منخفضة" : "Low")}
-                                          </span>
-                                        )}
-                                        {card.dueDate && (
-                                          <div className="text-xs text-gray-500">
-                                            📅 {card.dueDate}
+                                return (
+                                  <Draggable key={card.id} draggableId={card.id} index={index}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        onClick={() => openCard(card)}
+                                        className={`task-card ${snapshot.isDragging ? 'shadow-xl rotate-1 scale-105' : ''}`}
+                                      >
+                                        <div className={`priority-indicator ${card.priority === "High" ? 'priority-high' : card.priority === "Medium" ? 'priority-medium' : 'priority-low'}`} />
+                                        <div>
+                                          {/* Title */}
+                                          <div className="font-medium text-sm mb-2" style={{color: 'var(--text-primary)'}}>{card.title}</div>
+
+                                          {/* Priority and Due Date */}
+                                          <div className="flex items-center justify-between mb-2">
+                                            {card.priority && (
+                                              <span className={`chip ${
+                                                card.priority === "High" ? 'badge-error' : 
+                                                card.priority === "Medium" ? 'badge-warning' : 
+                                                'badge-success'
+                                              }`}>
+                                                {card.priority === "High" ? (language === 'ar' ? "عالية" : "High") : 
+                                                 card.priority === "Medium" ? (language === 'ar' ? "متوسطة" : "Medium") : 
+                                                 (language === 'ar' ? "منخفضة" : "Low")}
+                                              </span>
+                                            )}
+                                            {card.dueDate && (
+                                              <span className="text-xs" style={{color: 'var(--text-tertiary)'}}>📅 {card.dueDate}</span>
+                                            )}
                                           </div>
-                                        )}
-                                      </div>
 
-                                      {/* Members - compact */}
-                                      {card.members.length > 0 && (
-                                        <div className="flex items-center gap-1 mb-2">
-                                          {card.members.slice(0, 2).map((m) => (
-                                            <span key={m.id} title={m.name} className="text-sm">
-                                              {m.avatar || "👤"}
-                                            </span>
-                                          ))}
-                                          {card.members.length > 2 && (
-                                            <span className="text-xs text-gray-500">+{card.members.length - 2}</span>
+                                          {/* Members - compact */}
+                                          {card.members.length > 0 && (
+                                            <div className="flex items-center gap-1 mb-2">
+                                              {card.members.slice(0, 3).map((m) => (
+                                                <span key={m.id} title={m.name} className="text-sm">{m.avatar || "👤"}</span>
+                                              ))}
+                                              {card.members.length > 3 && (
+                                                <span className="text-xs" style={{color: 'var(--text-tertiary)'}}>+{card.members.length - 3}</span>
+                                              )}
+                                            </div>
+                                          )}
+
+                                          {/* Progress Bar */}
+                                          {total > 0 && (
+                                            <div className="mb-1">
+                                              <div className="progress-bar">
+                                                <div className="progress-fill" style={{ width: `${progress}%` }} />
+                                              </div>
+                                              <p className="text-xs mt-1" style={{color: 'var(--text-tertiary)'}}>
+                                                {completed}/{total} ({progress}%)
+                                              </p>
+                                            </div>
+                                          )}
+
+                                          {/* Attachments */}
+                                          {card.attachments.length > 0 && (
+                                            <span className="text-xs" style={{color: 'var(--text-tertiary)'}}>📎 {card.attachments.length}</span>
                                           )}
                                         </div>
-                                      )}
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                );
+                              })}
+                              {provided.placeholder}
+                            </div>
 
-                                      {/* Progress Bar - compact */}
-                                      {total > 0 && (
-                                        <div className="mb-2">
-                                          <div className="w-full bg-gray-200 rounded h-1">
-                                            <div
-                                              className="bg-green-500 h-1 rounded"
-                                              style={{ width: `${progress}%` }}
-                                            />
-                                          </div>
-                                          <p className="text-xs text-gray-500 mt-1">
-                                            {completed}/{total} ({progress}%)
-                                          </p>
-                                        </div>
-                                      )}
-
-                                      {/* Attachments - compact */}
-                                      {card.attachments.length > 0 && (
-                                        <div className="text-xs text-gray-500">
-                                          📎 {card.attachments.length}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          })}
-                          {provided.placeholder}
-                        </div>
-
-                        {/* Add Task Button - Fixed at bottom */}
-                        <div className="p-4 pt-0 flex-shrink-0">
-                          {hasPermission("create_task") && (
-                            <button
-                              className="btn-primary w-full py-3 rounded-xl font-medium flex items-center justify-center gap-2 fade-in"
-                              onClick={() => setIsAddModalOpen(col.id)}
-                            >
-                              <span className="text-lg">+</span>
-                              {t.addTask}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </Droppable>
-                ))}
+                            {/* Add Task Button */}
+                            <div className="px-3 pb-3 pt-0 flex-shrink-0">
+                              {hasPermission("create_task") && (
+                                <button
+                                  className="btn-primary w-full flex items-center justify-center gap-2"
+                                  onClick={() => setIsAddModalOpen(col.id)}
+                                >
+                                  <span>+</span>
+                                  {t.addTask}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </Droppable>
+                    ))}
+                  </div>
+                </DragDropContext>
               </div>
-            </DragDropContext>
-
-            {/* Column Management - Below columns */}
-            <div className="mt-6">
-              <ColumnManager
-                columns={columns}
-                onAddColumn={handleAddColumn}
-                onUpdateColumn={handleUpdateColumn}
-                onDeleteColumn={handleDeleteColumn}
-                hasPermission={hasPermission("manage_board")}
-              />
             </div>
 
             {selectedCard && currentUser && (
@@ -1432,9 +1305,13 @@ const App: React.FC = () => {
         )}
 
         {view === "dashboard" && (
-          <div className="p-6 animate-slideInFromRight">
-            <Dashboard columns={columns} />
-          </div>
+          <Dashboard
+            columns={columns}
+            currentUser={currentUser}
+            availableMembers={users.map(u => ({ id: u.id, name: u.name, avatar: u.avatar || "👤" }))}
+            onAddCard={addCard}
+            onOpenCard={openCard}
+          />
         )}
 
         {view === "control" && currentUser && (

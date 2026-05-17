@@ -25,8 +25,8 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
   const defaultLogoPath = '/images/todooos-logo.svg';
   const logoUrl = tenantLogoUrl || defaultLogoPath;
   const tenantName = localStorage.getItem('tenantName') || 'ToDoOS';
-  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#4A7C59';
-  const primaryDark = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim() || '#2D5A3D';
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#2563EB';
+  const primaryDark = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim() || '#1D4ED8';
 
   if (variant === 'icon') {
     return (
@@ -36,9 +36,8 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
           alt={tenantName}
           className="w-full h-full object-contain"
           style={{
-            filter: 'brightness(1.2) contrast(1.3) drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-            background: 'transparent',
-            mixBlendMode: 'multiply'
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.08))',
+            background: 'transparent'
           }}
         />
       </div>
@@ -67,9 +66,8 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
           alt={tenantName}
           className="w-full h-full object-contain"
           style={{
-            filter: 'brightness(1.2) contrast(1.3) drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-            background: 'transparent',
-            mixBlendMode: 'multiply'
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.08))',
+            background: 'transparent'
           }}
         />
       </div>
@@ -84,9 +82,8 @@ export default function Logo({ size = 'lg', variant = 'logo-only', className = '
           alt={tenantName}
           className="w-full h-full object-contain"
           style={{
-            filter: 'brightness(1.2) contrast(1.3) drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-            background: 'transparent',
-            mixBlendMode: 'multiply'
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.08))',
+            background: 'transparent'
           }}
         />
       </div>

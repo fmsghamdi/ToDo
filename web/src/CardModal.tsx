@@ -292,296 +292,270 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
   const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-md w-[900px] h-[90vh] shadow-lg relative flex gap-6">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-lg"
-        >
-          ✕
-        </button>
-
-        {/* Left column */}
-        <div className="flex-1 flex flex-col overflow-y-auto pr-2">
-          {/* Title */}
+    <>
+      <div className="card-modal-overlay" onClick={onClose} />
+      <div className="card-modal" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="card-modal-header">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="w-full border p-3 mb-3 rounded font-semibold text-lg"
+            className="text-lg font-bold bg-transparent border-none outline-none flex-1"
+            style={{color: 'var(--text-primary)'}}
           />
+          <button onClick={onClose} className="btn-ghost p-1 text-lg leading-none ml-2">✕</button>
+        </div>
 
-          {/* Description */}
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onBlur={handleDescriptionBlur}
-            placeholder="Add description..."
-            className="w-full border p-3 mb-4 rounded min-h-[80px]"
-          />
-
-          {/* Due Date */}
-          <h3 className="font-semibold mb-2">Due Date</h3>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => handleDueDateChange(e.target.value)}
-            className="border p-2 rounded w-full mb-4"
-          />
-
-          {/* Attachments */}
-          <h3 className="font-semibold">Attachments</h3>
-          <input type="file" onChange={handleFileUpload} className="mb-2" />
-          <div className="flex gap-2 mb-2">
-            <input
-              type="url"
-              placeholder="Paste a link..."
-              value={linkInput}
-              onChange={(e) => setLinkInput(e.target.value)}
-              className="border p-2 rounded flex-1"
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main content - scrollable */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-5">
+            {/* Description */}
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              onBlur={handleDescriptionBlur}
+              placeholder="Add description..."
+              className="input min-h-[80px] resize-y text-sm"
             />
-            <button
-              onClick={handleAddLink}
-              className="bg-blue-500 text-white px-3 rounded hover:bg-blue-600"
-            >
-              Add
-            </button>
-          </div>
-          <ul className="mb-3">
-            {attachments.map((att) => (
-              <li key={att.id} className="flex justify-between items-center text-sm border-b py-1">
-                <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
-                  📎 {att.name}
-                </a>
-                <button
-                  onClick={() => deleteAttachment(att.id)}
-                  className="text-red-500 hover:underline text-xs"
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
-          </ul>
 
-          {/* Comments */}
-          <h3 className="font-semibold mt-2">Comments</h3>
-          <div className="flex gap-2 mb-2 relative">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder='Write a comment... (use @ to mention)'
-                value={commentInput}
-                onChange={(e) => handleCommentChange(e.target.value)}
-                onKeyDown={handleCommentKeyDown}
-                className="border p-2 rounded w-full"
-              />
-              {showMentions && (
-                <div className="absolute top-full left-0 right-0 bg-white border rounded shadow-lg z-10 max-h-32 overflow-y-auto">
-                  {availableMembers
-                    .filter(m => m.name.toLowerCase().includes(mentionSearch.toLowerCase()))
-                    .slice(0, 5)
-                    .map((m, i) => (
-                      <button
-                        key={m.id}
-                        onClick={() => selectMention(m)}
-                        className={`w-full text-left px-3 py-1.5 text-sm flex items-center gap-2 ${
-                          i === mentionIndex ? "bg-blue-100" : "hover:bg-gray-100"
-                        }`}
-                      >
-                        <span>{m.avatar || "👤"}</span>
-                        <span>{m.name}</span>
-                      </button>
-                    ))}
+            {/* Subtasks */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold" style={{color: 'var(--text-secondary)'}}>{language === 'ar' ? 'المهام الفرعية' : 'Subtasks'}</h3>
+                {total > 0 && <span className="text-xs" style={{color: 'var(--text-tertiary)'}}>{completed}/{total}</span>}
+              </div>
+              {total > 0 && (
+                <div className="progress-bar mb-2">
+                  <div className="progress-fill" style={{ width: `${progress}%` }} />
+                </div>
+              )}
+              <div className="space-y-1 mb-2">
+                {subtasks.length === 0 && (
+                  <p className="text-sm" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'لا توجد مهام فرعية بعد' : 'No subtasks yet'}</p>
+                )}
+                {subtasks.map((st) => (
+                  <div key={st.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-surface transition-colors">
+                    <button
+                      onClick={() => toggleSubtask(st.id)}
+                      className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                        st.done ? 'bg-success border-success' : 'border-border-default hover:border-primary'
+                      }`}
+                    >
+                      {st.done && <span className="text-white text-[9px]">✓</span>}
+                    </button>
+                    <input
+                      type="text"
+                      value={st.title}
+                      onChange={(e) => changeSubtaskTitle(st.id, e.target.value)}
+                      className={`flex-1 bg-transparent border-none focus:outline-none text-sm px-1 py-0.5 ${
+                        st.done ? 'line-through' : ''
+                      }`}
+                      style={st.done ? {color: 'var(--text-tertiary)'} : {color: 'var(--text-primary)'}}
+                    />
+                    <button onClick={() => deleteSubtask(st.id)} className="text-xs px-1.5 py-0.5 rounded hover:bg-error/10 hover:text-error transition-colors" style={{color: 'var(--text-tertiary)'}}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <button onClick={addSubtask} className="btn-ghost text-xs w-full text-center py-1.5 border border-dashed border-border-default rounded-lg hover:border-primary hover:text-primary transition-colors">
+                + {language === 'ar' ? 'أضف مهمة فرعية' : 'Add Subtask'}
+              </button>
+            </div>
+
+            {/* Comments */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2" style={{color: 'var(--text-secondary)'}}>{language === 'ar' ? 'التعليقات' : 'Comments'}</h3>
+              <div className="flex gap-2 mb-2 relative">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder={language === 'ar' ? 'اكتب تعليق... (@ لذكر عضو)' : 'Write a comment... (@ to mention)'}
+                    value={commentInput}
+                    onChange={(e) => handleCommentChange(e.target.value)}
+                    onKeyDown={handleCommentKeyDown}
+                    className="input text-sm"
+                  />
+                  {showMentions && (
+                    <div className="absolute top-full left-0 right-0 bg-card border border-border-default rounded-lg shadow-lg z-10 max-h-32 overflow-y-auto mt-1">
+                      {availableMembers.filter(m => m.name.toLowerCase().includes(mentionSearch.toLowerCase())).slice(0, 5).map((m, i) => (
+                        <button key={m.id} onClick={() => selectMention(m)} className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors ${i === mentionIndex ? 'bg-primary-bright text-primary-dark' : 'hover:bg-surface'}`}>
+                          <span>{m.avatar || "👤"}</span>
+                          <span>{m.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button onClick={handleAddComment} className="btn-primary text-xs px-3 py-1.5">{language === 'ar' ? 'إضافة' : 'Add'}</button>
+              </div>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {comments.length === 0 && <p className="text-xs" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'لا توجد تعليقات' : 'No comments'}</p>}
+                {comments.map((c) => (
+                  <div key={c.id} className="text-xs py-1.5 px-3 rounded-lg bg-surface border border-border-light">
+                    <span style={{color: 'var(--text-primary)'}}>{renderCommentText(c.text)}</span>
+                    <span className="text-xs ml-2" style={{color: 'var(--text-tertiary)'}}>{new Date(c.at).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Activity Log */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2" style={{color: 'var(--text-secondary)'}}>{language === 'ar' ? 'النشاطات' : 'Activity'}</h3>
+              {activity.length === 0 ? (
+                <p className="text-xs" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'لا توجد نشاطات بعد' : 'No activity yet'}</p>
+              ) : (
+                <div className="space-y-1">
+                  {activity.map((a) => (
+                    <div key={a.id} className="activity-item">
+                      <div className="activity-dot" />
+                      <div>
+                        <div className="activity-text">{a.message}</div>
+                        <div className="activity-time">{new Date(a.at).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-            <button
-              onClick={handleAddComment}
-              className="bg-green-500 text-white px-3 rounded hover:bg-green-600"
-            >
-              Add
-            </button>
-          </div>
-          <ul className="mb-3 max-h-32 overflow-y-auto border p-2 rounded text-sm">
-            {comments.map((c) => (
-              <li key={c.id} className="mb-1">
-                <span className="text-gray-700">{renderCommentText(c.text)}</span>{" "}
-                <span className="text-xs text-gray-400">
-                  ({new Date(c.at).toLocaleString()})
-                </span>
-              </li>
-            ))}
-          </ul>
 
-          {/* Time Tracker */}
-          {currentUser && (
-            <div className="mb-4">
-              <TimeTracker
-                card={card}
-                currentUser={currentUser}
-                onUpdateCard={onUpdate}
-              />
-            </div>
-          )}
-
-          {/* Activity Log */}
-          <h3 className="font-semibold mt-2">Activity Log</h3>
-          {activity.length === 0 ? (
-            <p className="text-sm text-gray-400">No activity yet.</p>
-          ) : (
-            <ul className="mt-2 text-sm max-h-40 overflow-y-auto border-t pt-2">
-              {activity.map((a) => (
-                <li key={a.id} className="mb-1 text-gray-600">
-                  [{new Date(a.at).toLocaleString()}] {a.message}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Right column */}
-        <div className="w-[300px] flex flex-col">
-          {/* Subtasks */}
-          <h3 className="font-semibold mb-2">Subtasks</h3>
-          <div className="max-h-48 overflow-y-auto border p-2 rounded mb-2">
-            {subtasks.length === 0 && <p className="text-sm text-gray-400 mb-2">No subtasks yet</p>}
-            {subtasks.map((st) => (
-              <div key={st.id} className="flex items-center gap-2 mb-2">
-                <input type="checkbox" checked={st.done} onChange={() => toggleSubtask(st.id)} />
-                <input
-                  type="text"
-                  value={st.title}
-                  onChange={(e) => changeSubtaskTitle(st.id, e.target.value)}
-                  className={`flex-1 border-b focus:outline-none px-2 py-1 ${
-                    st.done ? "line-through text-gray-400" : ""
-                  }`}
-                />
-                <button onClick={() => deleteSubtask(st.id)} className="text-red-500 px-2">
-                  ✕
-                </button>
+            {/* Attachments */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold" style={{color: 'var(--text-secondary)'}}>{language === 'ar' ? 'المرفقات' : 'Attachments'}</h3>
               </div>
-            ))}
-          </div>
-          <button onClick={addSubtask} className="text-purple-600 text-sm mb-3 hover:underline">
-            + Add Subtask
-          </button>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {attachments.map((att) => (
+                  <div key={att.id} className="flex items-center gap-2 text-xs py-1.5 px-3 rounded-lg bg-surface border border-border-light">
+                    <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[150px]">
+                      📎 {att.name}
+                    </a>
+                    <button onClick={() => deleteAttachment(att.id)} className="hover:text-error ml-1">✕</button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <label className="btn-ghost text-xs cursor-pointer py-1.5 px-3 border border-dashed border-border-default rounded-lg hover:border-primary">
+                  📁 {language === 'ar' ? 'رفع ملف' : 'Upload file'}
+                  <input type="file" onChange={handleFileUpload} className="hidden" />
+                </label>
+                <div className="flex gap-1 flex-1">
+                  <input type="url" placeholder={language === 'ar' ? 'أو أضف رابط...' : 'Or paste a link...'} value={linkInput} onChange={(e) => setLinkInput(e.target.value)} className="input text-xs flex-1 min-w-0" />
+                  <button onClick={handleAddLink} className="btn-secondary text-xs px-3 py-1.5">+</button>
+                </div>
+              </div>
+            </div>
 
-          {/* Progress */}
-          <h3 className="font-semibold mt-3">Progress</h3>
-          <div className="w-full bg-gray-200 rounded h-2 mb-1">
-            <div className="bg-green-500 h-2 rounded" style={{ width: `${progress}%` }} />
-          </div>
-          <p className="text-sm text-gray-600 mb-3">
-            {completed}/{total} ({progress}%)
-          </p>
-
-          {/* Labels */}
-          <h3 className="font-semibold">Labels</h3>
-          <div className="flex gap-2 flex-wrap mb-3">
-            {LABEL_PRESETS.map((lbl) => {
-              const active = labels.some((l) => l.id === lbl.id);
-              return (
-                <button
-                  key={lbl.id}
-                  onClick={() => toggleLabel(lbl)}
-                  className="px-3 py-1 rounded text-sm border"
-                  style={{
-                    backgroundColor: active ? lbl.color : "#fff",
-                    color: active ? "#fff" : lbl.color,
-                    borderColor: lbl.color,
-                  }}
-                >
-                  {active ? "✓ " : "+ "} {lbl.name}
-                </button>
-              );
-            })}
+            {/* Time Tracker */}
+            {currentUser && (
+              <TimeTracker card={card} currentUser={currentUser} onUpdateCard={onUpdate} />
+            )}
           </div>
 
-          {/* Members */}
-          <h3 className="font-semibold">Members</h3>
-          <div className="flex gap-2 flex-wrap mb-3 max-h-32 overflow-y-auto">
-            {availableMembers.map((m) => {
-              const active = members.some((mm) => mm.id === m.id);
-              return (
-                <button
-                  key={m.id}
-                  onClick={() => toggleMember(m)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                    active 
-                      ? "bg-blue-500 text-white border-blue-500 shadow-md" 
-                      : "bg-gray-50 hover:bg-gray-100 border-gray-200"
-                  }`}
-                  title={m.name}
-                >
-                  <span className="text-sm">{m.avatar || "👤"}</span>
-                  <span className="text-xs font-medium truncate max-w-16">{m.name}</span>
-                  {active && <span className="text-xs">✓</span>}
-                </button>
-              );
-            })}
-          </div>
-          {availableMembers.length > 6 && (
-            <p className="text-xs text-gray-500 mb-3">
-              {members.length} من {availableMembers.length} أعضاء محددين
-            </p>
-          )}
+          {/* Sidebar metadata */}
+          <div className="w-[200px] flex-shrink-0 border-l border-border-light p-4 space-y-4 overflow-y-auto">
+            {/* Priority */}
+            <div>
+              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأولوية' : 'Priority'}</h4>
+              <div className="flex gap-1">
+                {PRIORITY_PRESETS.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => handlePriorityChange(p)}
+                    className={`text-xs px-2 py-1 rounded-md transition-all ${
+                      priority === p
+                        ? p === "High" ? 'bg-error text-white' : p === "Medium" ? 'bg-warning text-white' : 'bg-success text-white'
+                        : 'bg-surface text-secondary hover:bg-border-default'
+                    }`}
+                  >
+                    {p === "High" ? (language === 'ar' ? 'عالية' : 'High') : p === "Medium" ? (language === 'ar' ? 'متوسطة' : 'Med') : (language === 'ar' ? 'منخفضة' : 'Low')}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {/* Assign Requests */}
-          {currentUser && (
-            <AssignRequestsPanel
-              requests={assignRequests}
-              currentUser={currentUser}
-              cardMembers={members}
-              cardId={card.id}
-              cardTitle={card.title}
-              onRequestAssign={onRequestAssign}
-              onApprove={onApproveAssign}
-              onReject={onRejectAssign}
-            />
-          )}
+            {/* Due Date */}
+            <div>
+              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}</h4>
+              <input type="date" value={dueDate} onChange={(e) => handleDueDateChange(e.target.value)} className="input text-xs py-1.5" />
+            </div>
 
-          {/* Priority */}
-          <h3 className="font-semibold">Priority</h3>
-          <div className="flex gap-2 mb-3">
-            {PRIORITY_PRESETS.map((p) => (
-              <button
-                key={p}
-                onClick={() => handlePriorityChange(p)}
-                className={`px-3 py-1 rounded text-sm border ${
-                  priority === p ? "bg-red-500 text-white" : "bg-white text-gray-700"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+            {/* Labels */}
+            <div>
+              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'التصنيفات' : 'Labels'}</h4>
+              <div className="flex flex-wrap gap-1">
+                {LABEL_PRESETS.map((lbl) => {
+                  const active = labels.some((l) => l.id === lbl.id);
+                  return (
+                    <button
+                      key={lbl.id}
+                      onClick={() => toggleLabel(lbl)}
+                      className="text-[10px] px-1.5 py-0.5 rounded-md border transition-all"
+                      style={{
+                        backgroundColor: active ? lbl.color : 'transparent',
+                        color: active ? '#fff' : lbl.color,
+                        borderColor: lbl.color,
+                      }}
+                    >
+                      {active ? '✓ ' : ''}{lbl.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-          {/* Recurring Task Button */}
-          <div className="mb-3">
-            <button
-              onClick={() => setShowRecurringModal(true)}
-              className="w-full bg-purple-500 text-white px-3 py-2 rounded hover:bg-purple-600 text-sm flex items-center justify-center gap-2"
-            >
+            {/* Members */}
+            <div>
+              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأعضاء' : 'Members'}</h4>
+              <div className="space-y-1">
+                {availableMembers.slice(0, 6).map((m) => {
+                  const active = members.some((mm) => mm.id === m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => toggleMember(m)}
+                      className={`flex items-center gap-1.5 w-full px-2 py-1 rounded-md text-xs transition-all ${
+                        active ? 'bg-primary/10 text-primary' : 'hover:bg-surface text-secondary'
+                      }`}
+                    >
+                      <span>{m.avatar || "👤"}</span>
+                      <span className="truncate flex-1 text-left">{m.name}</span>
+                      {active && <span className="text-[9px]">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Assign Requests */}
+            {currentUser && (
+              <AssignRequestsPanel
+                requests={assignRequests}
+                currentUser={currentUser}
+                cardMembers={members}
+                cardId={card.id}
+                cardTitle={card.title}
+                onRequestAssign={onRequestAssign}
+                onApprove={onApproveAssign}
+                onReject={onRejectAssign}
+              />
+            )}
+
+            {/* Recurring Task */}
+            <button onClick={() => setShowRecurringModal(true)} className="btn-ghost w-full text-xs flex items-center justify-center gap-1 py-1.5">
               🔄 {t.repeatTask}
             </button>
-          </div>
 
-          {/* Buttons */}
-          <div className="flex justify-between mt-auto pt-4">
-            <button
-              onClick={() => onDelete(card.id)}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Delete
-            </button>
-            <button
-              onClick={onClose}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-            >
-              Close
-            </button>
+            {/* Actions */}
+            <div className="space-y-1.5 pt-2 border-t border-border-light">
+              <button onClick={() => onDelete(card.id)} className="w-full text-xs py-1.5 px-3 rounded-md border border-error/30 text-error hover:bg-error/5 transition-colors">
+                {language === 'ar' ? 'حذف' : 'Delete'}
+              </button>
+              <button onClick={onClose} className="w-full text-xs py-1.5 px-3 rounded-md bg-primary text-white hover:opacity-90 transition-colors">
+                {language === 'ar' ? 'حفظ وإغلاق' : 'Save & Close'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -596,7 +570,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
           baseCard={card}
         />
       </div>
-    </div>
+    </>
   );
 };
 

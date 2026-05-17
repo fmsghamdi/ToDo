@@ -98,19 +98,9 @@
   }
 }
 
-/* Smooth transitions for all elements */
-* {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Hover effects for buttons and interactive elements */
-button:hover {
-  transform: translateY(-1px);
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+/* Apply transitions on interactive elements only */
+a, button, input, textarea, select {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 /* Beautiful scrollbar */
@@ -119,15 +109,15 @@ button:hover {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--bg-surface);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+  background: var(--border-default);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, var(--primary-dark), var(--primary-darkest));
+  background: var(--border-hover);
 }

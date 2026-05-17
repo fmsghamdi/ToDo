@@ -79,21 +79,25 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-[500px] p-6">
-        <h2 className="text-lg font-bold mb-4">{t.addTask}</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-bold" style={{color: 'var(--text-primary)'}}>{t.addTask}</h2>
+          <button onClick={onClose} className="btn-ghost p-1 text-lg leading-none">✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Title */}
           <input
-            className="w-full border rounded p-2"
+            className="input"
             placeholder={t.taskTitle}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            autoFocus
           />
 
           {/* Description */}
           <textarea
-            className="w-full border rounded p-2"
+            className="input min-h-[80px] resize-y"
             placeholder={t.taskDescription}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -101,22 +105,19 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
 
           {/* Priority */}
           <div>
-            <h3 className="font-semibold mb-1">{t.priority}</h3>
+            <h3 className="text-sm font-semibold mb-2" style={{color: 'var(--text-secondary)'}}>{t.priority}</h3>
             <div className="flex gap-2">
               {["High", "Medium", "Low"].map((p) => (
                 <button
                   type="button"
                   key={p}
                   onClick={() => setPriority(p as "High" | "Medium" | "Low")}
-                  className={`px-3 py-1 rounded text-sm text-white ${
+                  className={`chip cursor-pointer transition-all ${
                     priority === p
-                      ? p === "High"
-                        ? "bg-red-600"
-                        : p === "Medium"
-                        ? "bg-yellow-500"
-                        : "bg-green-500"
-                      : "bg-gray-400"
+                      ? p === "High" ? 'badge-error' : p === "Medium" ? 'badge-warning' : 'badge-success'
+                      : 'hover:border-primary'
                   }`}
+                  style={priority === p ? {} : {background: 'var(--bg-card)', color: 'var(--text-secondary)'}}
                 >
                   {p === "High" ? t.high : p === "Medium" ? t.medium : t.low}
                 </button>
@@ -126,7 +127,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
 
           {/* Members */}
           <div>
-            <h3 className="font-semibold mb-1">{t.members}</h3>
+            <h3 className="text-sm font-semibold mb-2" style={{color: 'var(--text-secondary)'}}>{t.members}</h3>
             <div className="flex gap-2 flex-wrap max-h-32 overflow-y-auto">
               {availableMembers.map((m) => {
                 const active = selectedMembers.some((sm) => sm.id === m.id);
@@ -135,22 +136,23 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
                     type="button"
                     key={m.id}
                     onClick={() => toggleMember(m)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-sm ${
                       active 
-                        ? "bg-blue-500 text-white border-blue-500 shadow-md" 
-                        : "bg-gray-50 hover:bg-gray-100 border-gray-200"
+                        ? "bg-primary text-white border-primary" 
+                        : "hover:border-primary bg-surface border-border-default"
                     }`}
+                    style={active ? {background: 'var(--primary)', borderColor: 'var(--primary)'} : {}}
                     title={m.name}
                   >
-                    <span className="text-lg">{m.avatar || "👤"}</span>
-                    <span className="text-sm font-medium truncate max-w-20">{m.name}</span>
+                    <span>{m.avatar || "👤"}</span>
+                    <span className="font-medium truncate max-w-20">{m.name}</span>
                     {active && <span className="text-xs">✓</span>}
                   </button>
                 );
               })}
             </div>
             {availableMembers.length > 6 && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs mt-1" style={{color: 'var(--text-tertiary)'}}>
                 {selectedMembers.length} من {availableMembers.length} أعضاء محددين
               </p>
             )}
@@ -158,7 +160,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
 
           {/* Labels */}
           <div>
-            <h3 className="font-semibold mb-1">{t.labels}</h3>
+            <h3 className="text-sm font-semibold mb-2" style={{color: 'var(--text-secondary)'}}>{t.labels}</h3>
             <div className="flex gap-2 flex-wrap">
               {LABEL_PRESETS.map((lbl) => {
                 const active = selectedLabels.some((l) => l.id === lbl.id);
@@ -167,9 +169,9 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
                     type="button"
                     key={lbl.id}
                     onClick={() => toggleLabel(lbl)}
-                    className={`px-3 py-1 rounded text-sm border`}
+                    className="chip cursor-pointer transition-all"
                     style={{
-                      backgroundColor: active ? lbl.color : "#fff",
+                      backgroundColor: active ? lbl.color : "var(--bg-card)",
                       color: active ? "#fff" : lbl.color,
                       borderColor: lbl.color,
                     }}
@@ -184,54 +186,25 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">{t.startDate}</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full border rounded p-2"
-              />
+              <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>{t.startDate}</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{t.dueDate}</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full border rounded p-2"
-              />
+              <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>{t.dueDate}</label>
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="input" />
             </div>
           </div>
 
           {/* Estimated Hours */}
           <div>
-            <label className="block text-sm font-medium mb-1">{t.estimatedHours}</label>
-            <input
-              type="number"
-              min="0"
-              step="0.5"
-              value={estimatedHours}
-              onChange={(e) => setEstimatedHours(e.target.value)}
-              className="w-full border rounded p-2"
-              placeholder="8"
-            />
+            <label className="block text-sm font-medium mb-1" style={{color: 'var(--text-secondary)'}}>{t.estimatedHours}</label>
+            <input type="number" min="0" step="0.5" value={estimatedHours} onChange={(e) => setEstimatedHours(e.target.value)} className="input" placeholder="8" />
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-between mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-gray-300 px-3 py-1 rounded"
-            >
-              {t.close}
-            </button>
-            <button
-              type="submit"
-              className="bg-green-500 text-white px-3 py-1 rounded"
-            >
-              {t.save}
-            </button>
+          <div className="flex justify-between pt-2">
+            <button type="button" onClick={onClose} className="btn-secondary">{t.close}</button>
+            <button type="submit" className="btn-primary">{t.save}</button>
           </div>
         </form>
       </div>
