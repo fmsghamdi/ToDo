@@ -23,6 +23,7 @@ builder.Services.AddScoped<IActiveDirectoryConfigService, ActiveDirectoryConfigS
 // Register multi-tenant services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<ITenantProvider, TenantProvider>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
 // Add Entity Framework for MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

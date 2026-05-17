@@ -1,6 +1,7 @@
 import type { User } from "../UserTypes";
 import UserManagement from "./UserManagement";
 import InviteUsers from "../components/InviteUsers";
+import SubscriptionPanel from "../components/SubscriptionPanel";
 import { useLanguage } from "../i18n/useLanguage";
 
 type Props = {
@@ -24,6 +25,11 @@ export default function ControlPanel({
     <div className="min-h-[calc(100vh-4rem)] bg-gray-100 p-6">
       <h1 className="text-2xl font-bold mb-6">{t.controlPanel}</h1>
       <p className="text-gray-600 mb-6">{language === 'ar' ? 'إدارة الحسابات وإعدادات المنصة' : 'Manage accounts and platform settings'}</p>
+
+      {/* Subscription Panel */}
+      <div className="mb-6">
+        <SubscriptionPanel />
+      </div>
 
       {/* User Management - Only for admins */}
       {currentUser.permissions.includes("manage_users") && (

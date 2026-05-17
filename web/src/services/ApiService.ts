@@ -511,6 +511,53 @@ class ApiService {
     });
   }
 
+  // Subscription API
+  async getSubscriptionPlans(): Promise<{
+    name: string;
+    displayName: string;
+    displayNameEn: string;
+    maxUsers: number;
+    maxBoards: number;
+    maxStorageMB: number;
+    priceMonthly: number;
+    priceYearly: number;
+    features: string[];
+  }[]> {
+    return this.apiCall('/subscription/plans');
+  }
+
+  async getCurrentPlan(): Promise<{
+    name: string;
+    displayName: string;
+    displayNameEn: string;
+    maxUsers: number;
+    maxBoards: number;
+    currentMaxUsers: number;
+    currentMaxBoards: number;
+    features: string[];
+  }> {
+    return this.apiCall('/subscription/current');
+  }
+
+  async getSubscriptionUsage(): Promise<{
+    currentPlan: string;
+    currentUsers: number;
+    maxUsers: number;
+    currentBoards: number;
+    maxBoards: number;
+    usersPercent: number;
+    boardsPercent: number;
+  }> {
+    return this.apiCall('/subscription/usage');
+  }
+
+  async upgradePlan(planName: string): Promise<{ message: string }> {
+    return this.apiCall('/subscription/upgrade', {
+      method: 'PUT',
+      body: JSON.stringify({ planName }),
+    });
+  }
+
   // Test if API server is available
   async isApiAvailable(): Promise<boolean> {
     try {

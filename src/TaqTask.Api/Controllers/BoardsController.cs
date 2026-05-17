@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Dapper;
 using System.Security.Claims;
+using TaqTask.Application.Services;
 
 namespace TaqTask.Api.Controllers
 {
@@ -11,12 +12,14 @@ namespace TaqTask.Api.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly string _connectionString;
+        private readonly ISubscriptionService _subscriptionService;
 
-        public BoardsController(IConfiguration configuration)
+        public BoardsController(IConfiguration configuration, ISubscriptionService subscriptionService)
         {
             _configuration = configuration;
             _connectionString = _configuration.GetConnectionString("DefaultConnection") ?? 
                 "Server=localhost;Database=ToDoOS;Integrated Security=true;TrustServerCertificate=true;";
+            _subscriptionService = subscriptionService;
         }
 
         private int? GetTenantId()
@@ -167,6 +170,12 @@ namespace TaqTask.Api.Controllers
                 var tenantId = GetTenantId();
                 if (tenantId == null)
                     return Unauthorized(new { message = "Tenant context required" });
+
+                // Check board limit
+                if (!await _subscriptionService.CanCreateBoardAsync(tenantId.Value))
+                {
+                    return BadRequest(new { message = "Board limit reached. Upgrade your plan to create more boards." });
+                }
 
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!int.TryParse(userIdClaim, out var userId))

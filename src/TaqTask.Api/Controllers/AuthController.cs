@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using TaqTask.Data;
 using TaqTask.Api.Models;
+using TaqTask.Application.Services;
 
 namespace TaqTask.Api.Controllers;
 
@@ -18,15 +19,18 @@ public class AuthController : ControllerBase
     private readonly ToDoOSContext _context;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
+    private readonly ISubscriptionService _subscriptionService;
 
     public AuthController(
         ToDoOSContext context, 
         IConfiguration configuration,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        ISubscriptionService subscriptionService)
     {
         _context = context;
         _configuration = configuration;
         _logger = logger;
+        _subscriptionService = subscriptionService;
     }
 
     // POST: api/auth/login
@@ -149,6 +153,12 @@ public class AuthController : ControllerBase
 
         // Assign default tenant or use provided tenant
         var tenantId = request.TenantId > 0 ? request.TenantId : 1;
+
+        // Check tenant user limit
+        if (!await _subscriptionService.CanAddUserAsync(tenantId))
+        {
+            return BadRequest(new { message = "Tenant user limit reached. Upgrade your plan to add more users." });
+        }
 
         // Create new user
         var user = new User

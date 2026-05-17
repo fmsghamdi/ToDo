@@ -1,0 +1,30 @@
+namespace TaqTask.Domain;
+
+public class PlanDefinition
+{
+    public string Name { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string DisplayNameEn { get; set; } = string.Empty;
+    public int MaxUsers { get; set; }
+    public int MaxBoards { get; set; }
+    public int MaxStorageMB { get; set; }
+    public decimal PriceMonthly { get; set; }
+    public decimal PriceYearly { get; set; }
+    public List<string> Features { get; set; } = new();
+
+    public int CurrentMaxUsers { get; set; }
+    public int CurrentMaxBoards { get; set; }
+
+    public bool HasFeature(string feature) => Features.Contains(feature);
+}
+
+public class PlanUsage
+{
+    public string CurrentPlan { get; set; } = "free";
+    public int CurrentUsers { get; set; }
+    public int MaxUsers { get; set; }
+    public int CurrentBoards { get; set; }
+    public int MaxBoards { get; set; }
+    public int UsersPercent => MaxUsers > 0 ? (int)((double)CurrentUsers / MaxUsers * 100) : 0;
+    public int BoardsPercent => MaxBoards > 0 ? (int)((double)CurrentBoards / MaxBoards * 100) : 0;
+}
