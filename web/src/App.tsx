@@ -32,6 +32,7 @@ import DataStorageIndicator from "./components/DataStorageIndicator";
 import { workflowService } from './services/WorkflowService';
 import { workflowExecutionEngine } from './services/WorkflowExecutionEngine';
 import { authService, type ADUser } from './services/AuthService';
+import { apiService } from './services/ApiService';
 
 type View = "board" | "dashboard" | "control" | "chat" | "calendar" | "settings" | "reports" | "integrations" | "workflows" | "timeline";
 
@@ -931,7 +932,7 @@ const App: React.FC = () => {
     } else if (authView === "tenant-register") {
       return (
         <TenantRegister
-          onRegisterSuccess={(tenantId, tenantName) => {
+          onRegisterSuccess={(_tenantId, _tenantName) => {
             setAuthView("login");
           }}
           onShowLogin={() => setAuthView("login")}

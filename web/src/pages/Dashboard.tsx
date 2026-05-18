@@ -11,8 +11,8 @@ type Props = {
   onOpenCard: (card: Card) => void;
 };
 
-export default function Dashboard({ columns, currentUser, availableMembers, onAddCard, onOpenCard }: Props) {
-  const { t, language } = useLanguage();
+export default function Dashboard({ columns, currentUser, availableMembers: _availableMembers, onAddCard, onOpenCard }: Props) {
+  const { t: _t, language } = useLanguage();
   const [quickTitle, setQuickTitle] = useState("");
 
   const allCards = columns.flatMap((c) => c.cards);
@@ -31,7 +31,7 @@ export default function Dashboard({ columns, currentUser, availableMembers, onAd
 
   const totalSubtasks = allCards.reduce((sum, card) => sum + card.subtasks.length, 0);
   const doneSubtasks = allCards.reduce((sum, card) => sum + card.subtasks.filter((s) => s.done).length, 0);
-  const subtaskProgress = totalSubtasks === 0 ? 0 : Math.round((doneSubtasks / totalSubtasks) * 100);
+  const _subtaskProgress = totalSubtasks === 0 ? 0 : Math.round((doneSubtasks / totalSubtasks) * 100);
 
   // Get all activity from all cards, sorted by time
   const allActivity = allCards
