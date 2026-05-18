@@ -17,8 +17,8 @@ services:
   # API Backend
   api:
     build:
-      context: ./src/TaqTask.Api
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: TaqTask.Api/Dockerfile
     container_name: todoos-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
@@ -28,6 +28,8 @@ services:
       - JwtSettings__Issuer=${JWT_ISSUER:-ToDoOS}
       - JwtSettings__Audience=${JWT_AUDIENCE:-ToDoOS-Users}
       - Cors__AllowedOrigins__0=${CORS_ORIGIN:-https://yourdomain.com}
+    volumes:
+      - api_data:/app/Data
     depends_on:
       mssql:
         condition: service_started
