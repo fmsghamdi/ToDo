@@ -29,9 +29,7 @@ export default function Dashboard({ columns, currentUser, availableMembers: _ava
   const overdueCards = allCards.filter((c) => c.dueDate && c.dueDate < today);
   const highPriorityCards = allCards.filter((c) => c.priority === "High");
 
-  const totalSubtasks = allCards.reduce((sum, card) => sum + card.subtasks.length, 0);
-  const doneSubtasks = allCards.reduce((sum, card) => sum + card.subtasks.filter((s) => s.done).length, 0);
-  const _subtaskProgress = totalSubtasks === 0 ? 0 : Math.round((doneSubtasks / totalSubtasks) * 100);
+
 
   // Get all activity from all cards, sorted by time
   const allActivity = allCards
