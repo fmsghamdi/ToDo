@@ -138,6 +138,12 @@ dist
 **/bin/
 **/obj/
 
+# SSL certs
+ssl/
+
+# Let's Encrypt
+certbot/
+
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
