@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLanguage } from "../i18n/useLanguage";
+import { isDisposableEmail } from "../utils/disposableEmail";
 
 type Props = {
   onRegister: (name: string, email: string, password: string) => string | null;
@@ -19,6 +20,11 @@ export default function Register({ onRegister, onShowLogin }: Props) {
 
     if (!name.trim() || !email.trim() || !password.trim()) {
       setError("الرجاء إدخال الاسم والبريد وكلمة المرور");
+      return;
+    }
+
+    if (isDisposableEmail(email.trim())) {
+      setError("لا يُسمح باستخدام بريد مؤقت. الرجاء استخدام بريد دائم.");
       return;
     }
 

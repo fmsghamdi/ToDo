@@ -9,6 +9,7 @@ using System.Text;
 using TaqTask.Data;
 using TaqTask.Api.Models;
 using TaqTask.Application.Services;
+using TaqTask.Infrastructure.Services;
 
 namespace TaqTask.Api.Controllers;
 
@@ -149,6 +150,12 @@ public class AuthController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Username == request.Username))
         {
             return BadRequest(new { message = "Username already taken" });
+        }
+
+        // Block disposable emails
+        if (DisposableEmailChecker.IsDisposable(request.Email))
+        {
+            return BadRequest(new { message = "Disposable email addresses are not allowed. Please use a permanent email." });
         }
 
         // Assign default tenant or use provided tenant

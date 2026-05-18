@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import apiService from "../services/ApiService";
+import { isDisposableEmail } from "../utils/disposableEmail";
 
 type Props = {
   onRegisterSuccess: (tenantId: number, tenantName: string) => void;
@@ -21,6 +22,12 @@ export default function TenantRegister({ onRegisterSuccess, onShowLogin }: Props
 
     if (!name.trim() || !subdomain.trim() || !email.trim()) {
       setError("الرجاء إدخال اسم الجهة والدومين الفرعي والبريد الإلكتروني");
+      setIsLoading(false);
+      return;
+    }
+
+    if (isDisposableEmail(email.trim())) {
+      setError("لا يُسمح باستخدام بريد مؤقت. الرجاء استخدام بريد دائم.");
       setIsLoading(false);
       return;
     }

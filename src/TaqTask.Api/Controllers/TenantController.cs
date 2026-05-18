@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TaqTask.Data;
 using TaqTask.Domain;
 using TaqTask.Api.Models;
+using TaqTask.Infrastructure.Services;
 
 namespace TaqTask.Api.Controllers;
 
@@ -34,6 +35,12 @@ public class TenantController : ControllerBase
         if (await _context.Tenants.AnyAsync(t => t.Email == request.Email))
         {
             return BadRequest(new { message = "Email already registered" });
+        }
+
+        // Block disposable emails
+        if (DisposableEmailChecker.IsDisposable(request.Email))
+        {
+            return BadRequest(new { message = "Disposable email addresses are not allowed. Please use a permanent email." });
         }
 
         var tenant = new Tenant
@@ -289,6 +296,10 @@ public class TenantController : ControllerBase
         if (await _context.Users.IgnoreQueryFilters()
             .AnyAsync(u => u.Email == request.Email && u.TenantId == invitation.TenantId))
             return BadRequest(new { message = "User already exists in this tenant" });
+
+        // Block disposable emails
+        if (DisposableEmailChecker.IsDisposable(request.Email))
+            return BadRequest(new { message = "Disposable email addresses are not allowed. Please use a permanent email." });
 
         var tenant = await _context.Tenants
             .IgnoreQueryFilters()
