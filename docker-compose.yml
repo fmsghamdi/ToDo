@@ -34,8 +34,8 @@ services:
       - JwtSettings__Audience=${JWT_AUDIENCE:-ToDoOS-Users}
       - Cors__AllowedOrigins__0=${CORS_ORIGIN:-https://yourdomain.com}
     depends_on:
-      mssql:
-        condition: service_started
+      mysql:
+        condition: service_healthy
     networks:
       - todoos-network
     restart: unless-stopped
