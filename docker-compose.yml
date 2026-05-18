@@ -1,18 +1,23 @@
 services:
-  # SQL Server
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: todoos-mssql
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: todoos-mysql
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=${SA_PASSWORD:-YourStrong!Password123}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD:-rootpass123}
+      - MYSQL_DATABASE=ToDoOS
     ports:
-      - "1433:1433"
+      - "3306:3306"
     volumes:
-      - mssql_data:/var/opt/mssql
+      - mysql_data:/var/lib/mysql
     networks:
       - todoos-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
 
   # API Backend
   api:
@@ -23,7 +28,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=mssql;Database=ToDoOS;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Password123};TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=ToDoOS;User=root;Password=${MYSQL_PASSWORD:-rootpass123}
       - JwtSettings__SecretKey=${JWT_SECRET:-ChangeMeInProduction}
       - JwtSettings__Issuer=${JWT_ISSUER:-ToDoOS}
       - JwtSettings__Audience=${JWT_AUDIENCE:-ToDoOS-Users}
@@ -65,7 +70,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  mssql_data:
+  mysql_data:
 
 networks:
   todoos-network:
