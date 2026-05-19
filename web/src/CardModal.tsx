@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type {
   Card,
   Subtask,
@@ -45,6 +45,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
 
   const [commentInput, setCommentInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showRecurringModal, setShowRecurringModal] = useState(false);
   const [mentionSearch, setMentionSearch] = useState("");
   const [showMentions, setShowMentions] = useState(false);
@@ -426,10 +427,10 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
                 ))}
               </div>
               <div className="flex gap-2">
-                <label className="btn-ghost text-xs cursor-pointer py-1.5 px-3 border border-dashed border-border-default rounded-lg hover:border-primary">
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="btn-ghost text-sm lg:text-xs py-2.5 lg:py-1.5 px-3 border border-dashed border-border-default rounded-lg hover:border-primary">
                   📁 {language === 'ar' ? 'رفع ملف' : 'Upload file'}
-                  <input type="file" onChange={handleFileUpload} className="hidden" />
-                </label>
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} style={{display: 'none'}} />
                 <div className="flex gap-1 flex-1">
                   <input type="url" placeholder={language === 'ar' ? 'أو أضف رابط...' : 'Or paste a link...'} value={linkInput} onChange={(e) => setLinkInput(e.target.value)} className="input text-xs flex-1 min-w-0" />
                   <button onClick={handleAddLink} className="btn-secondary text-xs px-3 py-1.5">+</button>
@@ -449,19 +450,24 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
             <div>
               <h4 className="text-xs lg:text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأولوية' : 'Priority'}</h4>
               <div className="flex gap-1">
-                {PRIORITY_PRESETS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handlePriorityChange(p)}
-                    className={`flex-1 text-xs lg:text-xs px-2 py-2.5 lg:py-1 rounded-md transition-all font-medium ${
-                      priority === p
-                        ? p === "High" ? 'bg-error text-white' : p === "Medium" ? 'bg-warning text-white' : 'bg-success text-white'
-                        : 'bg-white border-2 border-border-default text-text-secondary hover:border-primary'
-                    }`}
-                  >
-                    {p === "High" ? (language === 'ar' ? 'عالية' : 'High') : p === "Medium" ? (language === 'ar' ? 'متوسطة' : 'Med') : (language === 'ar' ? 'منخفضة' : 'Low')}
-                  </button>
-                ))}
+                {PRIORITY_PRESETS.map((p) => {
+                  const isSelected = priority === p;
+                  const bgColor = p === "High" ? 'var(--error)' : p === "Medium" ? 'var(--warning)' : 'var(--success)';
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => handlePriorityChange(p)}
+                      className="flex-1 text-xs lg:text-xs px-2 py-2.5 lg:py-1 rounded-md transition-all font-medium"
+                      style={{
+                        background: isSelected ? bgColor : 'var(--bg-card)',
+                        color: isSelected ? '#fff' : 'var(--text-primary)',
+                        border: isSelected ? '2px solid ' + bgColor : '2px solid var(--border-default)',
+                      }}
+                    >
+                      {p === "High" ? (language === 'ar' ? 'عالية' : 'High') : p === "Medium" ? (language === 'ar' ? 'متوسطة' : 'Med') : (language === 'ar' ? 'منخفضة' : 'Low')}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
