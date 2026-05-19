@@ -1124,12 +1124,48 @@ body {
     font-size: 14px;
   }
 
-  /* Card modal body */
+  /* Card modal mobile layout */
   .card-modal-header {
     padding: 12px 16px;
   }
   .card-modal-body {
     padding: 16px;
+  }
+  .card-modal .flex.flex-1.overflow-hidden {
+    flex-direction: column !important;
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:last-child {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border-light);
+    padding: 16px;
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:first-child {
+    padding: 16px;
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:last-child .flex.gap-1 {
+    flex-wrap: wrap;
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:last-child button.text-xs.px-2.py-1 {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-height: 44px;
+    flex: 1;
+    text-align: center;
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:last-child button.bg-surface.text-secondary {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-default);
+    color: var(--text-primary);
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:last-child input[type="date"] {
+    padding: 12px 14px;
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .card-modal .flex.flex-1.overflow-hidden > div:last-child h4 {
+    font-size: 13px !important;
+    margin-bottom: 8px;
   }
 
   /* Larger touch targets */
@@ -1146,6 +1182,26 @@ body {
   input, select, textarea {
     font-size: 16px !important; /* Prevents iOS zoom on focus */
     padding: 12px 14px !important;
+    min-height: 44px;
+  }
+
+  /* AddTaskModal: stack dates on mobile */
+  .modal-content .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* AddTaskModal/Modal: bigger priority buttons */
+  .modal-content .flex.gap-2 button.chip {
+    padding: 10px 18px;
+    font-size: 14px;
+    min-height: 44px;
+    flex: 1;
+  }
+
+  /* AddTaskModal: bigger member/label buttons */
+  .modal-content .flex.flex-wrap button {
+    padding: 10px 14px;
+    font-size: 14px;
     min-height: 44px;
   }
 }
