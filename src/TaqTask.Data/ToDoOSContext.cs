@@ -33,6 +33,10 @@ public class ToDoOSContext : DbContext
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<RecurringTask> RecurringTasks { get; set; }
     public DbSet<TenantInvitation> TenantInvitations { get; set; }
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+    public DbSet<TenantSubscription> TenantSubscriptions { get; set; }
+    public DbSet<TrialExtensionRequest> TrialExtensionRequests { get; set; }
+    public DbSet<Payment> Payments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,6 +75,68 @@ public class ToDoOSContext : DbContext
                 .WithMany()
                 .HasForeignKey(i => i.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SubscriptionPlan configuration
+        modelBuilder.Entity<SubscriptionPlan>(entity =>
+        {
+            entity.ToTable("subscription_plans");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.Property(e => e.DisplayNameAr).HasMaxLength(100);
+            entity.Property(e => e.DisplayNameEn).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Features).HasMaxLength(2000);
+            entity.Property(e => e.MoyasarPlanId).HasMaxLength(100);
+        });
+
+        // TenantSubscription configuration
+        modelBuilder.Entity<TenantSubscription>(entity =>
+        {
+            entity.ToTable("tenant_subscriptions");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.HasOne(e => e.Tenant)
+                .WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Plan)
+                .WithMany()
+                .HasForeignKey(e => e.PlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // TrialExtensionRequest configuration
+        modelBuilder.Entity<TrialExtensionRequest>(entity =>
+        {
+            entity.ToTable("trial_extension_requests");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Reason).HasMaxLength(1000);
+            entity.HasOne(e => e.Tenant)
+                .WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Payment configuration
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.ToTable("payments");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Currency).HasMaxLength(3);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.PaymentMethod).HasMaxLength(50);
+            entity.Property(e => e.TransactionId).HasMaxLength(200);
+            entity.HasOne(e => e.Tenant)
+                .WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Subscription)
+                .WithMany()
+                .HasForeignKey(e => e.SubscriptionId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Configure relationships
@@ -238,6 +304,20 @@ public class ToDoOSContext : DbContext
             _tenantProvider == null || _tenantProvider.GetTenantId() == null || e.TenantId == _tenantProvider.GetTenantId());
         modelBuilder.Entity<SystemSetting>().HasQueryFilter(e =>
             _tenantProvider == null || _tenantProvider.GetTenantId() == null || e.TenantId == _tenantProvider.GetTenantId());
+        modelBuilder.Entity<TenantSubscription>().HasQueryFilter(e =>
+            _tenantProvider == null || _tenantProvider.GetTenantId() == null || e.TenantId == _tenantProvider.GetTenantId());
+        modelBuilder.Entity<TrialExtensionRequest>().HasQueryFilter(e =>
+            _tenantProvider == null || _tenantProvider.GetTenantId() == null || e.TenantId == _tenantProvider.GetTenantId());
+        modelBuilder.Entity<Payment>().HasQueryFilter(e =>
+            _tenantProvider == null || _tenantProvider.GetTenantId() == null || e.TenantId == _tenantProvider.GetTenantId());
+
+        // Seed subscription plans
+        modelBuilder.Entity<SubscriptionPlan>().HasData(
+            new SubscriptionPlan { Id = 1, Name = "free", DisplayNameAr = "مجاني", DisplayNameEn = "Free", Description = "ابدأ بتجربة مجانية لمدة 30 يوم", PriceMonthly = 0, PriceYearly = 0, MaxUsers = 10, MaxBoards = 5, MaxStorageMB = 100, TrialDays = 30, SortOrder = 1, IsActive = true, Features = "[\"basic_boards\",\"basic_collaboration\"]" },
+            new SubscriptionPlan { Id = 2, Name = "basic", DisplayNameAr = "أساسي", DisplayNameEn = "Basic", Description = "للفرق الصغيرة", PriceMonthly = 49, PriceYearly = 499, MaxUsers = 25, MaxBoards = 15, MaxStorageMB = 1024, TrialDays = 0, SortOrder = 2, IsActive = true, Features = "[\"basic_boards\",\"basic_collaboration\",\"advanced_reports\"]" },
+            new SubscriptionPlan { Id = 3, Name = "pro", DisplayNameAr = "احترافي", DisplayNameEn = "Professional", Description = "للشركات النامية", PriceMonthly = 99, PriceYearly = 999, MaxUsers = 100, MaxBoards = 50, MaxStorageMB = 5120, TrialDays = 0, SortOrder = 3, IsActive = true, Features = "[\"basic_boards\",\"basic_collaboration\",\"advanced_reports\",\"priority_support\",\"integrations\"]" },
+            new SubscriptionPlan { Id = 4, Name = "enterprise", DisplayNameAr = "مؤسسات", DisplayNameEn = "Enterprise", Description = "للشركات الكبيرة", PriceMonthly = 299, PriceYearly = 2999, MaxUsers = 1000, MaxBoards = 500, MaxStorageMB = 10240, TrialDays = 0, SortOrder = 4, IsActive = true, Features = "[\"basic_boards\",\"basic_collaboration\",\"advanced_reports\",\"priority_support\",\"integrations\",\"sso\",\"audit_logs\",\"api_access\"]" }
+        );
 
         // Seed data
         modelBuilder.Entity<Tenant>().HasData(
@@ -251,6 +331,23 @@ public class ToDoOSContext : DbContext
                 SubscriptionPlan = "enterprise",
                 MaxUsers = 1000,
                 MaxBoards = 100,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }
+        );
+
+        // Seed TenantSubscription for default tenant
+        modelBuilder.Entity<TenantSubscription>().HasData(
+            new TenantSubscription
+            {
+                Id = 1,
+                TenantId = 1,
+                PlanId = 4, // enterprise
+                Status = "active",
+                TrialStart = DateTime.UtcNow,
+                TrialEnd = DateTime.UtcNow.AddDays(30),
+                CurrentPeriodStart = DateTime.UtcNow,
+                CurrentPeriodEnd = DateTime.UtcNow.AddMonths(1),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             }

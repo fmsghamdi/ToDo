@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaqTask.Data;
 
@@ -11,9 +12,11 @@ using TaqTask.Data;
 namespace TaqTask.Data.Migrations
 {
     [DbContext(typeof(ToDoOSContext))]
-    partial class ToDoOSContextModelSnapshot : ModelSnapshot
+    [Migration("20260519104337_AddSubscriptionManagement")]
+    partial class AddSubscriptionManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

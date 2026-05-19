@@ -6,6 +6,7 @@ using TaqTask.Data;
 using TaqTask.Domain;
 using TaqTask.Api.Models;
 using TaqTask.Infrastructure.Services;
+using TaqTask.Application.Services;
 
 namespace TaqTask.Api.Controllers;
 
@@ -15,11 +16,13 @@ public class TenantController : ControllerBase
 {
     private readonly ToDoOSContext _context;
     private readonly ILogger<TenantController> _logger;
+    private readonly ISubscriptionService _subscriptionService;
 
-    public TenantController(ToDoOSContext context, ILogger<TenantController> logger)
+    public TenantController(ToDoOSContext context, ILogger<TenantController> logger, ISubscriptionService subscriptionService)
     {
         _context = context;
         _logger = logger;
+        _subscriptionService = subscriptionService;
     }
 
     // POST: api/tenant/register
@@ -61,6 +64,9 @@ public class TenantController : ControllerBase
 
         _context.Tenants.Add(tenant);
         await _context.SaveChangesAsync();
+
+        // Initialize tenant subscription with free trial
+        await _subscriptionService.InitializeTenantSubscriptionAsync(tenant.Id, "free");
 
         _logger.LogInformation("New tenant registered: {TenantName} ({Subdomain})", tenant.Name, tenant.Subdomain);
 
@@ -169,10 +175,11 @@ public class TenantController : ControllerBase
             return NotFound(new { message = "Tenant not found" });
 
         // Check user limit
-        var currentUsers = await _context.Users.CountAsync(u => u.TenantId == tenantId);
-        var pendingInvites = await _context.TenantInvitations.CountAsync(i => i.TenantId == tenantId && i.Status == "pending");
-        if (currentUsers + pendingInvites + request.Emails.Count > tenant.MaxUsers)
-            return BadRequest(new { message = $"User limit exceeded. Max: {tenant.MaxUsers}" });
+        if (!await _subscriptionService.CanInviteUsersAsync(tenantId, request.Emails.Count))
+        {
+            var usage = await _subscriptionService.GetUsageAsync(tenantId);
+            return BadRequest(new { message = $"User limit exceeded. Max: {usage.MaxUsers}" });
+        }
 
         var created = new List<InvitationResponse>();
         foreach (var email in request.Emails.Distinct())
@@ -309,9 +316,7 @@ public class TenantController : ControllerBase
             return BadRequest(new { message = "Tenant is not active" });
 
         // Check user limit
-        var currentUsers = await _context.Users.IgnoreQueryFilters()
-            .CountAsync(u => u.TenantId == invitation.TenantId);
-        if (currentUsers >= tenant.MaxUsers)
+        if (!await _subscriptionService.CanAddUserAsync(invitation.TenantId))
             return BadRequest(new { message = "Tenant user limit reached" });
 
         // Create user
