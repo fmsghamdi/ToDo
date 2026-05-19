@@ -494,7 +494,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
                         borderColor: lbl.color,
                       }}
                     >
-                      {active ? '✓ ' : ''}{lbl.name}
+                      {active ? '✓ ' : ''}{language === 'ar' && lbl.nameAr ? lbl.nameAr : lbl.name}
                     </button>
                   );
                 })}

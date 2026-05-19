@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers }: Props) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<"High" | "Medium" | "Low" | undefined>();
@@ -176,7 +176,7 @@ export default function AddTaskModal({ isOpen, onClose, onAdd, availableMembers 
                       borderColor: lbl.color,
                     }}
                   >
-                    {active ? "✓ " : "+ "} {lbl.name}
+                    {active ? "✓ " : "+ "} {language === 'ar' && lbl.nameAr ? lbl.nameAr : lbl.name}
                   </button>
                 );
               })}

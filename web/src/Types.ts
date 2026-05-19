@@ -8,6 +8,7 @@ export type Subtask = {
 export type Label = {
   id: string;
   name: string;
+  nameAr?: string;
   color: string;
 };
 
@@ -182,10 +183,14 @@ export type Board = {
 };
 
 export const LABEL_PRESETS: Label[] = [
-  { id: "lbl-urgent", name: "Urgent", color: "#ef4444" }, // red-500
-  { id: "lbl-bug", name: "Bug", color: "#f59e0b" }, // amber-500
-  { id: "lbl-feat", name: "Feature", color: "#10b981" }, // green-500
-  { id: "lbl-ui", name: "UI/UX", color: "#3b82f6" }, // blue-500
+  { id: "lbl-urgent", name: "Urgent", nameAr: "عاجل", color: "#ef4444" },
+  { id: "lbl-bug", name: "Bug", nameAr: "خطأ", color: "#f59e0b" },
+  { id: "lbl-feat", name: "Feature", nameAr: "ميزة", color: "#10b981" },
+  { id: "lbl-ui", name: "UI/UX", nameAr: "واجهة", color: "#3b82f6" },
+  { id: "lbl-improve", name: "Improvement", nameAr: "تحسين", color: "#8b5cf6" },
+  { id: "lbl-doc", name: "Documentation", nameAr: "توثيق", color: "#06b6d4" },
+  { id: "lbl-test", name: "Testing", nameAr: "اختبار", color: "#ec4899" },
+  { id: "lbl-meeting", name: "Meeting", nameAr: "اجتماع", color: "#f97316" },
 ];
 
 export const MEMBER_PRESETS: Member[] = [
