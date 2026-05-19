@@ -302,23 +302,23 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={handleTitleBlur}
-            className="text-lg font-bold bg-transparent border-none outline-none flex-1"
+            className="text-lg lg:text-lg text-base font-bold bg-transparent border-none outline-none flex-1"
             style={{color: 'var(--text-primary)'}}
           />
-          <button onClick={onClose} className="btn-ghost p-1 text-lg leading-none ml-2">✕</button>
+          <button onClick={onClose} className="btn-ghost p-2 text-xl leading-none ml-2">✕</button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
           {/* Main content - scrollable */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-4 lg:space-y-5">
             {/* Description */}
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={handleDescriptionBlur}
-              placeholder="Add description..."
-              className="input min-h-[80px] resize-y text-sm"
-            />
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onBlur={handleDescriptionBlur}
+                placeholder="Add description..."
+                className="input min-h-[100px] lg:min-h-[80px] resize-y text-sm"
+              />
 
             {/* Subtasks */}
             <div>
@@ -358,7 +358,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
                   </div>
                 ))}
               </div>
-              <button onClick={addSubtask} className="btn-ghost text-xs w-full text-center py-1.5 border border-dashed border-border-default rounded-lg hover:border-primary hover:text-primary transition-colors">
+              <button onClick={addSubtask} className="btn-ghost text-sm lg:text-xs w-full text-center py-2.5 lg:py-1.5 border border-dashed border-border-default rounded-lg hover:border-primary hover:text-primary transition-colors">
                 + {language === 'ar' ? 'أضف مهمة فرعية' : 'Add Subtask'}
               </button>
             </div>
@@ -374,21 +374,11 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
                     value={commentInput}
                     onChange={(e) => handleCommentChange(e.target.value)}
                     onKeyDown={handleCommentKeyDown}
-                    className="input text-sm"
+                    className="input text-sm py-2.5 lg:py-1.5"
                   />
-                  {showMentions && (
-                    <div className="absolute top-full left-0 right-0 bg-card border border-border-default rounded-lg shadow-lg z-10 max-h-32 overflow-y-auto mt-1">
-                      {availableMembers.filter(m => m.name.toLowerCase().includes(mentionSearch.toLowerCase())).slice(0, 5).map((m, i) => (
-                        <button key={m.id} onClick={() => selectMention(m)} className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors ${i === mentionIndex ? 'bg-primary-bright text-primary-dark' : 'hover:bg-surface'}`}>
-                          <span>{m.avatar || "👤"}</span>
-                          <span>{m.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button onClick={handleAddComment} className="btn-primary text-xs px-3 py-1.5">{language === 'ar' ? 'إضافة' : 'Add'}</button>
+                  <button onClick={handleAddComment} className="btn-primary text-sm lg:text-xs px-4 py-2.5 lg:py-1.5">{language === 'ar' ? 'إضافة' : 'Add'}</button>
               </div>
+            </div>
               <div className="space-y-1.5 max-h-36 overflow-y-auto">
                 {comments.length === 0 && <p className="text-xs" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'لا توجد تعليقات' : 'No comments'}</p>}
                 {comments.map((c) => (
@@ -454,19 +444,19 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
           </div>
 
           {/* Sidebar metadata */}
-          <div className="w-[200px] flex-shrink-0 border-l border-border-light p-4 space-y-4 overflow-y-auto">
+          <div className="w-full lg:w-[200px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light p-4 lg:p-4 space-y-4 lg:overflow-y-auto">
             {/* Priority */}
             <div>
-              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأولوية' : 'Priority'}</h4>
+              <h4 className="text-xs lg:text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأولوية' : 'Priority'}</h4>
               <div className="flex gap-1">
                 {PRIORITY_PRESETS.map((p) => (
                   <button
                     key={p}
                     onClick={() => handlePriorityChange(p)}
-                    className={`text-xs px-2 py-1 rounded-md transition-all ${
+                    className={`flex-1 text-xs lg:text-xs px-2 py-2.5 lg:py-1 rounded-md transition-all font-medium ${
                       priority === p
                         ? p === "High" ? 'bg-error text-white' : p === "Medium" ? 'bg-warning text-white' : 'bg-success text-white'
-                        : 'bg-surface text-secondary hover:bg-border-default'
+                        : 'bg-white border-2 border-border-default text-text-secondary hover:border-primary'
                     }`}
                   >
                     {p === "High" ? (language === 'ar' ? 'عالية' : 'High') : p === "Medium" ? (language === 'ar' ? 'متوسطة' : 'Med') : (language === 'ar' ? 'منخفضة' : 'Low')}
@@ -477,21 +467,21 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
 
             {/* Due Date */}
             <div>
-              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}</h4>
-              <input type="date" value={dueDate} onChange={(e) => handleDueDateChange(e.target.value)} className="input text-xs py-1.5" />
+              <h4 className="text-xs lg:text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'تاريخ الاستحقاق' : 'Due Date'}</h4>
+              <input type="date" value={dueDate} onChange={(e) => handleDueDateChange(e.target.value)} className="input text-sm py-2.5 lg:py-1.5" />
             </div>
 
             {/* Labels */}
             <div>
-              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'التصنيفات' : 'Labels'}</h4>
-              <div className="flex flex-wrap gap-1">
+              <h4 className="text-xs lg:text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'التصنيفات' : 'Labels'}</h4>
+              <div className="flex flex-wrap gap-1.5">
                 {LABEL_PRESETS.map((lbl) => {
                   const active = labels.some((l) => l.id === lbl.id);
                   return (
                     <button
                       key={lbl.id}
                       onClick={() => toggleLabel(lbl)}
-                      className="text-[10px] px-1.5 py-0.5 rounded-md border transition-all"
+                      className="text-xs px-2.5 py-1.5 rounded-md border transition-all"
                       style={{
                         backgroundColor: active ? lbl.color : 'transparent',
                         color: active ? '#fff' : lbl.color,
@@ -507,7 +497,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
 
             {/* Members */}
             <div>
-              <h4 className="text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأعضاء' : 'Members'}</h4>
+              <h4 className="text-xs lg:text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأعضاء' : 'Members'}</h4>
               <div className="space-y-1">
                 {availableMembers.slice(0, 6).map((m) => {
                   const active = members.some((mm) => mm.id === m.id);
@@ -515,13 +505,13 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
                     <button
                       key={m.id}
                       onClick={() => toggleMember(m)}
-                      className={`flex items-center gap-1.5 w-full px-2 py-1 rounded-md text-xs transition-all ${
+                      className={`flex items-center gap-2 w-full px-3 py-2 lg:px-2 lg:py-1 rounded-md text-sm lg:text-xs transition-all ${
                         active ? 'bg-primary/10 text-primary' : 'hover:bg-surface text-secondary'
                       }`}
                     >
-                      <span>{m.avatar || "👤"}</span>
+                      <span className="text-base lg:text-xs">{m.avatar || "👤"}</span>
                       <span className="truncate flex-1 text-left">{m.name}</span>
-                      {active && <span className="text-[9px]">✓</span>}
+                      {active && <span className="text-xs">✓</span>}
                     </button>
                   );
                 })}
@@ -543,16 +533,16 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
             )}
 
             {/* Recurring Task */}
-            <button onClick={() => setShowRecurringModal(true)} className="btn-ghost w-full text-xs flex items-center justify-center gap-1 py-1.5">
+            <button onClick={() => setShowRecurringModal(true)} className="btn-ghost w-full text-sm lg:text-xs flex items-center justify-center gap-1 py-2.5 lg:py-1.5">
               🔄 {t.repeatTask}
             </button>
 
             {/* Actions */}
-            <div className="space-y-1.5 pt-2 border-t border-border-light">
-              <button onClick={() => onDelete(card.id)} className="w-full text-xs py-1.5 px-3 rounded-md border border-error/30 text-error hover:bg-error/5 transition-colors">
-                {language === 'ar' ? 'حذف' : 'Delete'}
+            <div className="space-y-2 pt-3 border-t border-border-light">
+              <button onClick={() => onDelete(card.id)} className="w-full text-sm py-2.5 px-3 rounded-md border-2 border-error/30 text-error font-medium hover:bg-error/5 transition-colors">
+                {language === 'ar' ? 'حذف المهمة' : 'Delete Task'}
               </button>
-              <button onClick={onClose} className="w-full text-xs py-1.5 px-3 rounded-md bg-primary text-white hover:opacity-90 transition-colors">
+              <button onClick={onClose} className="w-full text-sm py-3 px-3 rounded-md bg-primary text-white font-semibold hover:opacity-90 transition-colors shadow-sm">
                 {language === 'ar' ? 'حفظ وإغلاق' : 'Save & Close'}
               </button>
             </div>
