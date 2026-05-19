@@ -77,7 +77,7 @@ export default function Dashboard({ columns, currentUser, availableMembers: _ava
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4 md:space-y-6">
       {/* Welcome Card */}
       <div className="welcome-card">
         <h2>{greeting}{currentUser ? `, ${currentUser.name}` : ''} 👋</h2>

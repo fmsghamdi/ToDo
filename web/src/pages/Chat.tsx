@@ -102,9 +102,9 @@ const ChatPage: React.FC<ChatProps> = ({
   };
 
   return (
-    <div className="flex h-[calc(100vh-120px)] bg-white rounded-lg shadow">
-      {/* Chat List Sidebar */}
-      <div className="w-1/3 border-r border-gray-200 flex flex-col">
+    <div className="flex h-[calc(100vh-80px)] lg:h-[calc(100vh-120px)] bg-white rounded-lg shadow">
+      {/* Chat List Sidebar - hidden on mobile when a chat is selected */}
+      <div className={`${selectedChatId ? 'hidden lg:flex' : 'flex'} lg:w-1/3 w-full border-r border-gray-200 flex-col`}>
         {/* Header */}
         <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-green-50">
           <h2 className="text-xl font-bold text-gray-800">{t.chats}</h2>
@@ -177,12 +177,16 @@ const ChatPage: React.FC<ChatProps> = ({
       </div>
 
       {/* Chat Messages Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`${!selectedChatId ? 'hidden lg:flex' : 'flex'} flex-1 flex-col`}>
         {selectedChat ? (
           <>
             {/* Chat Header */}
             <div className="p-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center gap-3">
+                {/* Mobile back button */}
+                <button onClick={() => setSelectedChatId(null)} className="lg:hidden p-1 hover:bg-gray-200 rounded">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
                 <div className="text-2xl">{getChatAvatar(selectedChat)}</div>
                 <div>
                   <h3 className="font-medium">{getChatTitle(selectedChat)}</h3>

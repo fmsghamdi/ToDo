@@ -112,6 +112,9 @@ const App: React.FC = () => {
   // Search and filter state
   const [filteredColumns, setFilteredColumns] = useState<Column[] | null>(null);
 
+  // Mobile column manager toggle
+  const [showColumnsManager, setShowColumnsManager] = useState(false);
+
   // Chat state
   const [chats, setChats] = useState<Chat[]>(() => {
     const saved = localStorage.getItem("chats");
@@ -1075,21 +1078,21 @@ const App: React.FC = () => {
 
         {/* Views */}
         {view === "board" && (
-            <div className="max-w-7xl mx-auto p-6 animate-fadeIn">
+            <div className="max-w-7xl mx-auto p-4 md:p-6 animate-fadeIn">
             {/* Board Header - Modern Card */}
             <div className="card p-6 mb-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)'}}>
-                    <span className="text-2xl">📋</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)'}}>
+                    <span className="text-xl sm:text-2xl">📋</span>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold" style={{color: 'var(--text-primary)'}}>{t.tasks}</h1>
-                    <p className="text-sm" style={{color: 'var(--text-tertiary)'}}>{boardDescription || t.tasks}</p>
+                    <h1 className="text-xl sm:text-2xl font-bold" style={{color: 'var(--text-primary)'}}>{t.tasks}</h1>
+                    <p className="text-xs sm:text-sm" style={{color: 'var(--text-tertiary)'}}>{boardDescription || t.tasks}</p>
                   </div>
                 </div>
                 
-                <div className={`${language === 'ar' ? 'order-first' : 'order-last'}`}>
+                <div className={`w-full sm:w-auto ${language === 'ar' ? 'sm:order-first' : 'sm:order-last'}`}>
                   <SearchAndFilter
                     columns={getFilteredColumns()}
                     users={users}
@@ -1125,23 +1128,55 @@ const App: React.FC = () => {
             <div className={`flex gap-6 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
               {/* Column Management Sidebar */}
               {hasPermission("manage_board") && (
-                <div className="w-[260px] flex-shrink-0">
-                  <div className="card p-4">
-                    <ColumnManager
-                      columns={columns}
-                      onAddColumn={handleAddColumn}
-                      onUpdateColumn={handleUpdateColumn}
-                      onDeleteColumn={handleDeleteColumn}
-                      hasPermission={hasPermission("manage_board")}
-                    />
+                <>
+                  {/* Desktop sidebar */}
+                  <div className="hidden lg:block w-[260px] flex-shrink-0">
+                    <div className="card p-4">
+                      <ColumnManager
+                        columns={columns}
+                        onAddColumn={handleAddColumn}
+                        onUpdateColumn={handleUpdateColumn}
+                        onDeleteColumn={handleDeleteColumn}
+                        hasPermission={hasPermission("manage_board")}
+                      />
+                    </div>
                   </div>
-                </div>
+                  {/* Mobile toggle button */}
+                  <button
+                    onClick={() => setShowColumnsManager(!showColumnsManager)}
+                    className="lg:hidden fixed bottom-4 right-4 z-30 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+                    style={{background: 'var(--primary)', color: '#fff'}}
+                  >
+                    <span className="text-xl">{showColumnsManager ? '✕' : '⚙'}</span>
+                  </button>
+                  {/* Mobile ColumnManager overlay */}
+                  {showColumnsManager && (
+                    <div className="lg:hidden fixed inset-0 z-20" onClick={() => setShowColumnsManager(false)}>
+                      <div className="absolute inset-0 bg-black/30" />
+                      <div className="absolute bottom-0 left-0 right-0 max-h-[60vh] overflow-y-auto rounded-t-2xl" style={{background: 'var(--bg-card)'}} onClick={e => e.stopPropagation()}>
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-bold text-sm" style={{color: 'var(--text-primary)'}}>{language === 'ar' ? 'إدارة الأعمدة' : 'Column Manager'}</span>
+                            <button onClick={() => setShowColumnsManager(false)} className="btn-ghost p-1">✕</button>
+                          </div>
+                          <ColumnManager
+                            columns={columns}
+                            onAddColumn={handleAddColumn}
+                            onUpdateColumn={handleUpdateColumn}
+                            onDeleteColumn={handleDeleteColumn}
+                            hasPermission={hasPermission("manage_board")}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Columns Grid */}
               <div className="flex-1 min-w-0">
                 <DragDropContext onDragEnd={onDragEnd}>
-                  <div className="grid grid-cols-2 xl:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
                     {getDisplayColumns().map((col, colIndex) => (
                       <Droppable droppableId={col.id} key={col.id}>
                         {(provided, snapshot) => (
@@ -1316,7 +1351,7 @@ const App: React.FC = () => {
         )}
 
         {view === "control" && currentUser && (
-          <div className="p-6 animate-slideInFromLeft">
+          <div className="p-4 md:p-6 animate-slideInFromLeft">
             <ControlPanel 
               currentUser={currentUser}
               users={users}
@@ -1328,7 +1363,7 @@ const App: React.FC = () => {
         )}
 
         {view === "chat" && currentUser && (
-          <div className="p-6 animate-slideInFromBottom">
+          <div className="p-4 md:p-6 animate-slideInFromBottom">
             <ChatPage
               currentUser={currentUser}
               users={users}
@@ -1341,7 +1376,7 @@ const App: React.FC = () => {
         )}
 
         {view === "calendar" && currentUser && (
-          <div className="p-6 animate-zoomIn">
+          <div className="p-4 md:p-6 animate-zoomIn">
             <CalendarView
               columns={columns}
               currentUser={currentUser}
@@ -1351,31 +1386,31 @@ const App: React.FC = () => {
         )}
 
         {view === "reports" && (
-          <div className="p-6 animate-slideInFromTop">
+          <div className="p-4 md:p-6 animate-slideInFromTop">
             <AdvancedReports boards={boards} />
           </div>
         )}
 
         {view === "integrations" && (
-          <div className="p-6 animate-slideInFromRight">
+          <div className="p-4 md:p-6 animate-slideInFromRight">
             <Integrations />
           </div>
         )}
 
         {view === "workflows" && (
-          <div className="p-6 animate-slideInFromLeft">
+          <div className="p-4 md:p-6 animate-slideInFromLeft">
             <Workflows />
           </div>
         )}
 
         {view === "timeline" && (
-          <div className="p-6 animate-zoomIn">
+          <div className="p-4 md:p-6 animate-zoomIn">
             <Timeline boards={boards} />
           </div>
         )}
 
         {view === "settings" && currentUser?.role === "admin" && (
-          <div className="p-6 animate-slideInFromBottom">
+          <div className="p-4 md:p-6 animate-slideInFromBottom">
             <SystemSettings />
           </div>
         )}
