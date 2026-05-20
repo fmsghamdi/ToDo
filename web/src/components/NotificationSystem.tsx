@@ -287,7 +287,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
 
       {/* Notifications Dropdown */}
       {showNotifications && (
-        <div className="absolute end-0 bottom-full mb-2 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="absolute end-0 lg:start-0 bottom-full mb-2 w-80 sm:w-96 max-w-[calc(100vw-1.5rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden">
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">{language === 'ar' ? 'الإشعارات' : 'Notifications'}</h3>
