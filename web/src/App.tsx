@@ -244,18 +244,19 @@ const App: React.FC = () => {
 
     // Fallback to API
     try {
-      const response = await apiService.login(email, password);
-      const apiUser: User = {
-        id: response.user.id.toString(),
-        name: response.user.fullName || response.user.username,
-        email: response.user.email,
+      const response: any = await apiService.login(email, password);
+      const apiUser = response.user;
+      const mappedUser: User = {
+        id: apiUser.id.toString(),
+        name: apiUser.fullName || apiUser.username || apiUser.email,
+        email: apiUser.email,
         password: '',
-        role: response.user.role,
-        permissions: response.user.role === 'admin' ? [...DEFAULT_ADMIN_PERMISSIONS] : ['view_board', 'create_task', 'edit_task', 'move_task'],
-        tenantId: response.user.tenantId,
+        role: apiUser.role || 'user',
+        permissions: apiUser.role === 'admin' ? [...DEFAULT_ADMIN_PERMISSIONS] : ['view_board', 'create_task', 'edit_task', 'move_task'],
+        tenantId: apiUser.tenantId,
       };
-      setUsers(prev => [...prev.filter(u => u.email !== apiUser.email), apiUser]);
-      setCurrentUserId(apiUser.id);
+      setUsers(prev => [...prev.filter(u => u.email !== mappedUser.email), mappedUser]);
+      setCurrentUserId(mappedUser.id);
       return null;
     } catch {
       return t.invalidCredentials;
