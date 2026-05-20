@@ -30,12 +30,13 @@ import Workflows from "./pages/Workflows";
 import Timeline from "./pages/Timeline";
 import DataStorageIndicator from "./components/DataStorageIndicator";
 import TrialBanner from "./components/TrialBanner";
+import SubscriptionPanel from "./components/SubscriptionPanel";
 import { workflowService } from './services/WorkflowService';
 import { workflowExecutionEngine } from './services/WorkflowExecutionEngine';
 import { authService, type ADUser } from './services/AuthService';
 import { apiService } from './services/ApiService';
 
-type View = "board" | "dashboard" | "control" | "chat" | "calendar" | "settings" | "reports" | "integrations" | "workflows" | "timeline";
+type View = "board" | "dashboard" | "control" | "chat" | "calendar" | "settings" | "reports" | "integrations" | "workflows" | "timeline" | "subscription";
 
 const App: React.FC = () => {
   const { language, t } = useLanguage();
@@ -1015,6 +1016,12 @@ const App: React.FC = () => {
             {language === 'en' ? 'Workflows' : 'سير العمل'}
           </button>
           {currentUser?.role === "admin" && (
+            <button className={`sidebar-item ${view === "subscription" ? "active" : ""}`} onClick={() => { setView("subscription"); setSidebarOpen(false); }}>
+              <span className="sidebar-icon">💳</span>
+              {language === 'en' ? 'Subscription' : 'الاشتراك'}
+            </button>
+          )}
+          {currentUser?.role === "admin" && (
             <button className={`sidebar-item ${view === "settings" ? "active" : ""}`} onClick={() => { setView("settings"); setSidebarOpen(false); }}>
               <span className="sidebar-icon">⚙️</span>
               {language === 'en' ? 'System' : 'النظام'}
@@ -1409,6 +1416,16 @@ const App: React.FC = () => {
         {view === "timeline" && (
           <div className="p-4 md:p-6 animate-zoomIn">
             <Timeline boards={boards} />
+          </div>
+        )}
+
+        {view === "subscription" && currentUser?.role === "admin" && (
+          <div className="min-h-[calc(100vh-4rem)] bg-gray-100 p-4 sm:p-6 animate-slideInFromBottom">
+            <h1 className="text-2xl font-bold mb-6">{language === 'ar' ? 'الاشتراك' : 'Subscription'}</h1>
+            <p className="text-gray-600 mb-6">{language === 'ar' ? 'إدارة خطة الاشتراك والفترة التجريبية' : 'Manage subscription plan and trial period'}</p>
+            <div className="max-w-4xl">
+              <SubscriptionPanel />
+            </div>
           </div>
         )}
 
