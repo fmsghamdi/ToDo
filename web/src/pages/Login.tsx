@@ -3,7 +3,7 @@ import { useLanguage } from "../i18n/useLanguage";
 import { authService, type ADUser } from "../services/AuthService";
 
 type Props = {
-  onLogin: (email: string, password: string) => string | null;
+  onLogin: (email: string, password: string) => Promise<string | null>;
   onADLogin: (user: ADUser) => void;
   onShowRegister: () => void;
   onShowForgotPassword?: () => void;
@@ -43,7 +43,7 @@ export default function Login({ onLogin, onADLogin, onShowRegister, onShowForgot
       return;
     }
 
-    const res = onLogin(email.trim().toLowerCase(), password.trim());
+    const res = await onLogin(email.trim().toLowerCase(), password.trim());
     if (res) setError(res);
     setIsLoading(false);
   };

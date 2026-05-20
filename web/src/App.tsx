@@ -231,15 +231,35 @@ const App: React.FC = () => {
   }, [chats]);
 
   // Auth handlers
-  const handleLogin = (email: string, password: string): string | null => {
+  const handleLogin = async (email: string, password: string): Promise<string | null> => {
     if (!email.includes("@")) return t.invalidEmail;
     if (password.length < 4) return t.passwordTooShort;
     
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (!user) return t.invalidCredentials;
-    
-    setCurrentUserId(user.id);
-    return null;
+    // First try localStorage users
+    const localUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+    if (localUser) {
+      setCurrentUserId(localUser.id);
+      return null;
+    }
+
+    // Fallback to API
+    try {
+      const response = await apiService.login(email, password);
+      const apiUser: User = {
+        id: response.user.id.toString(),
+        name: response.user.fullName || response.user.username,
+        email: response.user.email,
+        password: '',
+        role: response.user.role,
+        permissions: response.user.role === 'admin' ? [...DEFAULT_ADMIN_PERMISSIONS] : ['view_board', 'create_task', 'edit_task', 'move_task'],
+        tenantId: response.user.tenantId,
+      };
+      setUsers(prev => [...prev.filter(u => u.email !== apiUser.email), apiUser]);
+      setCurrentUserId(apiUser.id);
+      return null;
+    } catch {
+      return t.invalidCredentials;
+    }
   };
 
   const handleRegister = (name: string, email: string, password: string): string | null => {
