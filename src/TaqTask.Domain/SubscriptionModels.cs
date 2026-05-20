@@ -27,4 +27,8 @@ public class PlanUsage
     public int MaxBoards { get; set; }
     public int UsersPercent => MaxUsers > 0 ? (int)((double)CurrentUsers / MaxUsers * 100) : 0;
     public int BoardsPercent => MaxBoards > 0 ? (int)((double)CurrentBoards / MaxBoards * 100) : 0;
+    public string Status { get; set; } = "active";
+    public DateTime? TrialStart { get; set; }
+    public DateTime? TrialEnd { get; set; }
+    public int DaysRemaining { get; set; }
 }

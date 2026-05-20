@@ -547,6 +547,10 @@ class ApiService {
     maxBoards: number;
     usersPercent: number;
     boardsPercent: number;
+    status: string;
+    trialStart: string | null;
+    trialEnd: string | null;
+    daysRemaining: number;
   }> {
     return this.apiCall('/subscription/usage');
   }
@@ -555,6 +559,13 @@ class ApiService {
     return this.apiCall('/subscription/upgrade', {
       method: 'PUT',
       body: JSON.stringify({ planName }),
+    });
+  }
+
+  async extendTrial(days: number): Promise<{ message: string }> {
+    return this.apiCall('/subscription/extend-trial', {
+      method: 'POST',
+      body: JSON.stringify({ days }),
     });
   }
 

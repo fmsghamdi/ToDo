@@ -29,6 +29,7 @@ import Integrations from "./pages/Integrations";
 import Workflows from "./pages/Workflows";
 import Timeline from "./pages/Timeline";
 import DataStorageIndicator from "./components/DataStorageIndicator";
+import TrialBanner from "./components/TrialBanner";
 import { workflowService } from './services/WorkflowService';
 import { workflowExecutionEngine } from './services/WorkflowExecutionEngine';
 import { authService, type ADUser } from './services/AuthService';
@@ -1075,6 +1076,8 @@ const App: React.FC = () => {
           <span className="font-bold text-sm" style={{color: 'var(--text-primary)'}}>ToDoOS</span>
           <DataStorageIndicator />
         </div>
+
+        <TrialBanner />
 
         {/* Views */}
         {view === "board" && (

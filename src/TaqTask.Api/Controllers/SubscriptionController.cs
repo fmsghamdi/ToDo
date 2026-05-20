@@ -77,9 +77,33 @@ public class SubscriptionController : ControllerBase
             return NotFound(new { message = ex.Message });
         }
     }
+
+    [HttpPost("extend-trial")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult> ExtendTrial([FromBody] ExtendTrialRequest request)
+    {
+        var tenantId = GetTenantId();
+        if (tenantId == null) return Unauthorized();
+
+        try
+        {
+            var result = await _subscriptionService.ExtendTrialAsync(tenantId.Value, request.Days);
+            _logger.LogInformation("Tenant {TenantId} trial extended by {Days} days", tenantId, request.Days);
+            return Ok(new { message = result });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public class UpgradeRequest
 {
     public string PlanName { get; set; } = string.Empty;
+}
+
+public class ExtendTrialRequest
+{
+    public int Days { get; set; } = 30;
 }

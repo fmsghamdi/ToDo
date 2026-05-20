@@ -87,13 +87,21 @@ public class SubscriptionService : ISubscriptionService
         var userCount = await _context.Users.CountAsync(u => u.TenantId == tenantId);
         var boardCount = await _context.Boards.CountAsync(b => b.TenantId == tenantId && !b.IsArchived);
 
+        var daysRemaining = subscription != null
+            ? Math.Max(0, (int)(subscription.TrialEnd.Date - DateTime.UtcNow.Date).TotalDays)
+            : 0;
+
         return new PlanUsage
         {
             CurrentPlan = plan?.Name ?? "free",
             CurrentUsers = userCount,
             MaxUsers = plan?.MaxUsers ?? 10,
             CurrentBoards = boardCount,
-            MaxBoards = plan?.MaxBoards ?? 5
+            MaxBoards = plan?.MaxBoards ?? 5,
+            Status = subscription?.Status ?? "active",
+            TrialStart = subscription != null ? (DateTime?)subscription.TrialStart : null,
+            TrialEnd = subscription != null ? (DateTime?)subscription.TrialEnd : null,
+            DaysRemaining = daysRemaining
         };
     }
 
@@ -244,6 +252,26 @@ public class SubscriptionService : ISubscriptionService
 
         await _context.SaveChangesAsync();
         return $"Plan upgraded from {oldPlanName} to {plan.Name}";
+    }
+
+    public async Task<string> ExtendTrialAsync(int tenantId, int additionalDays)
+    {
+        var subscription = await _context.TenantSubscriptions
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId);
+
+        if (subscription == null)
+            throw new InvalidOperationException("No subscription found for this tenant");
+
+        var newEnd = subscription.TrialEnd > DateTime.MinValue
+            ? subscription.TrialEnd.AddDays(additionalDays)
+            : DateTime.UtcNow.AddDays(additionalDays);
+
+        subscription.TrialEnd = newEnd;
+        subscription.Status = "trial";
+        subscription.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        return $"Trial extended by {additionalDays} days. New expiry: {newEnd:yyyy-MM-dd}";
     }
 
     private static PlanDefinition MapToDefinition(SubscriptionPlan plan)
