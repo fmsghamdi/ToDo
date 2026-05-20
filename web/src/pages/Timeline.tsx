@@ -145,7 +145,7 @@ const Timeline: React.FC<TimelineProps> = ({ boards }) => {
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
         <div className="p-6 border-b">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               📊 {t.timeline}
             </h1>
@@ -169,7 +169,7 @@ const Timeline: React.FC<TimelineProps> = ({ boards }) => {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Board Selector */}
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium">{t.board}:</label>
@@ -294,7 +294,7 @@ const Timeline: React.FC<TimelineProps> = ({ boards }) => {
 
               {/* Legend */}
               <div className="mt-8 pt-4 border-t">
-                <div className="flex items-center gap-6 text-sm">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-sm">
                   <span className="font-medium">Priority:</span>
                   <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-red-500 rounded"></div>

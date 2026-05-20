@@ -281,7 +281,7 @@ const ChatPage: React.FC<ChatProps> = ({
       {/* New Chat Modal */}
       {showNewChatModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm sm:w-96 max-h-96 overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">{t.newChat}</h3>
             
             <div className="space-y-2 mb-4">

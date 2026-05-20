@@ -701,8 +701,8 @@ ${advancedMetrics.teamPerformance.slice(0, 5).map(member => `
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   📈 Daily Progress
                 </h3>
-                <div className="h-64">
-                  <div className="h-full flex items-end justify-between gap-2">
+                <div className="overflow-x-auto">
+                  <div className="h-64 min-w-[500px] flex items-end justify-between gap-2">
                     {dailyProgressData.slice(-14).map((day, index) => (
                       <div key={index} className="flex-1 flex flex-col items-center">
                         <div className="flex gap-1 mb-2 items-end">
@@ -748,13 +748,13 @@ ${advancedMetrics.teamPerformance.slice(0, 5).map(member => `
                       <span className="text-gray-700">High Priority</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-red-500 h-2 rounded-full"
                           style={{ width: `${advancedMetrics.totalTasks > 0 ? (advancedMetrics.highPriorityTasks / advancedMetrics.totalTasks) * 100 : 0}%` }}
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-900 w-8">{advancedMetrics.highPriorityTasks}</span>
+                      <span className="text-sm font-medium text-gray-900 w-8 flex-shrink-0">{advancedMetrics.highPriorityTasks}</span>
                     </div>
                   </div>
                   
@@ -764,13 +764,13 @@ ${advancedMetrics.teamPerformance.slice(0, 5).map(member => `
                       <span className="text-gray-700">Medium Priority</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-yellow-500 h-2 rounded-full"
                           style={{ width: `${advancedMetrics.totalTasks > 0 ? (advancedMetrics.mediumPriorityTasks / advancedMetrics.totalTasks) * 100 : 0}%` }}
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-900 w-8">{advancedMetrics.mediumPriorityTasks}</span>
+                      <span className="text-sm font-medium text-gray-900 w-8 flex-shrink-0">{advancedMetrics.mediumPriorityTasks}</span>
                     </div>
                   </div>
                   
@@ -780,13 +780,13 @@ ${advancedMetrics.teamPerformance.slice(0, 5).map(member => `
                       <span className="text-gray-700">Low Priority</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                      <div className="w-24 sm:w-32 bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-green-500 h-2 rounded-full"
                           style={{ width: `${advancedMetrics.totalTasks > 0 ? (advancedMetrics.lowPriorityTasks / advancedMetrics.totalTasks) * 100 : 0}%` }}
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-900 w-8">{advancedMetrics.lowPriorityTasks}</span>
+                      <span className="text-sm font-medium text-gray-900 w-8 flex-shrink-0">{advancedMetrics.lowPriorityTasks}</span>
                     </div>
                   </div>
                 </div>

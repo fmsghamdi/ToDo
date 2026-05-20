@@ -181,9 +181,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     : ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-lg shadow p-4 sm:p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold">{t.calendar} 📅</h1>
           <div className="flex items-center gap-2">
@@ -234,7 +234,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="overflow-x-auto">
+      <div className="grid grid-cols-7 gap-1 min-w-[650px] lg:min-w-0">
         {/* Week day headers */}
         {weekDays.map((day) => (
           <div key={day} className="p-3 text-center font-semibold text-gray-600 bg-gray-50">
@@ -246,7 +247,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         {calendarDays.map((day, index) => (
           <div
             key={index}
-            className={`min-h-[120px] p-2 border border-gray-200 ${
+            className={`min-h-[80px] lg:min-h-[120px] p-2 border border-gray-200 ${
               !day.isCurrentMonth ? "bg-gray-50" : "bg-white"
             } ${day.isToday ? "bg-blue-50 border-blue-300" : ""}`}
           >
@@ -287,8 +288,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         ))}
       </div>
 
+      </div>
+
       {/* Legend */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-sm">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-red-500 rounded"></div>
           <span>{t.high}</span>

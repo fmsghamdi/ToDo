@@ -74,7 +74,7 @@ const Workflows: React.FC = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               🔄 {t.workflows}
@@ -82,7 +82,7 @@ const Workflows: React.FC = () => {
             <p className="text-gray-600 mt-1">{t.workflowsDesc}</p>
           </div>
             
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setShowTemplates(true)}
                 className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2 font-medium shadow-sm"
@@ -185,7 +185,7 @@ const Workflows: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
                   <button
                     onClick={() => handleToggleWorkflow(workflow.id)}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${

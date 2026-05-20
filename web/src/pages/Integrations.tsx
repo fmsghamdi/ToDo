@@ -102,7 +102,7 @@ const Integrations: React.FC = () => {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
               🔌 {t.integrations}
@@ -185,7 +185,7 @@ const Integrations: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => handleSync(integration.id)}
                     disabled={syncingId === integration.id || integration.status !== 'connected'}

@@ -22,7 +22,7 @@ export default function ControlPanel({
   const { t, language } = useLanguage();
   
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-100 p-6">
+    <div className="min-h-[calc(100vh-4rem)] bg-gray-100 p-4 sm:p-6">
       <h1 className="text-2xl font-bold mb-6">{t.controlPanel}</h1>
       <p className="text-gray-600 mb-6">{language === 'ar' ? 'إدارة الحسابات وإعدادات المنصة' : 'Manage accounts and platform settings'}</p>
 
