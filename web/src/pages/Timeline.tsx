@@ -141,10 +141,10 @@ const Timeline: React.FC<TimelineProps> = ({ boards }) => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header */}
-        <div className="p-6 border-b">
+        <div className="p-4 sm:p-6 border-b">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <h1 className="text-2xl font-bold flex items-center gap-2">
               📊 {t.timeline}
@@ -226,7 +226,7 @@ const Timeline: React.FC<TimelineProps> = ({ boards }) => {
         </div>
 
         {/* Timeline Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {cards.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <div className="text-4xl mb-4">📅</div>

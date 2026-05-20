@@ -1035,12 +1035,12 @@ placeholder={t.systemUrlPlaceholder}
 );
 
 return (
-<div className="bg-gray-50 p-6 pt-24">
+<div className="bg-gray-50 p-4 sm:p-6 pt-20 sm:pt-24">
 <div className="max-w-6xl mx-auto">
 <div className="bg-white rounded-lg shadow-lg">
 {/* Header */}
-<div className="border-b border-gray-200 p-6">
-<h1 className="text-2xl font-bold text-gray-900">{t.systemSettingsTitle}</h1>
+<div className="border-b border-gray-200 p-4 sm:p-6">
+<h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.systemSettingsTitle}</h1>
 <p className="text-gray-600 mt-2">{t.systemSettingsDesc}</p>
 </div>
 
@@ -1066,7 +1066,7 @@ return (
 </div>
 
 {/* Content */}
-<div className="p-6">
+<div className="p-4 sm:p-6">
 {activeTab === 'database' && renderDatabaseTab()}
 {activeTab === 'ad' && renderADTab()}
 {activeTab === 'email' && renderEmailTab()}
