@@ -264,6 +264,7 @@ body {
   max-width: 560px;
   max-height: 85vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

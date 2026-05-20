@@ -309,9 +309,9 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
           <button onClick={onClose} className="btn-ghost p-2 text-xl leading-none ml-2">✕</button>
         </div>
 
-        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-y-auto lg:overflow-hidden [overscroll-behavior:contain]">
           {/* Main content - scrollable */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-4 lg:space-y-5">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-4 lg:space-y-5 [overscroll-behavior:contain]">
             {/* Description */}
               <textarea
                 value={description}
@@ -445,7 +445,7 @@ const CardModal: React.FC<Props> = ({ card, onUpdate, onDelete, onClose, availab
           </div>
 
           {/* Sidebar metadata */}
-          <div className="w-full lg:w-[200px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light p-4 lg:p-4 space-y-4 lg:overflow-y-auto">
+          <div className="w-full lg:w-[200px] flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light p-4 lg:p-4 space-y-4 lg:overflow-y-auto [overscroll-behavior:contain]">
             {/* Priority */}
             <div>
               <h4 className="text-xs lg:text-xs font-semibold mb-1.5" style={{color: 'var(--text-tertiary)'}}>{language === 'ar' ? 'الأولوية' : 'Priority'}</h4>
