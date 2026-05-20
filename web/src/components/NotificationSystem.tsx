@@ -312,7 +312,7 @@ const NotificationSystem: React.FC<NotificationSystemProps> = ({
           </div>
 
           {/* Notifications List */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto [overscroll-behavior:contain]">
             {sortedNotifications.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
                 <div className="text-4xl mb-2">🔕</div>
