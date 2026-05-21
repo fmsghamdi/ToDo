@@ -264,7 +264,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleRegister = (name: string, email: string, password: string): string | null => {
+  const handleRegister = async (name: string, email: string, password: string): Promise<string | null> => {
     if (!name.trim()) return t.nameRequired;
     if (!email.includes("@")) return t.invalidEmail;
     if (password.length < 4) return t.passwordTooShort;
@@ -273,6 +273,7 @@ const App: React.FC = () => {
       return t.emailExists;
     }
 
+    // Save to localStorage
     const newUser: User = {
       id: Date.now().toString(),
       name: name.trim(),
@@ -283,6 +284,14 @@ const App: React.FC = () => {
     };
 
     setUsers(prev => [...prev, newUser]);
+
+    // Also register via API so user appears in DB for admin dashboard
+    try {
+      await apiService.register(newUser.name, newUser.email, newUser.password);
+    } catch {
+      // API may not be available, local user is still created
+    }
+
     setCurrentUserId(newUser.id);
     return null;
   };

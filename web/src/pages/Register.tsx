@@ -3,7 +3,7 @@ import { useLanguage } from "../i18n/useLanguage";
 import { isDisposableEmail } from "../utils/disposableEmail";
 
 type Props = {
-  onRegister: (name: string, email: string, password: string) => string | null;
+  onRegister: (name: string, email: string, password: string) => Promise<string | null>;
   onShowLogin: () => void;
 };
 
@@ -14,7 +14,7 @@ export default function Register({ onRegister, onShowLogin }: Props) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -28,7 +28,7 @@ export default function Register({ onRegister, onShowLogin }: Props) {
       return;
     }
 
-    const res = onRegister(name.trim(), email.trim().toLowerCase(), password.trim());
+    const res = await onRegister(name.trim(), email.trim().toLowerCase(), password.trim());
     if (res) {
       setError(res);
     }
