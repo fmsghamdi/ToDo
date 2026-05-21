@@ -570,6 +570,20 @@ class ApiService {
   }
 
   // Admin APIs
+  async getAllUsers(): Promise<{
+    id: number;
+    username: string;
+    email: string;
+    fullName: string;
+    role: string;
+    isActive: boolean;
+    tenantId: number;
+    tenantName: string;
+    createdAt: string;
+  }[]> {
+    return this.apiCall('/admin/users');
+  }
+
   async getAllTenants(): Promise<{
     tenantId: number;
     tenantName: string;

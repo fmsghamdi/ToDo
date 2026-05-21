@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TaqTask.Data;
 using TaqTask.Application.Services;
 using TaqTask.Domain;
 
@@ -10,11 +12,13 @@ namespace TaqTask.Api.Controllers;
 [Authorize(Roles = "admin")]
 public class AdminController : ControllerBase
 {
+    private readonly ToDoOSContext _context;
     private readonly ISubscriptionService _subscriptionService;
     private readonly ILogger<AdminController> _logger;
 
-    public AdminController(ISubscriptionService subscriptionService, ILogger<AdminController> logger)
+    public AdminController(ToDoOSContext context, ISubscriptionService subscriptionService, ILogger<AdminController> logger)
     {
+        _context = context;
         _subscriptionService = subscriptionService;
         _logger = logger;
     }
@@ -24,6 +28,29 @@ public class AdminController : ControllerBase
     {
         var tenants = await _subscriptionService.GetAllTenantsSubscriptionInfoAsync();
         return Ok(tenants);
+    }
+
+    [HttpGet("users")]
+    public async Task<ActionResult> GetAllUsers()
+    {
+        var users = await _context.Users
+            .AsNoTracking()
+            .Select(u => new
+            {
+                u.Id,
+                u.Username,
+                u.Email,
+                u.FullName,
+                u.Role,
+                u.IsActive,
+                u.TenantId,
+                TenantName = _context.Tenants.Where(t => t.Id == u.TenantId).Select(t => t.Name).FirstOrDefault(),
+                u.CreatedAt
+            })
+            .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
+
+        return Ok(users);
     }
 
     [HttpPost("tenants/{tenantId}/extend-trial")]
