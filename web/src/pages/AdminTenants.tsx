@@ -17,17 +17,6 @@ type TenantInfo = {
   createdAt: string;
 };
 
-type PlanDefinition = {
-  name: string;
-  displayName: string;
-  displayNameEn: string;
-  maxUsers: number;
-  maxBoards: number;
-  priceMonthly: number;
-  priceYearly: number;
-  features: string[];
-};
-
 const planNames: Record<string, string> = {
   free: "مجاني",
   pro: "احترافي",
@@ -44,7 +33,6 @@ export default function AdminTenants() {
   const { language } = useLanguage();
   const isRtl = language === 'ar';
   const [tenants, setTenants] = useState<TenantInfo[]>([]);
-  const [plans, setPlans] = useState<PlanDefinition[]>([]);
   const [loading, setLoading] = useState(true);
   const [extending, setExtending] = useState<number | null>(null);
   const [extendDays, setExtendDays] = useState<Record<number, number>>({});
@@ -58,12 +46,8 @@ export default function AdminTenants() {
   async function loadData() {
     setLoading(true);
     try {
-      const [tenantsData, plansData] = await Promise.all([
-        apiService.getAllTenants(),
-        apiService.getSubscriptionPlans()
-      ]);
+      const tenantsData = await apiService.getAllTenants();
       setTenants(tenantsData);
-      setPlans(plansData);
     } catch {
       // API not available
     } finally {
