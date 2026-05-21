@@ -95,8 +95,6 @@ export default function SubscriptionPanel() {
   const isTrial = usage.status === "trial";
   const isExpired = isTrial && usage.daysRemaining <= 0;
   const expiringSoon = isTrial && usage.daysRemaining > 0 && usage.daysRemaining <= 7;
-  const isFree = usage.currentPlan === "free";
-
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100" dir={isRtl ? "rtl" : "ltr"}>
       <h2 className="text-xl font-bold mb-4">
