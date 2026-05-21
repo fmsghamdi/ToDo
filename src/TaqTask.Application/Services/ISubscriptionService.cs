@@ -12,5 +12,6 @@ public interface ISubscriptionService
     Task<bool> CanCreateBoardAsync(int tenantId);
     Task<string> UpgradePlanAsync(int tenantId, string newPlan);
     Task<string> ExtendTrialAsync(int tenantId, int additionalDays);
+    Task<List<TenantSubscriptionInfo>> GetAllTenantsSubscriptionInfoAsync();
     Task InitializeTenantSubscriptionAsync(int tenantId, string planName = "free");
 }

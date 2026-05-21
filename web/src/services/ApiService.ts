@@ -569,6 +569,38 @@ class ApiService {
     });
   }
 
+  // Admin APIs
+  async getAllTenants(): Promise<{
+    tenantId: number;
+    tenantName: string;
+    tenantEmail: string;
+    subdomain: string;
+    plan: string;
+    status: string;
+    trialStart: string | null;
+    trialEnd: string | null;
+    daysRemaining: number;
+    userCount: number;
+    boardCount: number;
+    createdAt: string;
+  }[]> {
+    return this.apiCall('/admin/tenants');
+  }
+
+  async adminExtendTrial(tenantId: number, days: number): Promise<{ message: string }> {
+    return this.apiCall(`/admin/tenants/${tenantId}/extend-trial`, {
+      method: 'POST',
+      body: JSON.stringify({ days }),
+    });
+  }
+
+  async adminChangePlan(tenantId: number, planName: string): Promise<{ message: string }> {
+    return this.apiCall(`/admin/tenants/${tenantId}/plan`, {
+      method: 'PUT',
+      body: JSON.stringify({ planName }),
+    });
+  }
+
   // Test if API server is available
   async isApiAvailable(): Promise<boolean> {
     try {

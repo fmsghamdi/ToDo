@@ -274,6 +274,47 @@ public class SubscriptionService : ISubscriptionService
         return $"Trial extended by {additionalDays} days. New expiry: {newEnd:yyyy-MM-dd}";
     }
 
+    public async Task<List<TenantSubscriptionInfo>> GetAllTenantsSubscriptionInfoAsync()
+    {
+        var tenants = await _context.Tenants.AsNoTracking().ToListAsync();
+        var subscriptions = await _context.TenantSubscriptions
+            .Include(s => s.Plan)
+            .AsNoTracking()
+            .ToListAsync();
+        var subDict = subscriptions.ToDictionary(s => s.TenantId, s => s);
+
+        var result = new List<TenantSubscriptionInfo>();
+
+        foreach (var tenant in tenants)
+        {
+            var subExists = subDict.TryGetValue(tenant.Id, out var sub);
+            var daysRemaining = subExists && sub.TrialEnd > DateTime.MinValue
+                ? Math.Max(0, (int)(sub.TrialEnd.Date - DateTime.UtcNow.Date).TotalDays)
+                : 0;
+
+            var userCount = await _context.Users.CountAsync(u => u.TenantId == tenant.Id);
+            var boardCount = await _context.Boards.CountAsync(b => b.TenantId == tenant.Id && !b.IsArchived);
+
+            result.Add(new TenantSubscriptionInfo
+            {
+                TenantId = tenant.Id,
+                TenantName = tenant.Name,
+                TenantEmail = tenant.Email,
+                Subdomain = tenant.Subdomain,
+                Plan = subExists ? (sub.Plan?.Name ?? tenant.SubscriptionPlan) : tenant.SubscriptionPlan,
+                Status = subExists ? sub.Status : "active",
+                TrialStart = subExists ? (DateTime?)sub.TrialStart : null,
+                TrialEnd = subExists ? (DateTime?)sub.TrialEnd : null,
+                DaysRemaining = daysRemaining,
+                UserCount = userCount,
+                BoardCount = boardCount,
+                CreatedAt = tenant.CreatedAt
+            });
+        }
+
+        return result;
+    }
+
     private static PlanDefinition MapToDefinition(SubscriptionPlan plan)
     {
         return new PlanDefinition

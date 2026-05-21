@@ -31,12 +31,13 @@ import Timeline from "./pages/Timeline";
 import DataStorageIndicator from "./components/DataStorageIndicator";
 import TrialBanner from "./components/TrialBanner";
 import SubscriptionPanel from "./components/SubscriptionPanel";
+import AdminTenants from "./pages/AdminTenants";
 import { workflowService } from './services/WorkflowService';
 import { workflowExecutionEngine } from './services/WorkflowExecutionEngine';
 import { authService, type ADUser } from './services/AuthService';
 import { apiService } from './services/ApiService';
 
-type View = "board" | "dashboard" | "control" | "chat" | "calendar" | "settings" | "reports" | "integrations" | "workflows" | "timeline" | "subscription";
+type View = "board" | "dashboard" | "control" | "chat" | "calendar" | "settings" | "reports" | "integrations" | "workflows" | "timeline" | "subscription" | "admin-tenants";
 
 const App: React.FC = () => {
   const { language, t } = useLanguage();
@@ -1037,6 +1038,12 @@ const App: React.FC = () => {
             {language === 'en' ? 'Workflows' : 'سير العمل'}
           </button>
           {currentUser?.role === "admin" && (
+            <button className={`sidebar-item ${view === "admin-tenants" ? "active" : ""}`} onClick={() => { setView("admin-tenants"); setSidebarOpen(false); }}>
+              <span className="sidebar-icon">🏢</span>
+              {language === 'en' ? 'All Tenants' : 'كل المؤسسات'}
+            </button>
+          )}
+          {currentUser?.role === "admin" && (
             <button className={`sidebar-item ${view === "subscription" ? "active" : ""}`} onClick={() => { setView("subscription"); setSidebarOpen(false); }}>
               <span className="sidebar-icon">💳</span>
               {language === 'en' ? 'Subscription' : 'الاشتراك'}
@@ -1438,6 +1445,10 @@ const App: React.FC = () => {
           <div className="p-4 md:p-6 animate-zoomIn">
             <Timeline boards={boards} />
           </div>
+        )}
+
+        {view === "admin-tenants" && currentUser?.role === "admin" && (
+          <AdminTenants />
         )}
 
         {view === "subscription" && currentUser?.role === "admin" && (

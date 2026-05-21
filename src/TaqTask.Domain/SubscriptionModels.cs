@@ -18,6 +18,22 @@ public class PlanDefinition
     public bool HasFeature(string feature) => Features.Contains(feature);
 }
 
+public class TenantSubscriptionInfo
+{
+    public int TenantId { get; set; }
+    public string TenantName { get; set; } = string.Empty;
+    public string TenantEmail { get; set; } = string.Empty;
+    public string Subdomain { get; set; } = string.Empty;
+    public string Plan { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime? TrialStart { get; set; }
+    public DateTime? TrialEnd { get; set; }
+    public int DaysRemaining { get; set; }
+    public int UserCount { get; set; }
+    public int BoardCount { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
 public class PlanUsage
 {
     public string CurrentPlan { get; set; } = "free";
