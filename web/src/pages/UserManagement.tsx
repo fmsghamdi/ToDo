@@ -513,7 +513,27 @@ export default function UserManagement({ users, currentUser, onAddUser, onUpdate
             </div>
 
             {editingUser === user.id && (
-              <div className="mt-4 p-3 bg-gray-50 rounded">
+              <div className="mt-4 p-3 bg-gray-50 rounded space-y-3">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">{language === 'ar' ? 'الاسم' : 'Name'}</label>
+                  <input
+                    type="text"
+                    value={user.name}
+                    onChange={(e) => onUpdateUser(user.id, { name: e.target.value })}
+                    className="border rounded p-2 w-full"
+                  />
+                </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
+                  <input
+                    type="email"
+                    value={user.email}
+                    onChange={(e) => onUpdateUser(user.id, { email: e.target.value })}
+                    className="border rounded p-2 w-full"
+                  />
+                </div>
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1">{language === 'ar' ? 'الدور' : 'Role'}</label>
                   <select

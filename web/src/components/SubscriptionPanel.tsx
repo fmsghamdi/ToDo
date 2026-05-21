@@ -206,76 +206,76 @@ export default function SubscriptionPanel() {
         </div>
       </div>
 
-      {/* Trial Extension (admin only — shown for trial & free plans) */}
-      {(isTrial || isFree) && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h4 className="font-semibold mb-2">
-            {isRtl ? "تمديد الفترة التجريبية" : "Extend Trial"}
-          </h4>
-          <p className="text-sm text-gray-600 mb-3">
-            {isRtl
-              ? "قم بتمديد الفترة التجريبية للمستخدمين في المنشأة."
-              : "Extend the trial period for users in your organization."}
-          </p>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={1}
-              max={365}
-              value={extendDays}
-              onChange={e => setExtendDays(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-center"
-            />
-            <span className="text-sm text-gray-500">
-              {isRtl ? "يوم" : "days"}
-            </span>
-            <button
-              onClick={handleExtendTrial}
-              disabled={extending || extendDays < 1}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 text-sm"
-            >
-              {extending
-                ? (isRtl ? "جاري..." : "Extending...")
-                : (isRtl ? "تمديد" : "Extend")}
-            </button>
-          </div>
+      {/* Trial Extension — always visible for admin */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h4 className="font-semibold mb-2">
+          {isRtl ? "تمديد الفترة التجريبية" : "Extend Trial"}
+        </h4>
+        <p className="text-sm text-gray-600 mb-3">
+          {isRtl
+            ? "قم بتمديد الفترة التجريبية للمستخدمين في المنشأة."
+            : "Extend the trial period for users in your organization."}
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={1}
+            max={365}
+            value={extendDays}
+            onChange={e => setExtendDays(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-center"
+          />
+          <span className="text-sm text-gray-500">
+            {isRtl ? "يوم" : "days"}
+          </span>
+          <button
+            onClick={handleExtendTrial}
+            disabled={extending || extendDays < 1}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 text-sm"
+          >
+            {extending
+              ? (isRtl ? "جاري..." : "Extending...")
+              : (isRtl ? "تمديد" : "Extend")}
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* Upgrade Section */}
-      {usage.currentPlan !== "enterprise" && plans.length > 0 && (
+      {/* Plan Selection — show ALL plans for admin, allow switching */}
+      {plans.length > 0 && (
         <div className="border-t pt-4">
-          <h4 className="font-semibold mb-3">{isRtl ? "ترقية الخطة" : "Upgrade Plan"}</h4>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {plans
-              .filter(p => {
-                const order = ["free", "pro", "enterprise"];
-                return order.indexOf(p.name) > order.indexOf(usage!.currentPlan);
-              })
-              .map(plan => (
+          <h4 className="font-semibold mb-3">{isRtl ? "اختيار الخطة" : "Choose Plan"}</h4>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {plans.map(plan => {
+              const isCurrent = plan.name === usage.currentPlan;
+              return (
                 <div
                   key={plan.name}
                   className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedPlan === plan.name
+                    isCurrent
+                      ? "border-green-500 bg-green-50 ring-2 ring-green-200"
+                      : selectedPlan === plan.name
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-blue-300"
                   }`}
                   onClick={() => setSelectedPlan(plan.name)}
                 >
+                  {isCurrent && (
+                    <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded mb-2 inline-block">
+                      {isRtl ? "الحالية" : "Current"}
+                    </span>
+                  )}
                   <div className="font-bold text-lg">{isRtl ? plan.displayName : plan.displayNameEn}</div>
                   <div className="text-2xl font-bold text-blue-600 mt-1">
                     ${plan.priceMonthly}<span className="text-sm font-normal text-gray-500">/{isRtl ? "شهر" : "mo"}</span>
                   </div>
                   <ul className="mt-2 space-y-1 text-sm text-gray-600">
-                    {plan.features.slice(0, 4).map(f => (
+                    {plan.features.map(f => (
                       <li key={f} className="flex items-center gap-1">✓ {f}</li>
                     ))}
-                    {plan.features.length > 4 && (
-                      <li className="text-blue-500">+{plan.features.length - 4} {isRtl ? "مميزات أخرى" : "more features"}</li>
-                    )}
                   </ul>
                 </div>
-              ))}
+              );
+            })}
           </div>
 
           {selectedPlan && selectedPlan !== usage.currentPlan && (
@@ -285,8 +285,8 @@ export default function SubscriptionPanel() {
               className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
             >
               {upgrading
-                ? (isRtl ? "جاري الترقية..." : "Upgrading...")
-                : (isRtl ? "ترقية إلى الخطة المحددة" : "Upgrade to Selected Plan")}
+                ? (isRtl ? "جاري التبديل..." : "Switching...")
+                : (isRtl ? `التبديل إلى ${planNames[selectedPlan] || selectedPlan}` : `Switch to ${planNames[selectedPlan] || selectedPlan}`)}
             </button>
           )}
 
