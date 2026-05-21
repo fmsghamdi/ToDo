@@ -59,15 +59,46 @@ export default function AdminTenants() {
 
   async function loadData() {
     setLoading(true);
+
+    // Read local users from localStorage (where existing registrations are)
+    const localUsers: UserInfo[] = [];
     try {
-      const [usersData, tenantsData] = await Promise.all([
+      const raw = localStorage.getItem("users");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        for (const u of parsed) {
+          localUsers.push({
+            id: parseInt(u.id) || 0,
+            username: u.name || u.email,
+            email: u.email,
+            fullName: u.name || "",
+            role: u.role || "user",
+            isActive: true,
+            tenantId: u.tenantId || 1,
+            tenantName: u.tenantName || "ToDoOS",
+            createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString()
+          });
+        }
+      }
+    } catch {}
+
+    // Fetch from API
+    try {
+      const [apiUsers, tenantsData] = await Promise.all([
         apiService.getAllUsers(),
         apiService.getAllTenants()
       ]);
-      setUsers(usersData);
+
+      // Merge: API users override local by email
+      const emailMap = new Map<string, UserInfo>();
+      for (const u of localUsers) emailMap.set(u.email, u);
+      for (const u of apiUsers) emailMap.set(u.email, u);
+
+      setUsers(Array.from(emailMap.values()));
       setTenants(tenantsData);
     } catch {
-      // API not available
+      // API not available — show only localStorage users
+      setUsers(localUsers);
     } finally {
       setLoading(false);
     }
