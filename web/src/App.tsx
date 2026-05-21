@@ -20,7 +20,7 @@ import BoardManager from "./components/BoardManager";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 import Logo from "./components/Logo";
 import type { User, Permission } from "./UserTypes";
-import { DEFAULT_ADMIN_PERMISSIONS } from "./UserTypes";
+import { DEFAULT_ADMIN_PERMISSIONS, DEFAULT_EMPLOYEE_PERMISSIONS } from "./UserTypes";
 import type { Chat, Message } from "./ChatTypes";
 import type { Board } from "./Types";
 import { useLanguage } from "./i18n/useLanguage";
@@ -274,13 +274,14 @@ const App: React.FC = () => {
     }
 
     // Save to localStorage
+    const isFirstUser = users.length === 0;
     const newUser: User = {
       id: Date.now().toString(),
       name: name.trim(),
       email: email.toLowerCase(),
       password: password.trim(),
-      role: "admin", // First user is admin
-      permissions: [...DEFAULT_ADMIN_PERMISSIONS],
+      role: isFirstUser ? "admin" : "employee",
+      permissions: isFirstUser ? [...DEFAULT_ADMIN_PERMISSIONS] : [...DEFAULT_EMPLOYEE_PERMISSIONS],
     };
 
     setUsers(prev => [...prev, newUser]);
