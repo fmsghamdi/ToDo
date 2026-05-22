@@ -28,10 +28,18 @@ builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 // Add Entity Framework for MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Build connection string with proper charset for Arabic support
+var csb = new MySqlConnector.MySqlConnectionStringBuilder(connectionString);
+csb.CharacterSet = "utf8mb4";
+connectionString = csb.ConnectionString;
+
 builder.Services.AddDbContext<ToDoOSContext>(options =>
 {
     var serverVersion = ServerVersion.AutoDetect(connectionString);
-    options.UseMySql(connectionString, serverVersion);
+    options.UseMySql(connectionString, serverVersion, mysqlOptions =>
+    {
+        mysqlOptions.ExecutionStrategy(c => new MySqlRetryingExecutionStrategy(c));
+    });
 
     if (builder.Environment.IsDevelopment())
     {

@@ -28,7 +28,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=ToDoOS;User=root;Password=${MYSQL_PASSWORD:-rootpass123}
+      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=ToDoOS;User=root;Password=${MYSQL_PASSWORD:-rootpass123};Charset=utf8mb4
       - JwtSettings__SecretKey=${JWT_SECRET:-ChangeMeInProduction}
       - JwtSettings__Issuer=${JWT_ISSUER:-ToDoOS}
       - JwtSettings__Audience=${JWT_AUDIENCE:-ToDoOS-Users}

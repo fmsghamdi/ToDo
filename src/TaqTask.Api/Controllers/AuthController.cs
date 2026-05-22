@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using TaqTask.Data;
+using TaqTask.Domain;
 using TaqTask.Api.Models;
 using TaqTask.Application.Services;
 using TaqTask.Infrastructure.Services;
@@ -139,6 +140,7 @@ public class AuthController : ControllerBase
 
     // POST: api/auth/register
     [HttpPost("register")]
+    [AllowAnonymous]
     public async Task<ActionResult<LoginResponse>> Register(RegisterRequest request)
     {
         // Check if user already exists
@@ -147,7 +149,8 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "User with this email already exists" });
         }
 
-        if (await _context.Users.AnyAsync(u => u.Username == request.Username))
+        if (request.AccountType != "individual" && !string.IsNullOrEmpty(request.Username) &&
+            await _context.Users.AnyAsync(u => u.Username == request.Username))
         {
             return BadRequest(new { message = "Username already taken" });
         }
@@ -158,23 +161,64 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Disposable email addresses are not allowed. Please use a permanent email." });
         }
 
-        // Assign default tenant or use provided tenant
-        var tenantId = request.TenantId > 0 ? request.TenantId : 1;
+        int tenantId;
 
-        // Check tenant user limit
-        if (!await _subscriptionService.CanAddUserAsync(tenantId))
+        if (request.TenantId > 0)
         {
-            return BadRequest(new { message = "Tenant user limit reached. Upgrade your plan to add more users." });
+            // Join existing tenant (for invitations or admin-created users)
+            tenantId = request.TenantId;
+            if (!await _subscriptionService.CanAddUserAsync(tenantId))
+                return BadRequest(new { message = "Tenant user limit reached. Upgrade your plan to add more users." });
+        }
+        else
+        {
+            // Create a new tenant for this user (individual account)
+            var baseSubdomain = (request.FullName ?? request.Email.Split('@')[0])
+                .ToLowerInvariant()
+                .Replace(" ", "-")
+                .Replace(".", "-")
+                .Trim('-');
+            if (baseSubdomain.Length > 50) baseSubdomain = baseSubdomain[..50];
+
+            // Ensure unique subdomain
+            var subdomain = baseSubdomain;
+            var counter = 1;
+            while (await _context.Tenants.AnyAsync(t => t.Subdomain == subdomain))
+            {
+                subdomain = $"{baseSubdomain}-{counter++}";
+                if (subdomain.Length > 50) subdomain = subdomain[..50];
+            }
+
+            var tenant = new Tenant
+            {
+                Name = $"{request.FullName ?? request.Email}",
+                Subdomain = subdomain,
+                Email = request.Email,
+                SubscriptionPlan = "free",
+                MaxUsers = request.AccountType == "company" ? 25 : 1,
+                MaxBoards = 5,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.Tenants.Add(tenant);
+            await _context.SaveChangesAsync();
+            tenantId = tenant.Id;
+
+            // Initialize subscription with trial
+            await _subscriptionService.InitializeTenantSubscriptionAsync(tenantId, "free");
+
+            _logger.LogInformation("New tenant created via registration: {TenantName} (ID: {TenantId})", tenant.Name, tenantId);
         }
 
-        // Create new user
+        // Create user
         var user = new User
         {
-            Username = request.Username,
+            Username = request.Username ?? request.Email.Split('@')[0],
             Email = request.Email,
             PasswordHash = HashPassword(request.Password),
-            FullName = request.FullName,
-            Role = "user",
+            FullName = request.FullName ?? "",
+            Role = request.Role,
             IsActive = true,
             TenantId = tenantId,
             CreatedAt = DateTime.UtcNow,
@@ -264,6 +308,43 @@ public class AuthController : ControllerBase
         }
 
         _logger.LogInformation("Fetching current user: {Username}, Role: {Role}", user.Username, user.Role);
+
+        return Ok(MapUserToDto(user));
+    }
+
+    // PUT: api/auth/profile - Update current user's profile
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> UpdateProfile(UpdateProfileRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        if (!string.IsNullOrEmpty(request.FullName))
+        {
+            user.FullName = request.FullName;
+        }
+
+        if (!string.IsNullOrEmpty(request.Email) && request.Email != user.Email)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email && u.Id != userId))
+            {
+                return BadRequest(new { message = "Email already in use" });
+            }
+            user.Email = request.Email;
+        }
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
 
         return Ok(MapUserToDto(user));
     }
@@ -411,11 +492,13 @@ public class ADLoginRequest
 
 public class RegisterRequest
 {
-    public string Username { get; set; } = string.Empty;
+    public string? Username { get; set; }
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public string FullName { get; set; } = string.Empty;
+    public string? FullName { get; set; }
     public int TenantId { get; set; }
+    public string AccountType { get; set; } = "individual";
+    public string Role { get; set; } = "admin";
 }
 
 public class LoginResponse
@@ -430,6 +513,12 @@ public class RefreshTokenRequest
 {
     public string Token { get; set; } = string.Empty;
     public string RefreshToken { get; set; } = string.Empty;
+}
+
+public class UpdateProfileRequest
+{
+    public string? FullName { get; set; }
+    public string? Email { get; set; }
 }
 
 public class UserDto

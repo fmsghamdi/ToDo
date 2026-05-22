@@ -27,9 +27,11 @@ export default function ControlPanel({
       <p className="text-gray-600 mb-6">{language === 'ar' ? 'إدارة الحسابات وإعدادات المنصة' : 'Manage accounts and platform settings'}</p>
 
       {/* Subscription Panel */}
-      <div className="mb-6">
-        <SubscriptionPanel />
-      </div>
+      {(currentUser.tenantId || 1) !== 1 && (
+        <div className="mb-6">
+          <SubscriptionPanel />
+        </div>
+      )}
 
       {/* User Management - Only for admins */}
       {currentUser.permissions.includes("manage_users") && (

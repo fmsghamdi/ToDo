@@ -63,6 +63,7 @@ const App: React.FC = () => {
   }>({ isOpen: false, user: null });
 
   const currentUser = users.find(u => u.id === currentUserId);
+  const tenantUsers = users.filter(u => (u.tenantId || 1) === (currentUser?.tenantId || 1));
 
   // Boards state
   const [boards, setBoards] = useState<Board[]>(() => {
@@ -235,15 +236,7 @@ const App: React.FC = () => {
   const handleLogin = async (email: string, password: string): Promise<string | null> => {
     if (!email.includes("@")) return t.invalidEmail;
     if (password.length < 4) return t.passwordTooShort;
-    
-    // First try localStorage users
-    const localUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
-    if (localUser) {
-      setCurrentUserId(localUser.id);
-      return null;
-    }
 
-    // Fallback to API
     try {
       const response: any = await apiService.login(email, password);
       const apiUser = response.user;
@@ -251,15 +244,21 @@ const App: React.FC = () => {
         id: apiUser.id.toString(),
         name: apiUser.fullName || apiUser.username || apiUser.email,
         email: apiUser.email,
-        password: '',
+        password: '', // not stored locally
         role: apiUser.role || 'user',
-        permissions: apiUser.role === 'admin' ? [...DEFAULT_ADMIN_PERMISSIONS] : ['view_board', 'create_task', 'edit_task', 'move_task'],
+        permissions: apiUser.role === 'admin' ? [...DEFAULT_ADMIN_PERMISSIONS] : [...DEFAULT_EMPLOYEE_PERMISSIONS],
         tenantId: apiUser.tenantId,
       };
       setUsers(prev => [...prev.filter(u => u.email !== mappedUser.email), mappedUser]);
       setCurrentUserId(mappedUser.id);
       return null;
-    } catch {
+    } catch (err: any) {
+      // Backend returns 400 for wrong credentials, fallback to local users
+      const localUser = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (localUser) {
+        setCurrentUserId(localUser.id);
+        return null;
+      }
       return t.invalidCredentials;
     }
   };
@@ -268,33 +267,26 @@ const App: React.FC = () => {
     if (!name.trim()) return t.nameRequired;
     if (!email.includes("@")) return t.invalidEmail;
     if (password.length < 4) return t.passwordTooShort;
-    
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+
+    // Register via API — creates new tenant + user as admin
+    try {
+      const response: any = await apiService.register(name.trim(), email.toLowerCase(), password.trim(), "individual", 0, "admin");
+      const apiUser: any = response.user;
+      const mappedUser: User = {
+        id: String(apiUser.id),
+        name: apiUser.fullName || apiUser.username || apiUser.email,
+        email: apiUser.email,
+        password: '', // don't store password locally
+        role: "admin",
+        permissions: [...DEFAULT_ADMIN_PERMISSIONS],
+        tenantId: apiUser.tenantId,
+      };
+      setUsers(prev => [...prev.filter(u => u.email !== mappedUser.email), mappedUser]);
+      setCurrentUserId(mappedUser.id);
+      return null;
+    } catch {
       return t.emailExists;
     }
-
-    // Save to localStorage
-    const isFirstUser = users.length === 0;
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      email: email.toLowerCase(),
-      password: password.trim(),
-      role: isFirstUser ? "admin" : "employee",
-      permissions: isFirstUser ? [...DEFAULT_ADMIN_PERMISSIONS] : [...DEFAULT_EMPLOYEE_PERMISSIONS],
-    };
-
-    setUsers(prev => [...prev, newUser]);
-
-    // Also register via API so user appears in DB for admin dashboard
-    try {
-      await apiService.register(newUser.name, newUser.email, newUser.password);
-    } catch {
-      // API may not be available, local user is still created
-    }
-
-    setCurrentUserId(newUser.id);
-    return null;
   };
 
   // Forgot password handler
@@ -373,15 +365,31 @@ const App: React.FC = () => {
       id: Date.now().toString(),
     };
     setUsers(prev => [...prev, newUser]);
+
+    // Also create via API so user appears in DB for admin dashboard
+    const tenantId = currentUser?.tenantId || 1;
+    apiService.register(newUser.name, newUser.email, newUser.password, "employee", tenantId, newUser.role)
+      .then(() => {
+        // Restore admin token (register() overwrites it)
+        apiService.restoreToken();
+      })
+      .catch(() => {});
   };
 
   const handleUpdateUser = (userId: string, updates: Partial<User>) => {
     setUsers(prev => {
       const updatedUsers = prev.map(u => u.id === userId ? { ...u, ...updates } : u);
-      // Force save to localStorage immediately for AD users
       localStorage.setItem("users", JSON.stringify(updatedUsers));
       return updatedUsers;
     });
+
+    // Sync profile changes (name, email) to backend API
+    const body: any = {};
+    if (updates.name !== undefined) body.fullName = updates.name;
+    if (updates.email !== undefined) body.email = updates.email;
+    if (Object.keys(body).length > 0) {
+      apiService.updateProfile(body).catch(() => {});
+    }
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -1047,13 +1055,13 @@ const App: React.FC = () => {
             <span className="sidebar-icon">🔄</span>
             {language === 'en' ? 'Workflows' : 'سير العمل'}
           </button>
-          {currentUser?.role === "admin" && (
+          {currentUser?.role === "admin" && (currentUser?.tenantId || 1) === 1 && (
             <button className={`sidebar-item ${view === "admin-tenants" ? "active" : ""}`} onClick={() => { setView("admin-tenants"); setSidebarOpen(false); }}>
               <span className="sidebar-icon">🏢</span>
               {language === 'en' ? 'All Tenants' : 'كل المؤسسات'}
             </button>
           )}
-          {currentUser?.role === "admin" && (
+          {currentUser?.role === "admin" && (currentUser?.tenantId || 1) !== 1 && (
             <button className={`sidebar-item ${view === "subscription" ? "active" : ""}`} onClick={() => { setView("subscription"); setSidebarOpen(false); }}>
               <span className="sidebar-icon">💳</span>
               {language === 'en' ? 'Subscription' : 'الاشتراك'}
@@ -1090,7 +1098,7 @@ const App: React.FC = () => {
               <NotificationSystem
                 currentUser={currentUser!}
                 columns={columns}
-                users={users}
+                users={tenantUsers}
                 chats={chats}
                 onClearChatNotifications={() => {}}
               />
@@ -1143,7 +1151,7 @@ const App: React.FC = () => {
                 <div className={`w-full sm:w-auto ${language === 'ar' ? 'sm:order-first' : 'sm:order-last'}`}>
                   <SearchAndFilter
                     columns={getFilteredColumns()}
-                    users={users}
+                    users={tenantUsers}
                     onFilteredResults={handleFilteredResults}
                     onClearFilters={handleClearFilters}
                   />
@@ -1357,7 +1365,7 @@ const App: React.FC = () => {
                 onClose={closeCard}
                 onUpdate={updateCard}
                 onDelete={deleteCard}
-                availableMembers={users.map(u => ({
+                availableMembers={tenantUsers.map(u => ({
                   id: u.id,
                   name: u.name,
                   avatar: u.avatar || "👤"
@@ -1378,7 +1386,7 @@ const App: React.FC = () => {
                   addCard(isAddModalOpen, card);
                   setIsAddModalOpen(null);
                 }}
-                availableMembers={users.map(u => ({
+                availableMembers={tenantUsers.map(u => ({
                   id: u.id,
                   name: u.name,
                   avatar: u.avatar || "👤"
@@ -1392,7 +1400,7 @@ const App: React.FC = () => {
           <Dashboard
             columns={columns}
             currentUser={currentUser}
-            availableMembers={users.map(u => ({ id: u.id, name: u.name, avatar: u.avatar || "👤" }))}
+            availableMembers={tenantUsers.map(u => ({ id: u.id, name: u.name, avatar: u.avatar || "👤" }))}
             onAddCard={addCard}
             onOpenCard={openCard}
           />
@@ -1402,7 +1410,7 @@ const App: React.FC = () => {
           <div className="p-4 md:p-6 animate-slideInFromLeft">
             <ControlPanel 
               currentUser={currentUser}
-              users={users}
+              users={tenantUsers}
               onAddUser={handleAddUser}
               onUpdateUser={handleUpdateUser}
               onDeleteUser={handleDeleteUser}
@@ -1414,7 +1422,7 @@ const App: React.FC = () => {
           <div className="p-4 md:p-6 animate-slideInFromBottom">
             <ChatPage
               currentUser={currentUser}
-              users={users}
+              users={tenantUsers}
               chats={chats}
               onSendMessage={handleSendMessage}
               onCreateChat={handleCreateChat}
@@ -1457,11 +1465,11 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {view === "admin-tenants" && currentUser?.role === "admin" && (
+        {view === "admin-tenants" && currentUser?.role === "admin" && (currentUser?.tenantId || 1) === 1 && (
           <AdminTenants />
         )}
 
-        {view === "subscription" && currentUser?.role === "admin" && (
+        {view === "subscription" && currentUser?.role === "admin" && (currentUser?.tenantId || 1) !== 1 && (
           <div className="min-h-[calc(100vh-4rem)] bg-gray-100 p-4 sm:p-6 animate-slideInFromBottom">
             <h1 className="text-2xl font-bold mb-6">{language === 'ar' ? 'الاشتراك' : 'Subscription'}</h1>
             <p className="text-gray-600 mb-6">{language === 'ar' ? 'إدارة خطة الاشتراك والفترة التجريبية' : 'Manage subscription plan and trial period'}</p>

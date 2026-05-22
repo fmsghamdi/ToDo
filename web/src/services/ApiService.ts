@@ -14,12 +14,6 @@ interface LoginRequest {
   password: string;
 }
 
-interface RegisterRequest {
-  name: string;
-  email: string;
-  password: string;
-}
-
 interface AuthResponse {
   token: string;
   user: User;
@@ -85,6 +79,12 @@ class ApiService {
   clearToken() {
     this.token = null;
     localStorage.removeItem('authToken');
+  }
+
+  // Restore the token from localStorage (undoes overwrites)
+  restoreToken() {
+    const stored = localStorage.getItem('authToken');
+    this.token = stored;
   }
 
   // Get headers with authentication
@@ -155,10 +155,10 @@ class ApiService {
     return response;
   }
 
-  async register(name: string, email: string, password: string): Promise<AuthResponse> {
+  async register(fullName: string, email: string, password: string, accountType: string = "individual", tenantId: number = 0, role: string = "admin"): Promise<AuthResponse> {
     const response = await this.apiCall<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password } as RegisterRequest),
+      body: JSON.stringify({ fullName, email, password, accountType, tenantId, role }),
     });
     
     if (response.token) {
@@ -166,6 +166,13 @@ class ApiService {
     }
     
     return response;
+  }
+
+  async updateProfile(data: { fullName?: string; email?: string }): Promise<any> {
+    return this.apiCall('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 
   async logout(): Promise<void> {

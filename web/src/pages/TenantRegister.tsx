@@ -11,6 +11,8 @@ export default function TenantRegister({ onRegisterSuccess, onShowLogin }: Props
   const [name, setName] = useState("");
   const [subdomain, setSubdomain] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [companyPhone, setCompanyPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -20,8 +22,8 @@ export default function TenantRegister({ onRegisterSuccess, onShowLogin }: Props
     setError("");
     setIsLoading(true);
 
-    if (!name.trim() || !subdomain.trim() || !email.trim()) {
-      setError("الرجاء إدخال اسم الجهة والدومين الفرعي والبريد الإلكتروني");
+    if (!name.trim() || !subdomain.trim() || !email.trim() || !password.trim()) {
+      setError("الرجاء إدخال جميع البيانات المطلوبة");
       setIsLoading(false);
       return;
     }
@@ -33,13 +35,25 @@ export default function TenantRegister({ onRegisterSuccess, onShowLogin }: Props
     }
 
     try {
-      const result = await apiService.registerTenant({
+      // Step 1: Create tenant
+      const tenant = await apiService.registerTenant({
         name: name.trim(),
         subdomain: subdomain.trim().toLowerCase(),
         email: email.trim().toLowerCase(),
         companyPhone: companyPhone.trim(),
       });
-      onRegisterSuccess(result.id, result.name);
+
+      // Step 2: Create user as admin of that tenant
+      await apiService.register(
+        fullName.trim() || name.trim(),
+        email.trim().toLowerCase(),
+        password.trim(),
+        "company",
+        tenant.id,
+        "admin"
+      );
+
+      onRegisterSuccess(tenant.id, tenant.name);
     } catch (err: any) {
       setError(err.message || "فشل في تسجيل الجهة");
     } finally {
@@ -91,6 +105,29 @@ export default function TenantRegister({ onRegisterSuccess, onShowLogin }: Props
               placeholder="admin@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">الاسم الكامل للمدير</label>
+            <input
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="أحمد محمد"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">كلمة المرور</label>
+            <input
+              type="password"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="******"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
             />
           </div>
